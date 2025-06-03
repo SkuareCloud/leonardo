@@ -1,0 +1,78 @@
+name: Build and Deploy Next.js Project to AWS
+
+on:
+  push:
+    branches:
+      - development
+      - main
+
+env:
+  IMAGE_TAG: ${{ github.sha }}  # commit SHA as the image tag
+  TASK_DEFINITION: leonardo-task-definition
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:latest
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPO_NAME }}:${{ github.sha }}
+
+  deploy-to-ecs:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to ECS Cluster Operator
+        run: |
+          SERVICE_NAME="LeonardoService"
+          echo "Deploying to service: $SERVICE_NAME"
+
+          # Create a new revision for the ECS service
+          aws ecs update-service \
+            --cluster Leonardo \
+            --service $SERVICE_NAME \
+            --force-new-deployment \
+            --task-definition ${{ env.TASK_DEFINITION }} \
+            --desired-count 1 \
+            & # Run in the background
