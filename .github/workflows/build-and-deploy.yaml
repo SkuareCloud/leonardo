@@ -8,7 +8,7 @@ on:
 
 env:
   IMAGE_TAG: ${{ github.sha }}  # commit SHA as the image tag
-  TASK_DEFINITION: leonardo-task-definition
+  TASK_DEFINITION: shepherd-task-definition
 
 jobs:
   build-and-push:
@@ -65,12 +65,12 @@ jobs:
 
       - name: Deploy to ECS Cluster Operator
         run: |
-          SERVICE_NAME="LeonardoService"
+          SERVICE_NAME="ShepherdService"
           echo "Deploying to service: $SERVICE_NAME"
 
           # Create a new revision for the ECS service
           aws ecs update-service \
-            --cluster Leonardo \
+            --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
             --service $SERVICE_NAME \
             --force-new-deployment \
             --task-definition ${{ env.TASK_DEFINITION }} \
