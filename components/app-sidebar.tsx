@@ -1,6 +1,17 @@
 "use client";
 
-import { ActivityIcon, Clapperboard, Crosshair, LucideIcon, MessagesSquare, ScrollText, Users2Icon, VenetianMask } from "lucide-react";
+import {
+  ActivityIcon,
+  Clapperboard,
+  Crosshair,
+  LucideIcon,
+  MessageCircleMore,
+  MessagesSquare,
+  ScrollText,
+  Users2Icon,
+  VenetianMask,
+  Waypoints,
+} from "lucide-react";
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
@@ -26,14 +37,19 @@ export interface NavItem {
 const data = {
   navMain: [
     {
-      title: "Profiles",
+      title: "Avatars",
       url: "#",
       isActive: true,
       items: [
         {
-          title: "All profiles",
-          url: "/profiles",
+          title: "Avatars",
+          url: "/avatars/avatars",
           icon: Users2Icon,
+        },
+        {
+          title: "Proxies",
+          url: "/avatars/proxies",
+          icon: Waypoints,
         },
         {
           title: "Activation",
@@ -62,8 +78,13 @@ const data = {
       items: [
         {
           title: "Scenarios",
-          url: "/scenarios",
+          url: "/operator/scenarios",
           icon: ScrollText,
+        },
+        {
+          title: "Status",
+          url: "/operator/status",
+          icon: MessageCircleMore,
         },
       ],
     },
@@ -101,8 +122,6 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isLocal = read_client_env().isLocal;
-  console.log({ isLocal });
-
   const navItems = data.navMain.filter((item) => !(isLocal && item.localOnly));
   for (const item of navItems) {
     if (item.items) {

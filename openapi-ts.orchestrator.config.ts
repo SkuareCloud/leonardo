@@ -11,12 +11,15 @@ export default defineConfig({
   output: `lib/api/${SERVICE}`,
   plugins: [
     ...defaultPlugins,
-    "@hey-api/client-fetch",
-    "@hey-api/client-next",
+    {
+      name: "@hey-api/client-next",
+      baseUrl: false,
+      strictBaseUrl: false,
+    },
     "zod",
     {
       name: "@hey-api/sdk",
       validator: true,
-    }
+    },
   ],
 });

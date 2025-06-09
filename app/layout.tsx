@@ -31,7 +31,6 @@ export default async function RootLayout({
 }>) {
   const requestHeaders = await headers();
   const pathname = requestHeaders.get("X-Pathname");
-  console.log("Pathname:", pathname);
   const breadcrumbItems: BreadcrumbItem[] = [];
   if (pathname) {
     const pathSegments = pathname.split("/");
@@ -46,8 +45,6 @@ export default async function RootLayout({
       }
     }
   }
-  console.log("Breadcrumb items:", breadcrumbItems);
-
   return (
     <html lang="en">
       <body className="antialiased">

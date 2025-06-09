@@ -7,8 +7,8 @@ export type ActionPrefrences = {
 export type ActionResponse = {
     id?: string;
     status: ActionStatus;
-    type: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | null;
     start_time: string;
 };
 
@@ -41,19 +41,25 @@ export type ActivationResponse = {
     status: ActivationStatus;
 };
 
-export type ActivationStatus = 'ACTIVATION_STARTED';
+export type ActivationStatus = 'CHECKING_PROFILE' | 'STARTED' | 'ALREADY_LOGGED_IN' | 'WAITING_FOR_OTP' | 'ENTERING_OTP' | 'WAITING_FOR_PASSWORD' | 'ENTERING_PASSWORD' | 'VERIFYING_LOGIN' | 'LOGIN_VERIFICATION_FAILED' | 'SKIPPED' | 'FAILED' | 'SUCCESS';
 
 export type AsyncWorkerState = 'init' | 'starting' | 'stopping' | 'stopped' | 'idle' | 'working' | 'paused';
 
+export type Attachment = {
+    url: string;
+    name?: string | null;
+    mime_type?: string | null;
+};
+
 export type AuthRequest = {
     profile_id: string;
-    otp?: number | null;
+    otp?: string | null;
     password?: string | null;
 };
 
 export type BehaviouralAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: BehaviouralArgs;
 };
@@ -97,7 +103,7 @@ export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
  * TODO: Should not be in common, needs to be translated to a contact_info...
  */
 export type DialogValue = {
-    peerId: number;
+    peer_id: number;
     read_inbox_max_id: number;
     read_outbox_max_id: number;
     top_message: number;
@@ -108,7 +114,7 @@ export type DialogValue = {
 
 export type ForwardMessageAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: ForwardMessageArgs;
 };
@@ -117,7 +123,7 @@ export type ForwardMessageArgs = {
     from_chat: ChatInfo;
     message_info: MessageInfo;
     target_chat: ChatInfo;
-    message?: string | null;
+    message?: InputMessage | null;
 };
 
 export type ForwardMessageResponseContent = {
@@ -138,16 +144,22 @@ export type HttpValidationError = {
     detail?: Array<ValidationError>;
 };
 
+export type InputMessage = {
+    text?: string | null;
+    attachments?: Array<Attachment>;
+};
+
 export type JoinGroupAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: JoinGroupArgs;
 };
 
 export type JoinGroupArgs = {
-    chat: ChatInfo;
+    chat?: ChatInfo | null;
     join_discussion_group_if_availble?: boolean;
+    invite_link?: string | null;
 };
 
 export type JoinGroupResponseContent = {
@@ -157,7 +169,7 @@ export type JoinGroupResponseContent = {
 
 export type LeaveGroupAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: LeaveGroupArgs;
 };
@@ -167,7 +179,7 @@ export type LeaveGroupArgs = {
 };
 
 export type LeaveGroupResponseContent = {
-    chat_info: ChatInfo | null;
+    [key: string]: unknown;
 };
 
 export type MessageInfo = {
@@ -198,7 +210,7 @@ export type ProfileWorkerView = {
 
 export type ReplyToMessageAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: ReplyToMessageArgs;
 };
@@ -206,7 +218,7 @@ export type ReplyToMessageAction = {
 export type ReplyToMessageArgs = {
     chat: ChatInfo;
     message_info: MessageInfo;
-    input_message_content: string;
+    input_message_content: InputMessage;
 };
 
 export type ReplyToMessageResponseContent = {
@@ -217,7 +229,7 @@ export type Scenario = {
     id?: string;
     profile: Character;
     prefrences: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
 };
 
 export type ScenarioInfo = {
@@ -244,28 +256,47 @@ export type ScenarioWithResult = {
     result?: ScenarioResult | null;
 };
 
+export type SendBulkMessagesAction = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    prefrences?: ActionPrefrences;
+    args: SendBulkMessagesArgs;
+};
+
+export type SendBulkMessagesArgs = {
+    chat: ChatInfo;
+    messages: Array<string>;
+    interval?: number;
+};
+
+export type SendBulkMessagesResponseContent = {
+    message_infos: Array<MessageInfo>;
+};
+
 export type SendMessageAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: SendMessageArgs;
 };
 
 export type SendMessageArgs = {
     chat: ChatInfo;
-    input_message_content: string;
+    input_message_content: InputMessage;
 };
 
 export type SendMessageResponseContent = {
     message_info: MessageInfo;
 };
 
-export type TgAuthCredentialsReadable = {
-    otp?: string | null;
-    password?: string | null;
+export type SubmitCredentialsResponse = {
+    /**
+     * Whether the credentials were submitted successfully
+     */
+    success: boolean;
 };
 
-export type TgAuthCredentialsWritable = {
+export type TgAuthCredentialsResponse = {
     otp?: string | null;
     password?: string | null;
 };
@@ -498,7 +529,7 @@ export type CredentialsAuthCredentialsGetResponses = {
     /**
      * Successful Response
      */
-    200: TgAuthCredentialsReadable;
+    200: TgAuthCredentialsResponse;
 };
 
 export type CredentialsAuthCredentialsGetResponse = CredentialsAuthCredentialsGetResponses[keyof CredentialsAuthCredentialsGetResponses];
@@ -526,8 +557,10 @@ export type SubmitCredentialsAuthPostResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: SubmitCredentialsResponse;
 };
+
+export type SubmitCredentialsAuthPostResponse = SubmitCredentialsAuthPostResponses[keyof SubmitCredentialsAuthPostResponses];
 
 export type ActivateActivationActivatePostData = {
     body: ActivationRequest;
@@ -554,6 +587,36 @@ export type ActivateActivationActivatePostResponses = {
 
 export type ActivateActivationActivatePostResponse = ActivateActivationActivatePostResponses[keyof ActivateActivationActivatePostResponses];
 
+export type GetStatusActivationStatusGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The ID (GUID) of the profile to get the status of
+         */
+        profile_id: string;
+    };
+    url: '/activation/status';
+};
+
+export type GetStatusActivationStatusGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetStatusActivationStatusGetError = GetStatusActivationStatusGetErrors[keyof GetStatusActivationStatusGetErrors];
+
+export type GetStatusActivationStatusGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ActivationResponse;
+};
+
+export type GetStatusActivationStatusGetResponse = GetStatusActivationStatusGetResponses[keyof GetStatusActivationStatusGetResponses];
+
 export type ClientOptions = {
-    baseUrl: 'https://operator.queenb.cloud' | (string & {});
+    baseUrl: (string & {});
 };

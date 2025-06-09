@@ -135,7 +135,7 @@ export const zForwardMessageResponseContent = z.object({
 });
 
 export const zDialogValue = z.object({
-    peerId: z.number().int(),
+    peer_id: z.number().int(),
     read_inbox_max_id: z.number().int(),
     read_outbox_max_id: z.number().int(),
     top_message: z.number().int(),
@@ -155,11 +155,16 @@ export const zBehaviouralResponseContent = z.object({
     ]).optional()
 });
 
+export const zSendBulkMessagesResponseContent = z.object({
+    message_infos: z.array(zMessageInfo)
+});
+
 export const zActionResponse = z.object({
     id: z.string().optional(),
     status: zActionStatus,
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -173,6 +178,7 @@ export const zActionResponse = z.object({
         zJoinGroupResponseContent,
         zForwardMessageResponseContent,
         zBehaviouralResponseContent,
+        zSendBulkMessagesResponseContent,
         z.null()
     ]),
     start_time: z.string().datetime()
@@ -185,7 +191,18 @@ export const zActivationRequest = z.object({
 });
 
 export const zActivationStatus = z.enum([
-    'ACTIVATION_STARTED'
+    'CHECKING_PROFILE',
+    'STARTED',
+    'ALREADY_LOGGED_IN',
+    'WAITING_FOR_OTP',
+    'ENTERING_OTP',
+    'WAITING_FOR_PASSWORD',
+    'ENTERING_PASSWORD',
+    'VERIFYING_LOGIN',
+    'LOGIN_VERIFICATION_FAILED',
+    'SKIPPED',
+    'FAILED',
+    'SUCCESS'
 ]);
 
 export const zActivationResponse = z.object({
@@ -202,10 +219,22 @@ export const zAsyncWorkerState = z.enum([
     'paused'
 ]);
 
+export const zAttachment = z.object({
+    url: z.string(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    mime_type: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
 export const zAuthRequest = z.object({
     profile_id: z.string(),
     otp: z.union([
-        z.number().int(),
+        z.string(),
         z.null()
     ]).optional(),
     password: z.union([
@@ -224,6 +253,7 @@ export const zBehaviouralAction = z.object({
     id: z.string().optional(),
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -261,12 +291,20 @@ export const zChatInfo = z.object({
     ]).optional()
 });
 
+export const zInputMessage = z.object({
+    text: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    attachments: z.array(zAttachment).optional().default([])
+});
+
 export const zForwardMessageArgs = z.object({
     from_chat: zChatInfo,
     message_info: zMessageInfo,
     target_chat: zChatInfo,
     message: z.union([
-        z.string(),
+        zInputMessage,
         z.null()
     ]).optional()
 });
@@ -275,6 +313,7 @@ export const zForwardMessageAction = z.object({
     id: z.string().optional(),
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -296,14 +335,22 @@ export const zHttpValidationError = z.object({
 });
 
 export const zJoinGroupArgs = z.object({
-    chat: zChatInfo,
-    join_discussion_group_if_availble: z.boolean().optional().default(false)
+    chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    join_discussion_group_if_availble: z.boolean().optional().default(false),
+    invite_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 export const zJoinGroupAction = z.object({
     id: z.string().optional(),
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -322,6 +369,7 @@ export const zLeaveGroupAction = z.object({
     id: z.string().optional(),
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -362,13 +410,14 @@ export const zPrefrences = z.object({
 export const zReplyToMessageArgs = z.object({
     chat: zChatInfo,
     message_info: zMessageInfo,
-    input_message_content: z.string()
+    input_message_content: zInputMessage
 });
 
 export const zReplyToMessageAction = z.object({
     id: z.string().optional(),
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -381,13 +430,14 @@ export const zReplyToMessageAction = z.object({
 
 export const zSendMessageArgs = z.object({
     chat: zChatInfo,
-    input_message_content: z.string()
+    input_message_content: zInputMessage
 });
 
 export const zSendMessageAction = z.object({
     id: z.string().optional(),
     type: z.enum([
         'send_message',
+        'send_bulk_messages',
         'join_group',
         'leave_group',
         'reply_to_message',
@@ -396,6 +446,27 @@ export const zSendMessageAction = z.object({
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
+});
+
+export const zSendBulkMessagesArgs = z.object({
+    chat: zChatInfo,
+    messages: z.array(z.string()),
+    interval: z.number().optional().default(1)
+});
+
+export const zSendBulkMessagesAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zSendBulkMessagesArgs
 });
 
 export const zScenario = z.object({
@@ -457,7 +528,11 @@ export const zScenarioWithResult = z.object({
     ]).optional()
 });
 
-export const zTgAuthCredentials = z.object({
+export const zSubmitCredentialsResponse = z.object({
+    success: z.boolean()
+});
+
+export const zTgAuthCredentialsResponse = z.object({
     otp: z.union([
         z.string(),
         z.null()
@@ -481,6 +556,10 @@ export const zGetScenarioByIdScenarioScenarioScenarioIdGetResponse = z.union([
 
 export const zGetAllCharactersCharactersGetResponse = z.array(zProfileWorkerView);
 
-export const zCredentialsAuthCredentialsGetResponse = zTgAuthCredentials;
+export const zCredentialsAuthCredentialsGetResponse = zTgAuthCredentialsResponse;
+
+export const zSubmitCredentialsAuthPostResponse = zSubmitCredentialsResponse;
 
 export const zActivateActivationActivatePostResponse = zActivationResponse;
+
+export const zGetStatusActivationStatusGetResponse = zActivationResponse;

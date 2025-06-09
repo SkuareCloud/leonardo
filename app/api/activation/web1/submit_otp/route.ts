@@ -1,9 +1,10 @@
+import { logger } from "@lib/logger"
 import { read_server_env } from "@lib/server-env"
 
 export async function POST(request: Request) {
     const env = read_server_env()
     const { profileId, otp } = await request.json()
-    console.log(`Submitting OTP for profile ${profileId}...`)
+    logger.info(`Submitting OTP for profile ${profileId}...`)
     const endpoint = env.operatorApiEndpoint
     const resp = await fetch(`${endpoint}/activation/submit-otp`, {
         method: "POST",
@@ -14,6 +15,6 @@ export async function POST(request: Request) {
         body: JSON.stringify({ profile_id: profileId, otp }),
     })
     const json = await resp.json()
-    console.log(`Successfully submitted OTP for profile ${profileId}.`)
+    logger.info(`Successfully submitted OTP for profile ${profileId}.`)
     return json
 }

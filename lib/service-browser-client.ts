@@ -1,7 +1,7 @@
 import { CombinedAvatar } from "./api/models";
 import { ClientEnv, read_client_env } from "./client-env";
 import { Web1Account } from "./web1/web1-models";
-
+import { logger } from "./logger";
 /**
  * Client for usage from the frontend.
  */
@@ -14,7 +14,7 @@ export class ServiceBrowserClient {
 
   async listProfiles() {
     const resp = await fetch(`/api/avatars`);
-    const json = await resp.json() as CombinedAvatar[];
+    const json = (await resp.json()) as CombinedAvatar[];
     return json;
   }
 
@@ -23,7 +23,7 @@ export class ServiceBrowserClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ profile_id: profileId }),
     });
@@ -32,12 +32,12 @@ export class ServiceBrowserClient {
   }
 
   async assignWeb1Account(profileId: string): Promise<Web1Account> {
-    console.log(`Assigning WEB1 account for profile ${profileId}.`);
+    logger.info(`Assigning WEB1 account for profile ${profileId}.`);
     const resp = await fetch("/api/activation/web1/assign", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ profileId }),
     });
@@ -50,7 +50,7 @@ export class ServiceBrowserClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ profile_id: profileId, otp: otp }),
     });
@@ -63,7 +63,7 @@ export class ServiceBrowserClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ profile_id: profileId, password }),
     });

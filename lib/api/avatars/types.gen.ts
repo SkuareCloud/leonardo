@@ -92,7 +92,7 @@ export type Address = {
     city: string;
 };
 
-export type TelegramApi = {
+export type Api = {
     api_id: number;
     api_hash: string;
 };
@@ -100,8 +100,8 @@ export type TelegramApi = {
 export type Telegram = {
     activation_source?: string | null;
     active?: boolean | null;
-    activity_rate: number;
-    api?: TelegramApi | null;
+    activity_rate?: number | null;
+    api?: Api | null;
 };
 
 export type SocialNetworkAccounts = {
@@ -821,5 +821,5 @@ export type DeleteApiKeyKeysUserNameDeleteResponses = {
 export type DeleteApiKeyKeysUserNameDeleteResponse = DeleteApiKeyKeysUserNameDeleteResponses[keyof DeleteApiKeyKeysUserNameDeleteResponses];
 
 export type ClientOptions = {
-    baseUrl: 'https://avatars.queenb.cloud' | (string & {});
+    baseUrl: (string & {});
 };

@@ -1,15 +1,22 @@
 import { client as operatorClient } from "@lib/api/operator/client.gen";
 import { client as avatarsClient } from "@lib/api/avatars/client.gen";
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen";
+import { getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator } from "@lib/api/orchestrator/sdk.gen";
 import {
   stopProfileCharactersCharacterIdStopPost,
   submitScenarioAsyncScenarioPost,
   Scenario,
+  getAllCharactersCharactersGet,
+  getScenariosScenarioScenarioGet,
+  ScenarioWithResult,
+  getScenarioByIdScenarioScenarioScenarioIdGet,
 } from "@lib/api/operator";
-import { getAllCharactersCharactersGet } from "@lib/api/orchestrator/sdk.gen";
 import {
   avatarsAvatarsGet,
+  getProxiesProxiesGet,
+  getProxyProxiesProxyIdGet,
   patchAvatarAvatarsAvatarIdPatch,
+  pingProxyProxiesProxyIdPingPut,
 } from "@lib/api/avatars/sdk.gen";
 import { read_server_env } from "../../../lib/server-env";
 import { CombinedAvatar } from "@lib/api/models";
@@ -20,6 +27,7 @@ import {
   getAllChatsChatsGet,
   getMissionsMissionsGet,
 } from "@lib/api/orchestrator/sdk.gen";
+import { logger } from "@lib/logger";
 
 export class ApiService {
   constructor(
@@ -74,7 +82,7 @@ export class ApiService {
   }
 
   async listProfiles(): Promise<CombinedAvatar[]> {
-    console.log("Listing all avatars...");
+    logger.info("Listing all avatars...");
     const [allAvatarsResponse, runningAvatarsResponse] = await Promise.all([
       avatarsAvatarsGet(),
       getAllCharactersCharactersGet(),
@@ -93,7 +101,7 @@ export class ApiService {
         )}`
       );
     }
-    console.log("Successfully fetched all avatars.");
+    logger.info("Successfully fetched all avatars.");
 
     return allAvatarsResponse.data.map((avatar) => {
       const character = runningAvatarsResponse.data.find(
@@ -104,10 +112,10 @@ export class ApiService {
       const profile_worker_view = character
         ? {
             id: character.id,
-            state: "idle" as const, // Default state since CharacterRead doesn't have state
-            current_scenario: null,
-            current_scenario_result: null,
-            pending_actions: 0,
+            state: character.state, // Default state since CharacterRead doesn't have state
+            current_scenario: character.current_scenario,
+            current_scenario_result: character.current_scenario_result,
+            pending_actions: character.pending_actions,
           }
         : undefined;
 
@@ -142,7 +150,7 @@ export class ApiService {
   }
 
   async updateProfilePhone(profileId: string, phoneNumber: string) {
-    console.log(`Updating profile phone for ${profileId}...`);
+    logger.info(`Updating profile phone for ${profileId}...`);
     const response = await patchAvatarAvatarsAvatarIdPatch({
       path: {
         avatar_id: profileId,
@@ -157,10 +165,11 @@ export class ApiService {
         `Failed to update profile phone: ${JSON.stringify(response.error)}`
       );
     }
-    console.log(`Successfully updated profile phone for ${profileId}.`);
+    logger.info(`Successfully updated profile phone for ${profileId}.`);
   }
 
   async stop(avatarId: string) {
+    logger.info(`Stopping avatar: ${avatarId}`);
     const response = await stopProfileCharactersCharacterIdStopPost({
       client: operatorClient,
       path: {
@@ -172,10 +181,11 @@ export class ApiService {
         `Failed to stop avatar: ${JSON.stringify(response.error)}`
       );
     }
-    console.log("Successfully stopped avatar.");
+    logger.info(`Successfully stopped avatar: ${avatarId}`);
   }
 
   async submitScenario(scenario: Scenario) {
+    logger.info(`Submitting scenario: ${scenario.id}`);
     const response = await submitScenarioAsyncScenarioPost({
       client: operatorClient,
       body: scenario,
@@ -185,11 +195,12 @@ export class ApiService {
         `Failed to stop avatar: ${JSON.stringify(response.error)}`
       );
     }
-    console.log("Successfully submitted scenario.");
+    logger.info(`Successfully submitted scenario: ${scenario.id}`);
   }
 
   async getOrchestratorCharacters(): Promise<CharacterRead[]> {
-    const response = await getAllCharactersCharactersGet({
+    logger.info("Getting orchestrator characters");
+    const response = await getAllCharactersCharactersGetOrchestrator({
       client: orchestratorClient,
     });
     if (response.error) {
@@ -199,10 +210,12 @@ export class ApiService {
         )}`
       );
     }
+    logger.info("Successfully got orchestrator characters");
     return response.data ?? [];
   }
 
   async getOrchestratorChats(): Promise<ChatRead[]> {
+    logger.info("Getting orchestrator chats");
     const response = await getAllChatsChatsGet({
       client: orchestratorClient,
     });
@@ -211,10 +224,12 @@ export class ApiService {
         `Failed to get orchestrator chats: ${JSON.stringify(response.error)}`
       );
     }
+    logger.info("Successfully got orchestrator chats");
     return response.data ?? [];
   }
 
   async getOrchestratorMissions(): Promise<MissionRead[]> {
+    logger.info("Getting orchestrator missions");
     const response = await getMissionsMissionsGet({
       client: orchestratorClient,
     });
@@ -223,6 +238,125 @@ export class ApiService {
         `Failed to get orchestrator missions: ${JSON.stringify(response.error)}`
       );
     }
+    logger.info("Successfully got orchestrator missions");
+    return response.data ?? [];
+  }
+
+  async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
+    logger.info("Getting operator scenarios");
+    const response = await getScenariosScenarioScenarioGet({
+      client: operatorClient,
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to get operator scenarios: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info("Successfully got operator scenarios");
+    return response.data ?? {};
+  }
+
+  async submitOperatorScenario(scenario: Scenario) {
+    logger.info(`Submitting operator scenario: ${scenario.id}`);
+    const response = await submitScenarioAsyncScenarioPost({
+      client: operatorClient,
+      body: scenario,
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to submit operator scenario: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info(`Successfully submitted operator scenario: ${scenario.id}`);
+    return response.data ?? null;
+  }
+
+  async getOperatorScenarioById(
+    scenarioId: string
+  ): Promise<ScenarioWithResult | null> {
+    logger.info(`Getting operator scenario by id: ${scenarioId}`);
+    const response = await getScenarioByIdScenarioScenarioScenarioIdGet({
+      client: operatorClient,
+      path: { scenario_id: scenarioId },
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to get operator scenario: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info(`Successfully got operator scenario by id: ${scenarioId}`);
+    return response.data ?? null;
+  }
+
+  async getOperatorCharacters() {
+    logger.info("Getting operator characters");
+    const response = await getAllCharactersCharactersGet({
+      client: operatorClient,
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to get operator characters: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info("Successfully got operator characters");
+    return response.data ?? [];
+  }
+
+  async getProxies() {
+    logger.info("Getting proxies");
+    const response = await getProxiesProxiesGet({
+      client: avatarsClient,
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to get proxies: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info("Successfully got proxies");
+    return response.data ?? [];
+  }
+
+  async getProxyById(proxyId: string) {
+    logger.info("Getting proxy by id");
+    const response = await getProxyProxiesProxyIdGet({
+      client: avatarsClient,
+      path: { proxy_id: proxyId },
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to get proxy by id: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info("Successfully got proxy by id");
+    return response.data ?? null;
+  }
+
+  async pingProxy(proxyId: string) {
+    logger.info("Pinging proxy");
+    const response = await pingProxyProxiesProxyIdPingPut({
+      client: avatarsClient,
+      path: { proxy_id: proxyId },
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to ping proxy: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info("Successfully pinged proxy");
+    return response.data ?? null;
+  }
+
+  async getAvatars() {
+    logger.info("Getting avatars");
+    const response = await avatarsAvatarsGet({
+      client: avatarsClient,
+    });
+    if (response.error) {
+      throw new Error(
+        `Failed to get avatars: ${JSON.stringify(response.error)}`
+      );
+    }
+    logger.info("Successfully got avatars");
     return response.data ?? [];
   }
 }

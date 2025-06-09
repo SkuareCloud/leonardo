@@ -36,7 +36,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "scripts/removeBaseUrl.js"  ],
   "exclude": [
     "node_modules"
   ]

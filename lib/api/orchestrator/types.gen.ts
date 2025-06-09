@@ -30,17 +30,22 @@ export type ActionRead = {
 export type ActionResponseInput = {
     id?: string;
     status: AppModelsOperatorActivityActionsActionStatusActionStatus;
-    type: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContent | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContent | SendBulkMessagesResponseContentInput | null;
     start_time: string;
 };
 
 export type ActionResponseOutput = {
     id?: string;
-    status: AppModelsOperatorActivityActionsActionStatusActionStatus;
-    type: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContent | null;
+    status: ActionStatusOutput;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContent | SendBulkMessagesResponseContentOutput | null;
     start_time: string;
+};
+
+export type ActionStatusOutput = {
+    status_code: ActionStatusCode;
+    error?: string | null;
 };
 
 export type ActionStatusCode = 'success' | 'failed' | 'cancelled';
@@ -64,15 +69,21 @@ export type AllocateProfilesGroupsMissionInput = {
     planning_timeout?: number | null;
 };
 
+export type Attachment = {
+    url: string;
+    name?: string | null;
+    mime_type?: string | null;
+};
+
 export type BehaviouralAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: BehaviouralArgs;
 };
 
 export type BehaviouralArgs = {
-    wait_time?: number;
+    wait_time?: number | null;
     sync_context?: boolean;
     get_chats?: boolean;
 };
@@ -80,6 +91,30 @@ export type BehaviouralArgs = {
 export type BehaviouralResponseContent = {
     current_context?: unknown | null;
     chats?: Array<DialogValue> | null;
+};
+
+export type CategoryCreate = {
+    name?: string;
+    description?: string;
+    parent_id?: string | null;
+};
+
+export type CategoryRead = {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    name?: string;
+    description?: string;
+    parent_id?: string | null;
+};
+
+export type ChannelInfo = {
+    id?: number | null;
+    name?: string | null;
+    title?: string | null;
+    type?: ChatType;
+    description?: string | null;
+    subscribers?: number | null;
 };
 
 export type Character = {
@@ -99,6 +134,9 @@ export type CharacterCreate = {
 };
 
 export type CharacterRead = {
+    id: string;
+    created_at: string;
+    updated_at: string;
     name: string;
     is_bot?: boolean;
     origin?: string;
@@ -107,24 +145,6 @@ export type CharacterRead = {
     timezone?: string;
     activity_type?: number;
     telegram_id?: string;
-    id: string;
-    created_at: string;
-    updated_at: string;
-};
-
-export type ChatCategoryCreate = {
-    name?: string;
-    description?: string;
-    parent_id?: string | null;
-};
-
-export type ChatCategoryRead = {
-    name?: string;
-    description?: string;
-    parent_id?: string | null;
-    id: string;
-    created_at: string;
-    updated_at: string;
 };
 
 export type ChatCreate = {
@@ -144,6 +164,10 @@ export type ChatCreate = {
      * Name of the chat or channel
      */
     username?: string | null;
+    /**
+     * Invite link for the chat
+     */
+    invite_link?: string | null;
     /**
      * Title of the chat
      */
@@ -204,6 +228,9 @@ export type ChatInfo = {
 };
 
 export type ChatRead = {
+    id: string;
+    created_at: string;
+    updated_at: string;
     /**
      * Platform where the chat exists
      */
@@ -220,6 +247,10 @@ export type ChatRead = {
      * Name of the chat or channel
      */
     username?: string | null;
+    /**
+     * Invite link for the chat
+     */
+    invite_link?: string | null;
     /**
      * Title of the chat
      */
@@ -269,9 +300,6 @@ export type ChatRead = {
      * Category of the chat
      */
     category_id?: string | null;
-    id: string;
-    created_at: string;
-    updated_at: string;
 };
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
@@ -281,7 +309,7 @@ export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
  * TODO: Should not be in common, needs to be translated to a contact_info...
  */
 export type DialogValue = {
-    peerId: number;
+    peer_id: number;
     read_inbox_max_id: number;
     read_outbox_max_id: number;
     top_message: number;
@@ -321,7 +349,7 @@ export type FluffMissionInput = {
 
 export type ForwardMessageAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: ForwardMessageArgs;
 };
@@ -330,7 +358,7 @@ export type ForwardMessageArgs = {
     from_chat: ChatInfo;
     message_info: AppModelsOperatorCommonMessageInfoMessageInfo | string;
     target_chat: ChatInfo;
-    message?: string | null;
+    message?: InputMessage | null;
 };
 
 export type ForwardMessageResponseContentInput = {
@@ -341,6 +369,16 @@ export type ForwardMessageResponseContentOutput = {
     message_info: MessageInfoOutput;
 };
 
+export type GroupInfo = {
+    id?: number | null;
+    name?: string | null;
+    title?: string | null;
+    type?: ChatType;
+    description?: string | null;
+    members?: number | null;
+    online?: number | null;
+};
+
 export type HttpOperatorValidationError = {
     detail?: Array<OperatorValidationError> | null;
 };
@@ -349,31 +387,37 @@ export type HttpValidationError = {
     detail?: Array<ValidationError>;
 };
 
+export type InputMessage = {
+    text?: string | null;
+    attachments?: Array<Attachment>;
+};
+
 export type JoinGroupAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: JoinGroupArgs;
 };
 
 export type JoinGroupArgs = {
-    chat: ChatInfo;
+    chat?: ChatInfo | null;
     join_discussion_group_if_availble?: boolean;
+    invite_link?: string | null;
 };
 
 export type JoinGroupResponseContentInput = {
-    chat_info: ChatInfo | null;
-    discussion_group_chat_info: ChatInfo | null;
+    chat_info: ChannelInfo | GroupInfo | null;
+    discussion_group_chat_info: ChannelInfo | GroupInfo | null;
 };
 
 export type JoinGroupResponseContentOutput = {
-    chat_info: ChatInfo | null;
-    discussion_group_chat_info: ChatInfo | null;
+    chat_info: ChannelInfo | GroupInfo | null;
+    discussion_group_chat_info: ChannelInfo | GroupInfo | null;
 };
 
 export type LeaveGroupAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: LeaveGroupArgs;
 };
@@ -387,19 +431,13 @@ export type LeaveGroupResponseContent = {
 };
 
 export type Message = {
-    data: MessageData;
+    message_content: InputMessage;
     metadata: MessageMetadata;
     replies?: Array<Message>;
 };
 
-export type MessageData = {
-    text?: string | null;
-    link?: string | null;
-    attachment_url?: string | null;
-};
-
 export type MessageForwardRequest = {
-    message_text?: string | null;
+    message_content?: InputMessage | null;
     message_info?: AppModelsPlannerMessageInfo | string | null;
 };
 
@@ -428,15 +466,15 @@ export type MissionCreate = {
 };
 
 export type MissionRead = {
+    id: string;
+    created_at: string;
+    updated_at: string;
     description?: string | null;
     payload: {
         [key: string]: unknown;
     };
     mission_type: string;
     status_code?: MissionStatus | null;
-    id: string;
-    created_at: string;
-    updated_at: string;
     scenarios?: Array<ScenarioRead>;
 };
 
@@ -468,7 +506,7 @@ export type PuppetShowInput = {
 
 export type ReplyToMessageAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: ReplyToMessageArgs;
 };
@@ -476,7 +514,7 @@ export type ReplyToMessageAction = {
 export type ReplyToMessageArgs = {
     chat: ChatInfo;
     message_info: AppModelsOperatorCommonMessageInfoMessageInfo | string;
-    input_message_content: string;
+    input_message_content: InputMessage;
 };
 
 export type ReplyToMessageResponseContentInput = {
@@ -491,22 +529,10 @@ export type Scenario = {
     id?: string;
     profile: Character;
     prefrences: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
 };
 
-export type ScenarioCreateInput = {
-    description: string;
-    trigger_time: string;
-    actions?: Array<ActionCreate>;
-    external_id?: string | null;
-    scenario_parent_id?: string | null;
-    character_id: string;
-    mission_id: string | null;
-    expiration_time?: string | null;
-    max_retries?: number;
-};
-
-export type ScenarioCreateOutput = {
+export type ScenarioCreate = {
     description: string;
     trigger_time: string;
     actions?: Array<ActionCreate>;
@@ -524,6 +550,9 @@ export type ScenarioInfo = {
 };
 
 export type ScenarioRead = {
+    id: string;
+    created_at: string;
+    updated_at: string;
     description: string;
     trigger_time: string;
     status_code?: AppModelsScenariosScenarioStatus;
@@ -536,9 +565,6 @@ export type ScenarioRead = {
     expiration_time?: string | null;
     retries?: number;
     max_retries?: number;
-    id: string;
-    created_at: string;
-    updated_at: string;
     actions?: Array<ActionRead>;
     mission_id: string;
 };
@@ -573,24 +599,45 @@ export type ScheduledEventCreate = {
 };
 
 export type ScheduledEventRead = {
-    trigger_time?: string;
-    status_code?: EventStatus;
     id: string;
     created_at: string;
     updated_at: string;
+    trigger_time?: string;
+    status_code?: EventStatus;
     character_id: string;
+};
+
+export type SendBulkMessagesAction = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    prefrences?: ActionPrefrences;
+    args: SendBulkMessagesArgs;
+};
+
+export type SendBulkMessagesArgs = {
+    chat: ChatInfo;
+    messages: Array<string>;
+    interval?: number;
+};
+
+export type SendBulkMessagesResponseContentInput = {
+    message_infos: Array<AppModelsOperatorCommonMessageInfoMessageInfo>;
+};
+
+export type SendBulkMessagesResponseContentOutput = {
+    message_infos: Array<MessageInfoOutput>;
 };
 
 export type SendMessageAction = {
     id?: string;
-    type?: 'send_message' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     prefrences?: ActionPrefrences;
     args: SendMessageArgs;
 };
 
 export type SendMessageArgs = {
     chat: ChatInfo;
-    input_message_content: string;
+    input_message_content: InputMessage;
 };
 
 export type SendMessageResponseContentInput = {
@@ -674,7 +721,7 @@ export type GetScenariosScenariosGetResponses = {
 export type GetScenariosScenariosGetResponse = GetScenariosScenariosGetResponses[keyof GetScenariosScenariosGetResponses];
 
 export type CreateScenarioScenariosPostData = {
-    body: ScenarioCreateInput;
+    body: ScenarioCreate;
     path?: never;
     query?: never;
     url: '/scenarios/';
@@ -886,6 +933,37 @@ export type RerunScenarioScenariosScenarioIdRerunGetResponses = {
 
 export type RerunScenarioScenariosScenarioIdRerunGetResponse = RerunScenarioScenariosScenarioIdRerunGetResponses[keyof RerunScenarioScenariosScenarioIdRerunGetResponses];
 
+export type RescheduledScenariosScenariosRescheduledScenariosPostData = {
+    body?: never;
+    path?: never;
+    query?: {
+        delay_minutes?: number;
+    };
+    url: '/scenarios/rescheduled_scenarios/';
+};
+
+export type RescheduledScenariosScenariosRescheduledScenariosPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RescheduledScenariosScenariosRescheduledScenariosPostError = RescheduledScenariosScenariosRescheduledScenariosPostErrors[keyof RescheduledScenariosScenariosRescheduledScenariosPostErrors];
+
+export type RescheduledScenariosScenariosRescheduledScenariosPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ScenarioRead>;
+};
+
+export type RescheduledScenariosScenariosRescheduledScenariosPostResponse = RescheduledScenariosScenariosRescheduledScenariosPostResponses[keyof RescheduledScenariosScenariosRescheduledScenariosPostResponses];
+
 export type GetActionActionsActionIdGetData = {
     body?: never;
     path: {
@@ -1030,6 +1108,27 @@ export type GetScheduledEventScheduledEventsEventIdGetResponses = {
 };
 
 export type GetScheduledEventScheduledEventsEventIdGetResponse = GetScheduledEventScheduledEventsEventIdGetResponses[keyof GetScheduledEventScheduledEventsEventIdGetResponses];
+
+export type RescheduledEventsScheduledEventsRescheduledEventsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/scheduled-events/rescheduled_events/';
+};
+
+export type RescheduledEventsScheduledEventsRescheduledEventsGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+};
+
+export type RescheduledEventsScheduledEventsRescheduledEventsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type GetAllCharactersCharactersGetData = {
     body?: never;
@@ -1401,6 +1500,97 @@ export type GetOriginsCharactersOriginsOriginCharactersGetResponses = {
 
 export type GetOriginsCharactersOriginsOriginCharactersGetResponse = GetOriginsCharactersOriginsOriginCharactersGetResponses[keyof GetOriginsCharactersOriginsOriginCharactersGetResponses];
 
+export type GetCharacterCategoriesCharactersCharacterIdCategoriesGetData = {
+    body?: never;
+    path: {
+        character_id: string;
+    };
+    query?: never;
+    url: '/characters/{character_id}/categories/';
+};
+
+export type GetCharacterCategoriesCharactersCharacterIdCategoriesGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCharacterCategoriesCharactersCharacterIdCategoriesGetError = GetCharacterCategoriesCharactersCharacterIdCategoriesGetErrors[keyof GetCharacterCategoriesCharactersCharacterIdCategoriesGetErrors];
+
+export type GetCharacterCategoriesCharactersCharacterIdCategoriesGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<CategoryRead>;
+};
+
+export type GetCharacterCategoriesCharactersCharacterIdCategoriesGetResponse = GetCharacterCategoriesCharactersCharacterIdCategoriesGetResponses[keyof GetCharacterCategoriesCharactersCharacterIdCategoriesGetResponses];
+
+export type RemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteData = {
+    body?: never;
+    path: {
+        character_id: string;
+        category_id: string;
+    };
+    query?: never;
+    url: '/characters/{character_id}/categories/{category_id}';
+};
+
+export type RemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteError = RemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteErrors[keyof RemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteErrors];
+
+export type RemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostData = {
+    body?: never;
+    path: {
+        character_id: string;
+        category_id: string;
+    };
+    query?: never;
+    url: '/characters/{character_id}/categories/{category_id}';
+};
+
+export type AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostError = AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostErrors[keyof AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostErrors];
+
+export type AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type GetAllChatsChatsGetData = {
     body?: never;
     path?: never;
@@ -1433,14 +1623,16 @@ export type GetAllChatsChatsGetResponses = {
 
 export type GetAllChatsChatsGetResponse = GetAllChatsChatsGetResponses[keyof GetAllChatsChatsGetResponses];
 
-export type CreateChatChatsPostData = {
-    body: ChatCreate;
+export type CreateChatsFromCsvChatsPostData = {
+    body?: never;
     path?: never;
-    query?: never;
+    query: {
+        csv_path: string;
+    };
     url: '/chats/';
 };
 
-export type CreateChatChatsPostErrors = {
+export type CreateChatsFromCsvChatsPostErrors = {
     /**
      * Not found
      */
@@ -1451,16 +1643,16 @@ export type CreateChatChatsPostErrors = {
     422: HttpValidationError;
 };
 
-export type CreateChatChatsPostError = CreateChatChatsPostErrors[keyof CreateChatChatsPostErrors];
+export type CreateChatsFromCsvChatsPostError = CreateChatsFromCsvChatsPostErrors[keyof CreateChatsFromCsvChatsPostErrors];
 
-export type CreateChatChatsPostResponses = {
+export type CreateChatsFromCsvChatsPostResponses = {
     /**
      * Successful Response
      */
     200: ChatRead;
 };
 
-export type CreateChatChatsPostResponse = CreateChatChatsPostResponses[keyof CreateChatChatsPostResponses];
+export type CreateChatsFromCsvChatsPostResponse = CreateChatsFromCsvChatsPostResponses[keyof CreateChatsFromCsvChatsPostResponses];
 
 export type DeleteChatChatsChatIdDeleteData = {
     body?: never;
@@ -1675,42 +1867,6 @@ export type AddCharacterToChatChatsChatIdCharactersCharacterIdPostResponses = {
     200: unknown;
 };
 
-export type GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetData = {
-    body?: never;
-    path: {
-        chat_category_id: string;
-    };
-    query?: {
-        /**
-         * Include chats from descendant categories
-         */
-        include_descendants?: boolean;
-    };
-    url: '/chats/chat_categories/{chat_category_id}';
-};
-
-export type GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetError = GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetErrors[keyof GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetErrors];
-
-export type GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: Array<ChatRead>;
-};
-
-export type GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetResponse = GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetResponses[keyof GetChatsByCategoryIdChatsChatCategoriesChatCategoryIdGetResponses];
-
 export type GetCategoriesChatsCategoriesGetData = {
     body?: never;
     path?: never;
@@ -1764,6 +1920,97 @@ export type GetChatsByCategoryChatsCategoriesCategoryChatsGetResponses = {
 };
 
 export type GetChatsByCategoryChatsCategoriesCategoryChatsGetResponse = GetChatsByCategoryChatsCategoriesCategoryChatsGetResponses[keyof GetChatsByCategoryChatsCategoriesCategoryChatsGetResponses];
+
+export type GetChatCategoriesChatsChatIdCategoriesGetData = {
+    body?: never;
+    path: {
+        chat_id: string;
+    };
+    query?: never;
+    url: '/chats/{chat_id}/categories/';
+};
+
+export type GetChatCategoriesChatsChatIdCategoriesGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetChatCategoriesChatsChatIdCategoriesGetError = GetChatCategoriesChatsChatIdCategoriesGetErrors[keyof GetChatCategoriesChatsChatIdCategoriesGetErrors];
+
+export type GetChatCategoriesChatsChatIdCategoriesGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<CategoryRead>;
+};
+
+export type GetChatCategoriesChatsChatIdCategoriesGetResponse = GetChatCategoriesChatsChatIdCategoriesGetResponses[keyof GetChatCategoriesChatsChatIdCategoriesGetResponses];
+
+export type RemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteData = {
+    body?: never;
+    path: {
+        chat_id: string;
+        category_id: string;
+    };
+    query?: never;
+    url: '/chats/{chat_id}/categories/{category_id}';
+};
+
+export type RemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteError = RemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteErrors[keyof RemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteErrors];
+
+export type RemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostData = {
+    body?: never;
+    path: {
+        chat_id: string;
+        category_id: string;
+    };
+    query?: never;
+    url: '/chats/{chat_id}/categories/{category_id}';
+};
+
+export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostError = AddChatToCategoryChatsChatIdCategoriesCategoryIdPostErrors[keyof AddChatToCategoryChatsChatIdCategoriesCategoryIdPostErrors];
+
+export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type SubmitScenarioScenarioPostOperatorScenarioPostData = {
     body: ScenarioResultInput;
@@ -2074,37 +2321,6 @@ export type UpdateMissionMissionsMissionIdPutResponses = {
 
 export type UpdateMissionMissionsMissionIdPutResponse = UpdateMissionMissionsMissionIdPutResponses[keyof UpdateMissionMissionsMissionIdPutResponses];
 
-export type RunMissionMissionsRunMissionMissionIdPostData = {
-    body?: never;
-    path: {
-        mission_id: string;
-    };
-    query?: never;
-    url: '/missions/run_mission/{mission_id}';
-};
-
-export type RunMissionMissionsRunMissionMissionIdPostErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RunMissionMissionsRunMissionMissionIdPostError = RunMissionMissionsRunMissionMissionIdPostErrors[keyof RunMissionMissionsRunMissionMissionIdPostErrors];
-
-export type RunMissionMissionsRunMissionMissionIdPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: Array<ScenarioCreateOutput>;
-};
-
-export type RunMissionMissionsRunMissionMissionIdPostResponse = RunMissionMissionsRunMissionMissionIdPostResponses[keyof RunMissionMissionsRunMissionMissionIdPostResponses];
-
 export type PlanMissionMissionsPlanMissionMissionIdPostData = {
     body?: never;
     path: {
@@ -2131,10 +2347,70 @@ export type PlanMissionMissionsPlanMissionMissionIdPostResponses = {
     /**
      * Successful Response
      */
-    200: Array<ScenarioCreateOutput>;
+    200: Array<ScenarioRead>;
 };
 
 export type PlanMissionMissionsPlanMissionMissionIdPostResponse = PlanMissionMissionsPlanMissionMissionIdPostResponses[keyof PlanMissionMissionsPlanMissionMissionIdPostResponses];
+
+export type RunMissionMissionsRunMissionMissionIdPostData = {
+    body?: never;
+    path: {
+        mission_id: string;
+    };
+    query?: never;
+    url: '/missions/run_mission/{mission_id}';
+};
+
+export type RunMissionMissionsRunMissionMissionIdPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RunMissionMissionsRunMissionMissionIdPostError = RunMissionMissionsRunMissionMissionIdPostErrors[keyof RunMissionMissionsRunMissionMissionIdPostErrors];
+
+export type RunMissionMissionsRunMissionMissionIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ScenarioRead>;
+};
+
+export type RunMissionMissionsRunMissionMissionIdPostResponse = RunMissionMissionsRunMissionMissionIdPostResponses[keyof RunMissionMissionsRunMissionMissionIdPostResponses];
+
+export type RetryMissionMissionsRetryMissionMissionIdPostData = {
+    body?: never;
+    path: {
+        mission_id: string;
+    };
+    query?: never;
+    url: '/missions/retry_mission/{mission_id}';
+};
+
+export type RetryMissionMissionsRetryMissionMissionIdPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RetryMissionMissionsRetryMissionMissionIdPostError = RetryMissionMissionsRetryMissionMissionIdPostErrors[keyof RetryMissionMissionsRetryMissionMissionIdPostErrors];
+
+export type RetryMissionMissionsRetryMissionMissionIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type CancelMissionMissionsCancelMissionMissionIdPostData = {
     body?: never;
@@ -2236,37 +2512,37 @@ export type GetMissionsStatisticsMissionsStatisticsGetResponses = {
 
 export type GetMissionsStatisticsMissionsStatisticsGetResponse = GetMissionsStatisticsMissionsStatisticsGetResponses[keyof GetMissionsStatisticsMissionsStatisticsGetResponses];
 
-export type GetAllChatCategoriesChatsCategoriesGetData = {
+export type GetAllCategoriesCategoriesGetData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/chats_categories/';
+    url: '/categories/';
 };
 
-export type GetAllChatCategoriesChatsCategoriesGetErrors = {
+export type GetAllCategoriesCategoriesGetErrors = {
     /**
      * Not found
      */
     404: unknown;
 };
 
-export type GetAllChatCategoriesChatsCategoriesGetResponses = {
+export type GetAllCategoriesCategoriesGetResponses = {
     /**
      * Successful Response
      */
-    200: Array<ChatCategoryRead>;
+    200: Array<CategoryRead>;
 };
 
-export type GetAllChatCategoriesChatsCategoriesGetResponse = GetAllChatCategoriesChatsCategoriesGetResponses[keyof GetAllChatCategoriesChatsCategoriesGetResponses];
+export type GetAllCategoriesCategoriesGetResponse = GetAllCategoriesCategoriesGetResponses[keyof GetAllCategoriesCategoriesGetResponses];
 
-export type CreateChatCategoryChatsCategoriesPostData = {
-    body: ChatCategoryCreate;
+export type CreateCategoryCategoriesPostData = {
+    body: CategoryCreate;
     path?: never;
     query?: never;
-    url: '/chats_categories/';
+    url: '/categories/';
 };
 
-export type CreateChatCategoryChatsCategoriesPostErrors = {
+export type CreateCategoryCategoriesPostErrors = {
     /**
      * Not found
      */
@@ -2277,27 +2553,27 @@ export type CreateChatCategoryChatsCategoriesPostErrors = {
     422: HttpValidationError;
 };
 
-export type CreateChatCategoryChatsCategoriesPostError = CreateChatCategoryChatsCategoriesPostErrors[keyof CreateChatCategoryChatsCategoriesPostErrors];
+export type CreateCategoryCategoriesPostError = CreateCategoryCategoriesPostErrors[keyof CreateCategoryCategoriesPostErrors];
 
-export type CreateChatCategoryChatsCategoriesPostResponses = {
+export type CreateCategoryCategoriesPostResponses = {
     /**
      * Successful Response
      */
-    200: ChatCategoryRead;
+    200: CategoryRead;
 };
 
-export type CreateChatCategoryChatsCategoriesPostResponse = CreateChatCategoryChatsCategoriesPostResponses[keyof CreateChatCategoryChatsCategoriesPostResponses];
+export type CreateCategoryCategoriesPostResponse = CreateCategoryCategoriesPostResponses[keyof CreateCategoryCategoriesPostResponses];
 
-export type DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteData = {
+export type DeleteCategoryCategoriesCategoryIdDeleteData = {
     body?: never;
     path: {
-        chat_category_id: string;
+        category_id: string;
     };
     query?: never;
-    url: '/chats_categories/{chat_category_id}';
+    url: '/categories/{category_id}';
 };
 
-export type DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteErrors = {
+export type DeleteCategoryCategoriesCategoryIdDeleteErrors = {
     /**
      * Not found
      */
@@ -2308,25 +2584,25 @@ export type DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteErrors = {
     422: HttpValidationError;
 };
 
-export type DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteError = DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteErrors[keyof DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteErrors];
+export type DeleteCategoryCategoriesCategoryIdDeleteError = DeleteCategoryCategoriesCategoryIdDeleteErrors[keyof DeleteCategoryCategoriesCategoryIdDeleteErrors];
 
-export type DeleteChatCategoryChatsCategoriesChatCategoryIdDeleteResponses = {
+export type DeleteCategoryCategoriesCategoryIdDeleteResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type GetChatCategoryChatsCategoriesChatCategoryIdGetData = {
+export type GetCategoryCategoriesCategoryIdGetData = {
     body?: never;
     path: {
-        chat_category_id: string;
+        category_id: string;
     };
     query?: never;
-    url: '/chats_categories/{chat_category_id}';
+    url: '/categories/{category_id}';
 };
 
-export type GetChatCategoryChatsCategoriesChatCategoryIdGetErrors = {
+export type GetCategoryCategoriesCategoryIdGetErrors = {
     /**
      * Not found
      */
@@ -2337,27 +2613,27 @@ export type GetChatCategoryChatsCategoriesChatCategoryIdGetErrors = {
     422: HttpValidationError;
 };
 
-export type GetChatCategoryChatsCategoriesChatCategoryIdGetError = GetChatCategoryChatsCategoriesChatCategoryIdGetErrors[keyof GetChatCategoryChatsCategoriesChatCategoryIdGetErrors];
+export type GetCategoryCategoriesCategoryIdGetError = GetCategoryCategoriesCategoryIdGetErrors[keyof GetCategoryCategoriesCategoryIdGetErrors];
 
-export type GetChatCategoryChatsCategoriesChatCategoryIdGetResponses = {
+export type GetCategoryCategoriesCategoryIdGetResponses = {
     /**
      * Successful Response
      */
-    200: ChatCategoryRead;
+    200: CategoryRead;
 };
 
-export type GetChatCategoryChatsCategoriesChatCategoryIdGetResponse = GetChatCategoryChatsCategoriesChatCategoryIdGetResponses[keyof GetChatCategoryChatsCategoriesChatCategoryIdGetResponses];
+export type GetCategoryCategoriesCategoryIdGetResponse = GetCategoryCategoriesCategoryIdGetResponses[keyof GetCategoryCategoriesCategoryIdGetResponses];
 
-export type UpdateChatCategoryChatsCategoriesChatCategoryIdPutData = {
-    body: ChatCategoryCreate;
+export type UpdateCategoryCategoriesCategoryIdPutData = {
+    body: CategoryCreate;
     path: {
-        chat_category_id: string;
+        category_id: string;
     };
     query?: never;
-    url: '/chats_categories/{chat_category_id}';
+    url: '/categories/{category_id}';
 };
 
-export type UpdateChatCategoryChatsCategoriesChatCategoryIdPutErrors = {
+export type UpdateCategoryCategoriesCategoryIdPutErrors = {
     /**
      * Not found
      */
@@ -2368,50 +2644,50 @@ export type UpdateChatCategoryChatsCategoriesChatCategoryIdPutErrors = {
     422: HttpValidationError;
 };
 
-export type UpdateChatCategoryChatsCategoriesChatCategoryIdPutError = UpdateChatCategoryChatsCategoriesChatCategoryIdPutErrors[keyof UpdateChatCategoryChatsCategoriesChatCategoryIdPutErrors];
+export type UpdateCategoryCategoriesCategoryIdPutError = UpdateCategoryCategoriesCategoryIdPutErrors[keyof UpdateCategoryCategoriesCategoryIdPutErrors];
 
-export type UpdateChatCategoryChatsCategoriesChatCategoryIdPutResponses = {
+export type UpdateCategoryCategoriesCategoryIdPutResponses = {
     /**
      * Successful Response
      */
-    200: ChatCategoryRead;
+    200: CategoryRead;
 };
 
-export type UpdateChatCategoryChatsCategoriesChatCategoryIdPutResponse = UpdateChatCategoryChatsCategoriesChatCategoryIdPutResponses[keyof UpdateChatCategoryChatsCategoriesChatCategoryIdPutResponses];
+export type UpdateCategoryCategoriesCategoryIdPutResponse = UpdateCategoryCategoriesCategoryIdPutResponses[keyof UpdateCategoryCategoriesCategoryIdPutResponses];
 
-export type GetRootChatCategoryChatsCategoriesRootGetData = {
+export type GetRootCategoryCategoriesRootGetData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/chats_categories/root/';
+    url: '/categories/root/';
 };
 
-export type GetRootChatCategoryChatsCategoriesRootGetErrors = {
+export type GetRootCategoryCategoriesRootGetErrors = {
     /**
      * Not found
      */
     404: unknown;
 };
 
-export type GetRootChatCategoryChatsCategoriesRootGetResponses = {
+export type GetRootCategoryCategoriesRootGetResponses = {
     /**
      * Successful Response
      */
-    200: ChatCategoryRead;
+    200: CategoryRead;
 };
 
-export type GetRootChatCategoryChatsCategoriesRootGetResponse = GetRootChatCategoryChatsCategoriesRootGetResponses[keyof GetRootChatCategoryChatsCategoriesRootGetResponses];
+export type GetRootCategoryCategoriesRootGetResponse = GetRootCategoryCategoriesRootGetResponses[keyof GetRootCategoryCategoriesRootGetResponses];
 
-export type GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetData = {
+export type GetCategoryChildrensCategoriesCategoryIdChildrensGetData = {
     body?: never;
     path: {
-        chat_category_id: string;
+        category_id: string;
     };
     query?: never;
-    url: '/chats_categories/{chat_category_id}/childrens/';
+    url: '/categories/{category_id}/childrens/';
 };
 
-export type GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetErrors = {
+export type GetCategoryChildrensCategoriesCategoryIdChildrensGetErrors = {
     /**
      * Not found
      */
@@ -2422,27 +2698,27 @@ export type GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetErr
     422: HttpValidationError;
 };
 
-export type GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetError = GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetErrors[keyof GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetErrors];
+export type GetCategoryChildrensCategoriesCategoryIdChildrensGetError = GetCategoryChildrensCategoriesCategoryIdChildrensGetErrors[keyof GetCategoryChildrensCategoriesCategoryIdChildrensGetErrors];
 
-export type GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetResponses = {
+export type GetCategoryChildrensCategoriesCategoryIdChildrensGetResponses = {
     /**
      * Successful Response
      */
-    200: Array<ChatCategoryRead>;
+    200: Array<CategoryRead>;
 };
 
-export type GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetResponse = GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetResponses[keyof GetChatCategoryChildrensChatsCategoriesChatCategoryIdChildrensGetResponses];
+export type GetCategoryChildrensCategoriesCategoryIdChildrensGetResponse = GetCategoryChildrensCategoriesCategoryIdChildrensGetResponses[keyof GetCategoryChildrensCategoriesCategoryIdChildrensGetResponses];
 
-export type GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetData = {
+export type GetCategoryDescendantsCategoriesCategoryIdDescendantsGetData = {
     body?: never;
     path: {
-        chat_category_id: string;
+        category_id: string;
     };
     query?: never;
-    url: '/chats_categories/{chat_category_id}/descendants/';
+    url: '/categories/{category_id}/descendants/';
 };
 
-export type GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetErrors = {
+export type GetCategoryDescendantsCategoriesCategoryIdDescendantsGetErrors = {
     /**
      * Not found
      */
@@ -2453,16 +2729,202 @@ export type GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGe
     422: HttpValidationError;
 };
 
-export type GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetError = GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetErrors[keyof GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetErrors];
+export type GetCategoryDescendantsCategoriesCategoryIdDescendantsGetError = GetCategoryDescendantsCategoriesCategoryIdDescendantsGetErrors[keyof GetCategoryDescendantsCategoriesCategoryIdDescendantsGetErrors];
 
-export type GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetResponses = {
+export type GetCategoryDescendantsCategoriesCategoryIdDescendantsGetResponses = {
     /**
      * Successful Response
      */
-    200: Array<ChatCategoryRead>;
+    200: Array<CategoryRead>;
 };
 
-export type GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetResponse = GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetResponses[keyof GetChatCategoryDescendantsChatsCategoriesChatCategoryIdDescendantsGetResponses];
+export type GetCategoryDescendantsCategoriesCategoryIdDescendantsGetResponse = GetCategoryDescendantsCategoriesCategoryIdDescendantsGetResponses[keyof GetCategoryDescendantsCategoriesCategoryIdDescendantsGetResponses];
+
+export type GetCategoryCharactersCategoriesCategoryIdCharactersGetData = {
+    body?: never;
+    path: {
+        category_id: string;
+    };
+    query?: {
+        include_descendants?: boolean;
+    };
+    url: '/categories/{category_id}/characters/';
+};
+
+export type GetCategoryCharactersCategoriesCategoryIdCharactersGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCategoryCharactersCategoriesCategoryIdCharactersGetError = GetCategoryCharactersCategoriesCategoryIdCharactersGetErrors[keyof GetCategoryCharactersCategoriesCategoryIdCharactersGetErrors];
+
+export type GetCategoryCharactersCategoriesCategoryIdCharactersGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<CharacterRead>;
+};
+
+export type GetCategoryCharactersCategoriesCategoryIdCharactersGetResponse = GetCategoryCharactersCategoriesCategoryIdCharactersGetResponses[keyof GetCategoryCharactersCategoriesCategoryIdCharactersGetResponses];
+
+export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteData = {
+    body?: never;
+    path: {
+        category_id: string;
+        character_id: string;
+    };
+    query?: never;
+    url: '/categories/{category_id}/characters/{character_id}';
+};
+
+export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteError = RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteErrors[keyof RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteErrors];
+
+export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostData = {
+    body?: never;
+    path: {
+        category_id: string;
+        character_id: string;
+    };
+    query?: never;
+    url: '/categories/{category_id}/characters/{character_id}';
+};
+
+export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostError = AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostErrors[keyof AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostErrors];
+
+export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetCategoryChatsCategoriesCategoryIdChatsGetData = {
+    body?: never;
+    path: {
+        category_id: string;
+    };
+    query?: {
+        include_descendants?: boolean;
+    };
+    url: '/categories/{category_id}/chats/';
+};
+
+export type GetCategoryChatsCategoriesCategoryIdChatsGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCategoryChatsCategoriesCategoryIdChatsGetError = GetCategoryChatsCategoriesCategoryIdChatsGetErrors[keyof GetCategoryChatsCategoriesCategoryIdChatsGetErrors];
+
+export type GetCategoryChatsCategoriesCategoryIdChatsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ChatRead>;
+};
+
+export type GetCategoryChatsCategoriesCategoryIdChatsGetResponse = GetCategoryChatsCategoriesCategoryIdChatsGetResponses[keyof GetCategoryChatsCategoriesCategoryIdChatsGetResponses];
+
+export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteData = {
+    body?: never;
+    path: {
+        category_id: string;
+        chat_id: string;
+    };
+    query?: never;
+    url: '/categories/{category_id}/chats/{chat_id}';
+};
+
+export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteError = RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteErrors[keyof RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteErrors];
+
+export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostData = {
+    body?: never;
+    path: {
+        category_id: string;
+        chat_id: string;
+    };
+    query?: never;
+    url: '/categories/{category_id}/chats/{chat_id}';
+};
+
+export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostError = AddChatToCategoryCategoriesCategoryIdChatsChatIdPostErrors[keyof AddChatToCategoryCategoriesCategoryIdChatsChatIdPostErrors];
+
+export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type RootGetData = {
     body?: never;
@@ -2493,5 +2955,5 @@ export type HealthHealthGetResponses = {
 };
 
 export type ClientOptions = {
-    baseUrl: 'https://orchestrator.queenb.cloud' | (string & {});
+    baseUrl: (string & {});
 };

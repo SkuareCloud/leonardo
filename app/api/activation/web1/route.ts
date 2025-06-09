@@ -1,13 +1,13 @@
 import { read_server_env } from "@lib/server-env"
 import { Web1Client } from "@lib/web1/web1-client"
-
+import { logger } from "@lib/logger"
 /**
  * Fetch all WEB1 accounts.
 */
 export async function GET() {
-    console.log("Retrieving WEB1 accounts...")
+    logger.info("Retrieving WEB1 accounts...")
     const accounts = await new Web1Client().listAccounts()
-    console.log(`Successfully retrieved ${accounts.length} WEB1 accounts.`)
+    logger.info(`Successfully retrieved ${accounts.length} WEB1 accounts.`)
 
     return new Response(
         JSON.stringify(accounts),
@@ -23,11 +23,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
     const { profileId } = await request.json()
-    console.log(`Activating account for profile ${profileId}...`)
+    logger.info(`Activating account for profile ${profileId}...`)
     const env = read_server_env();
     const endpoint = env.operatorApiEndpoint;
 
-    console.log(`Starting browser for profile ${profileId} via '${endpoint}/activation/activate'.`);
+    logger.info(`Starting browser for profile ${profileId} via '${endpoint}/activation/activate'.`);
     const resp = await fetch(`${endpoint}/activation/activate`, {
         method: "POST",
         headers: {
@@ -37,6 +37,6 @@ export async function POST(request: Request) {
         body: JSON.stringify({ profile_id: profileId }),
     });
     const json = await resp.json();
-    console.log(`Successfully activated account for profile ${profileId}.`)
+    logger.info(`Successfully activated account for profile ${profileId}.`)
     return json;
 }
