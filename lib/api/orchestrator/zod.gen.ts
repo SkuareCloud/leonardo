@@ -498,6 +498,154 @@ export const zChatCreate = z.object({
     category_id: z.union([
         z.string().uuid(),
         z.null()
+    ]).optional(),
+    can_view_participants: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    antispam: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    slowmode_seconds: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    bot_verification: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_slowmode_enabled: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_noforwards: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_join_to_send: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_join_request: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    view_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_stickers: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_gifs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_games: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_inline: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    embed_links: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_polls: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    change_info: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    invite_users: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    pin_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    manage_topics: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_photos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_videos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_roundvideos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_audios: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_voices: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_docs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_plain: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_broadcast: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    analysis_message_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_active_participants: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_times_forwarded: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_channels_forwarding: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_times_forwards: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_channels_forwards: z.union([
+        z.number().int(),
+        z.null()
     ]).optional()
 });
 
@@ -596,6 +744,154 @@ export const zChatRead = z.object({
     category_id: z.union([
         z.string().uuid(),
         z.null()
+    ]).optional(),
+    can_view_participants: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    antispam: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    slowmode_seconds: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    bot_verification: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_slowmode_enabled: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_noforwards: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_join_to_send: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_join_request: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    view_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_stickers: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_gifs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_games: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_inline: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    embed_links: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_polls: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    change_info: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    invite_users: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    pin_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    manage_topics: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_photos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_videos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_roundvideos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_audios: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_voices: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_docs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_plain: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    chats_broadcast: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    analysis_message_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_active_participants: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_times_forwarded: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_channels_forwarding: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_times_forwards: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    analysis_num_of_channels_forwards: z.union([
+        z.number().int(),
+        z.null()
     ]).optional()
 });
 
@@ -677,6 +973,28 @@ export const zEventStatus = z.enum([
     'in_process',
     'completed'
 ]);
+
+export const zMessageMetadata = z.object({
+    chat_id: z.string(),
+    character_id: z.string(),
+    relative_seconds: z.number().optional().default(0)
+});
+
+export const zMessage: z.AnyZodObject = z.object({
+    message_content: zInputMessage,
+    metadata: zMessageMetadata,
+    replies: z.array(z.lazy(() => {
+        return zMessage;
+    })).optional()
+});
+
+export const zFirstPuppetShowMessage: z.AnyZodObject = z.object({
+    message: zMessage,
+    start_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional()
+});
 
 export const zFluffMissionInput = z.object({
     origin_ids: z.union([
@@ -792,20 +1110,6 @@ export const zLeaveGroupAction = z.object({
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
-});
-
-export const zMessageMetadata = z.object({
-    chat_id: z.string(),
-    character_id: z.string(),
-    relative_seconds: z.number().optional().default(0)
-});
-
-export const zMessage: z.AnyZodObject = z.object({
-    message_content: zInputMessage,
-    metadata: zMessageMetadata,
-    replies: z.array(z.lazy(() => {
-        return zMessage;
-    })).optional()
 });
 
 export const zMissionStatus = z.enum([
@@ -925,11 +1229,7 @@ export const zPrefrences = z.object({
 });
 
 export const zPuppetShowInput = z.object({
-    first_message: zMessage,
-    start_time: z.union([
-        z.string().datetime(),
-        z.null()
-    ]).optional(),
+    first_messages: z.array(zFirstPuppetShowMessage),
     max_retries: z.union([
         z.number().int(),
         z.null()

@@ -1,7 +1,6 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { CircleStop } from "lucide-react";
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -10,67 +9,64 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { getAllCharactersCharactersGet } from "@/lib/api/operator/sdk.gen";
-import { client as operatorClient } from "@lib/api/operator/client.gen";
+} from "@/components/ui/dialog"
+import { client as operatorClient } from "@lib/api/operator/client.gen"
+import { getAllCharactersCharactersGet } from "@lib/api/operator/sdk.gen"
+import { CircleStop, Loader2 } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 export function StopAllButton() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleStopAll = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const response = await fetch("/api/operator/stop-all", {
         method: "POST",
-      });
-      const data = await response.json();
+      })
+      const data = await response.json()
 
       if (response.ok) {
         // Wait for characters to be empty with 1 minute timeout
-        let charactersEmpty = false;
-        const startTime = Date.now();
-        const TIMEOUT = 60000; // 1 minute in milliseconds
-        
+        let charactersEmpty = false
+        const startTime = Date.now()
+        const TIMEOUT = 60000 // 1 minute in milliseconds
+
         while (!charactersEmpty) {
           const response = await getAllCharactersCharactersGet({
             client: operatorClient,
-          });
-          console.log("response", response);
+          })
+          console.log("response", response)
           if (response.data && response.data.length === 0) {
-            charactersEmpty = true;
+            charactersEmpty = true
           } else {
             // Check if timeout reached
             if (Date.now() - startTime > TIMEOUT) {
-              throw new Error("Timeout waiting for characters to stop");
+              throw new Error("Timeout waiting for characters to stop")
             }
             // Wait for 1 second before checking again
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 1000))
           }
         }
 
         toast.success("All profiles stopped", {
           description: "All running profiles have been successfully stopped.",
-        });
+        })
       } else {
-        throw new Error(data.error || "Failed to stop characters");
+        throw new Error(data.error || "Failed to stop characters")
       }
     } catch (error) {
       toast.error("Failed to stop profiles", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred while stopping profiles",
+        description: error instanceof Error ? error.message : "An unexpected error occurred while stopping profiles",
         action: {
           label: "Undo",
           onClick: () => console.log("Undo"),
         },
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog>
@@ -87,8 +83,7 @@ export function StopAllButton() {
         <DialogHeader>
           <DialogTitle>Stop All Characters</DialogTitle>
           <DialogDescription>
-            Are you sure you want to stop all running characters? This action
-            cannot be undone.
+            Are you sure you want to stop all running characters? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -113,5 +108,5 @@ export function StopAllButton() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

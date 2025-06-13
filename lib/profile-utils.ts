@@ -1,4 +1,3 @@
-import { CombinedAvatar } from "./api/models";
 import { AvatarModelWithProxy } from "./api/avatars/types.gen";
 
 export function isProfileActive(avatar: AvatarModelWithProxy) {

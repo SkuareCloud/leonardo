@@ -1,7 +1,6 @@
 import { PageHeader } from "@/components/page-header";
-import { AvatarsList } from "./avatars-list";
-import { ApiService } from "@/app/api/lib/api_service";
 import { ServiceClient } from "@lib/service-client";
+import { AvatarsList } from "./avatars-list";
 
 export default async function Page() {
   const serviceClient = new ServiceClient();

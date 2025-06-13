@@ -351,6 +351,42 @@ export type ReplaceAvatarAvatarsAvatarIdPutResponses = {
 
 export type ReplaceAvatarAvatarsAvatarIdPutResponse = ReplaceAvatarAvatarsAvatarIdPutResponses[keyof ReplaceAvatarAvatarsAvatarIdPutResponses];
 
+export type AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostData = {
+    body?: never;
+    path: {
+        avatar_id: string;
+        proxy_id: string;
+    };
+    query?: never;
+    url: '/avatars/{avatar_id}/proxy/{proxy_id}';
+};
+
+export type AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostError = AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostErrors[keyof AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostErrors];
+
+export type AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: Proxy;
+};
+
+export type AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostResponse = AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostResponses[keyof AssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostResponses];
+
 export type UnassignProxyForAvatarAvatarsAvatarIdProxyDeleteData = {
     body?: never;
     path: {

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ActivityIcon,
@@ -11,27 +11,21 @@ import {
   Users2Icon,
   VenetianMask,
   Waypoints,
-} from "lucide-react";
-import * as React from "react";
+} from "lucide-react"
+import * as React from "react"
 
-import { NavMain } from "@/components/nav-main";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenuButton,
-  SidebarRail,
-} from "@/components/ui/sidebar";
-import Link from "next/link";
-import { read_client_env } from "@lib/client-env";
+import { NavMain } from "@/components/nav-main"
+import { Sidebar, SidebarContent, SidebarHeader, SidebarMenuButton, SidebarRail } from "@/components/ui/sidebar"
+import { read_client_env } from "@lib/client-env"
+import Link from "next/link"
 
 export interface NavItem {
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  isActive?: boolean;
-  localOnly?: boolean;
-  items?: NavItem[];
+  title: string
+  url: string
+  icon?: LucideIcon
+  isActive?: boolean
+  localOnly?: boolean
+  items?: NavItem[]
 }
 
 const data = {
@@ -117,17 +111,15 @@ const data = {
     },
   ],
 } as {
-  navMain: NavItem[];
-};
+  navMain: NavItem[]
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const isLocal = read_client_env().isLocal;
-  const navItems = data.navMain.filter((item) => !(isLocal && item.localOnly));
+  const isLocal = read_client_env().isLocal
+  const navItems = data.navMain.filter(item => !(!isLocal && item.localOnly))
   for (const item of navItems) {
     if (item.items) {
-      item.items = item.items.filter(
-        (subItem) => !(isLocal && subItem.localOnly)
-      );
+      item.items = item.items.filter(subItem => !(!isLocal && subItem.localOnly))
     }
   }
 
@@ -151,5 +143,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
-  );
+  )
 }

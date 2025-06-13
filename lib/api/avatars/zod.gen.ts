@@ -217,6 +217,8 @@ export const zReplaceAvatarAvatarsAvatarIdPutResponse = z.union([
     z.void()
 ]);
 
+export const zAssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostResponse = zProxy;
+
 export const zUnassignProxyForAvatarAvatarsAvatarIdProxyDeleteResponse = z.void();
 
 export const zGetAvatarProxyAvatarsAvatarIdProxyGetResponse = zProxy;

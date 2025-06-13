@@ -196,6 +196,7 @@ export const zActivationStatus = z.enum([
     'ALREADY_LOGGED_IN',
     'WAITING_FOR_OTP',
     'ENTERING_OTP',
+    'CHECKING_IF_WAITING_FOR_PASSWORD',
     'WAITING_FOR_PASSWORD',
     'ENTERING_PASSWORD',
     'VERIFYING_LOGIN',
@@ -472,7 +473,7 @@ export const zSendBulkMessagesAction = z.object({
 export const zScenario = z.object({
     id: z.string().optional(),
     profile: zCharacter,
-    prefrences: zPrefrences,
+    prefrences: zPrefrences.optional(),
     actions: z.array(z.unknown())
 });
 

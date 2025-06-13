@@ -3,19 +3,16 @@
 import { DataTable } from "@/components/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScenarioWithResult } from "@lib/api/operator";
-import { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
-import { CombinedAvatar } from "@lib/api/models";
-import { cn } from "@lib/utils";
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen";
-import { CopyableText } from "@/components/copy-button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen";
+import { ScenarioWithResult } from "@lib/api/operator";
+import { cn } from "@lib/utils";
+import { ColumnDef } from "@tanstack/react-table";
 import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 

@@ -217,6 +217,154 @@ export type ChatCreate = {
      * Category of the chat
      */
     category_id?: string | null;
+    /**
+     * Whether the chat can view participants
+     */
+    can_view_participants?: boolean | null;
+    /**
+     * Whether the chat is antispam
+     */
+    antispam?: boolean | null;
+    /**
+     * Number of participants in the chat
+     */
+    participants_count?: number | null;
+    /**
+     * Linked chat id
+     */
+    linked_chat_id?: number | null;
+    /**
+     * Slowmode in seconds
+     */
+    slowmode_seconds?: number | null;
+    /**
+     * Whether the chat is a bot
+     */
+    bot_verification?: boolean | null;
+    /**
+     * Whether the chat has slowmode enabled
+     */
+    chats_slowmode_enabled?: boolean | null;
+    /**
+     * Whether the chat has no forwards enabled
+     */
+    chats_noforwards?: boolean | null;
+    /**
+     * Whether the chat has join to send enabled
+     */
+    chats_join_to_send?: boolean | null;
+    /**
+     * Whether the chat has join request enabled
+     */
+    chats_join_request?: boolean | null;
+    /**
+     * Whether the chat can view messages
+     */
+    view_messages?: boolean | null;
+    /**
+     * Whether the chat can send messages
+     */
+    send_messages?: boolean | null;
+    /**
+     * Whether the chat can send media
+     */
+    send_media?: boolean | null;
+    /**
+     * Whether the chat can send stickers
+     */
+    send_stickers?: boolean | null;
+    /**
+     * Whether the chat can send gifs
+     */
+    send_gifs?: boolean | null;
+    /**
+     * Whether the chat can send games
+     */
+    send_games?: boolean | null;
+    /**
+     * Whether the chat can send inline
+     */
+    send_inline?: boolean | null;
+    /**
+     * Whether the chat can embed links
+     */
+    embed_links?: boolean | null;
+    /**
+     * Whether the chat can send polls
+     */
+    send_polls?: boolean | null;
+    /**
+     * Whether the chat can change info
+     */
+    change_info?: boolean | null;
+    /**
+     * Whether the chat can invite users
+     */
+    invite_users?: boolean | null;
+    /**
+     * Whether the chat can pin messages
+     */
+    pin_messages?: boolean | null;
+    /**
+     * Whether the chat can manage topics
+     */
+    manage_topics?: boolean | null;
+    /**
+     * Whether the chat can send photos
+     */
+    send_photos?: boolean | null;
+    /**
+     * Whether the chat can send videos
+     */
+    send_videos?: boolean | null;
+    /**
+     * Whether the chat can send round videos
+     */
+    send_roundvideos?: boolean | null;
+    /**
+     * Whether the chat can send audios
+     */
+    send_audios?: boolean | null;
+    /**
+     * Whether the chat can send voices
+     */
+    send_voices?: boolean | null;
+    /**
+     * Whether the chat can send docs
+     */
+    send_docs?: boolean | null;
+    /**
+     * Whether the chat can send plain
+     */
+    send_plain?: boolean | null;
+    /**
+     * Whether the chat can broadcast
+     */
+    chats_broadcast?: boolean | null;
+    /**
+     * Number of messages in the latest month
+     */
+    analysis_message_count_last_month?: number | null;
+    /**
+     * Number of active participants in the chat
+     */
+    analysis_active_participants?: number | null;
+    /**
+     * Number of times the chat was forwarded
+     */
+    analysis_num_of_times_forwarded?: number | null;
+    /**
+     * Number of channels forwarding the chat
+     */
+    analysis_num_of_channels_forwarding?: number | null;
+    /**
+     * Number of times the chat was forwarded
+     */
+    analysis_num_of_times_forwards?: number | null;
+    /**
+     * Number of channels forwarding the chat
+     */
+    analysis_num_of_channels_forwards?: number | null;
 };
 
 export type ChatInfo = {
@@ -300,6 +448,154 @@ export type ChatRead = {
      * Category of the chat
      */
     category_id?: string | null;
+    /**
+     * Whether the chat can view participants
+     */
+    can_view_participants?: boolean | null;
+    /**
+     * Whether the chat is antispam
+     */
+    antispam?: boolean | null;
+    /**
+     * Number of participants in the chat
+     */
+    participants_count?: number | null;
+    /**
+     * Linked chat id
+     */
+    linked_chat_id?: number | null;
+    /**
+     * Slowmode in seconds
+     */
+    slowmode_seconds?: number | null;
+    /**
+     * Whether the chat is a bot
+     */
+    bot_verification?: boolean | null;
+    /**
+     * Whether the chat has slowmode enabled
+     */
+    chats_slowmode_enabled?: boolean | null;
+    /**
+     * Whether the chat has no forwards enabled
+     */
+    chats_noforwards?: boolean | null;
+    /**
+     * Whether the chat has join to send enabled
+     */
+    chats_join_to_send?: boolean | null;
+    /**
+     * Whether the chat has join request enabled
+     */
+    chats_join_request?: boolean | null;
+    /**
+     * Whether the chat can view messages
+     */
+    view_messages?: boolean | null;
+    /**
+     * Whether the chat can send messages
+     */
+    send_messages?: boolean | null;
+    /**
+     * Whether the chat can send media
+     */
+    send_media?: boolean | null;
+    /**
+     * Whether the chat can send stickers
+     */
+    send_stickers?: boolean | null;
+    /**
+     * Whether the chat can send gifs
+     */
+    send_gifs?: boolean | null;
+    /**
+     * Whether the chat can send games
+     */
+    send_games?: boolean | null;
+    /**
+     * Whether the chat can send inline
+     */
+    send_inline?: boolean | null;
+    /**
+     * Whether the chat can embed links
+     */
+    embed_links?: boolean | null;
+    /**
+     * Whether the chat can send polls
+     */
+    send_polls?: boolean | null;
+    /**
+     * Whether the chat can change info
+     */
+    change_info?: boolean | null;
+    /**
+     * Whether the chat can invite users
+     */
+    invite_users?: boolean | null;
+    /**
+     * Whether the chat can pin messages
+     */
+    pin_messages?: boolean | null;
+    /**
+     * Whether the chat can manage topics
+     */
+    manage_topics?: boolean | null;
+    /**
+     * Whether the chat can send photos
+     */
+    send_photos?: boolean | null;
+    /**
+     * Whether the chat can send videos
+     */
+    send_videos?: boolean | null;
+    /**
+     * Whether the chat can send round videos
+     */
+    send_roundvideos?: boolean | null;
+    /**
+     * Whether the chat can send audios
+     */
+    send_audios?: boolean | null;
+    /**
+     * Whether the chat can send voices
+     */
+    send_voices?: boolean | null;
+    /**
+     * Whether the chat can send docs
+     */
+    send_docs?: boolean | null;
+    /**
+     * Whether the chat can send plain
+     */
+    send_plain?: boolean | null;
+    /**
+     * Whether the chat can broadcast
+     */
+    chats_broadcast?: boolean | null;
+    /**
+     * Number of messages in the latest month
+     */
+    analysis_message_count_last_month?: number | null;
+    /**
+     * Number of active participants in the chat
+     */
+    analysis_active_participants?: number | null;
+    /**
+     * Number of times the chat was forwarded
+     */
+    analysis_num_of_times_forwarded?: number | null;
+    /**
+     * Number of channels forwarding the chat
+     */
+    analysis_num_of_channels_forwarding?: number | null;
+    /**
+     * Number of times the chat was forwarded
+     */
+    analysis_num_of_times_forwards?: number | null;
+    /**
+     * Number of channels forwarding the chat
+     */
+    analysis_num_of_channels_forwards?: number | null;
 };
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
@@ -333,6 +629,11 @@ export type EchoMissionInput = {
 };
 
 export type EventStatus = 'scheduled' | 'failed' | 'in_process' | 'completed';
+
+export type FirstPuppetShowMessage = {
+    message: Message;
+    start_time?: string | null;
+};
 
 export type FluffMissionInput = {
     /**
@@ -496,11 +797,7 @@ export type Prefrences = {
 };
 
 export type PuppetShowInput = {
-    first_message: Message;
-    /**
-     * The time to start the mission - in UTC timezone
-     */
-    start_time?: string | null;
+    first_messages: Array<FirstPuppetShowMessage>;
     max_retries?: number | null;
 };
 

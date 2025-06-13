@@ -41,7 +41,7 @@ export type ActivationResponse = {
     status: ActivationStatus;
 };
 
-export type ActivationStatus = 'CHECKING_PROFILE' | 'STARTED' | 'ALREADY_LOGGED_IN' | 'WAITING_FOR_OTP' | 'ENTERING_OTP' | 'WAITING_FOR_PASSWORD' | 'ENTERING_PASSWORD' | 'VERIFYING_LOGIN' | 'LOGIN_VERIFICATION_FAILED' | 'SKIPPED' | 'FAILED' | 'SUCCESS';
+export type ActivationStatus = 'CHECKING_PROFILE' | 'STARTED' | 'ALREADY_LOGGED_IN' | 'WAITING_FOR_OTP' | 'ENTERING_OTP' | 'CHECKING_IF_WAITING_FOR_PASSWORD' | 'WAITING_FOR_PASSWORD' | 'ENTERING_PASSWORD' | 'VERIFYING_LOGIN' | 'LOGIN_VERIFICATION_FAILED' | 'SKIPPED' | 'FAILED' | 'SUCCESS';
 
 export type AsyncWorkerState = 'init' | 'starting' | 'stopping' | 'stopped' | 'idle' | 'working' | 'paused';
 
@@ -228,7 +228,7 @@ export type ReplyToMessageResponseContent = {
 export type Scenario = {
     id?: string;
     profile: Character;
-    prefrences: Prefrences;
+    prefrences?: Prefrences;
     actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
 };
 
