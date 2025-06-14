@@ -2,7 +2,6 @@
 
 import TelegramIcon from "@/assets/telegram.svg"
 import { DataTable } from "@/components/table"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -13,7 +12,7 @@ import { getSocialNetworkStatus } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
-import { MarsIcon, RefreshCcwIcon, VenusIcon } from "lucide-react"
+import { MarsIcon, VenusIcon } from "lucide-react"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -198,7 +197,6 @@ const profileColumns: ColumnDef<ProfileDataRow>[] = [
 
 export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelWithProxy[] }) {
   const [activeRow, setActiveRow] = useState<ProfileDataRow | undefined>(undefined)
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const tableRef = useRef<HTMLDivElement>(null)
   const avatarDrawerRef = useRef<HTMLDivElement>(null)
 
@@ -216,7 +214,7 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
 
   const refreshAvatar = async () => {
     // HACK: Slight delay to allow DB to catch up.
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise(resolve => setTimeout(resolve, 5000))
     if (!activeRow) {
       throw new Error("No active row")
     }
@@ -259,7 +257,7 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
       >
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel className="pr-8">
-            <div className="">
+            {/* <div className="">
               <div className="mb-12 flex flex-row items-center gap-6 h-4 w-full">
                 <Button
                   variant="link"
@@ -275,7 +273,7 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
                   />
                 </Button>
               </div>
-            </div>
+            </div> */}
             <div className="flex flex-col gap-4 max-w-[1280px]" ref={tableRef}>
               <DataTable
                 columns={profileColumns}

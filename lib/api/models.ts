@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { zAvatarModelWithProxy } from "./avatars/zod.gen"
 import { zProfileWorkerView } from "./operator/zod.gen"
+import { CategoryRead, ChatRead } from "./orchestrator"
 
 export const zCombinedAvatar = z.object({
   profile_worker_view: zProfileWorkerView.optional(),
@@ -19,4 +20,14 @@ export interface ProxyData {
   ip_address?: string | null
   fqdn?: string | null
   status?: "success" | "failed"
+}
+
+export interface ChatWithCategory {
+  chat: ChatRead
+  category: CategoryRead
+}
+
+export interface CategoryWithChatCount {
+  category: CategoryRead
+  count: number
 }

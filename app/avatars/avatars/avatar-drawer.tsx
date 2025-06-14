@@ -10,7 +10,7 @@ import { cn } from "@lib/utils"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
 import debounce from "debounce"
 import { Loader2 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Proxy } from "./proxy"
 
 export function LoadingInputField({
@@ -29,6 +29,10 @@ export function LoadingInputField({
   const [value, setValue] = useState(initialValue)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setValue(initialValue)
+  }, [initialValue])
 
   const debouncedOnChange = useMemo(
     () =>
@@ -100,32 +104,36 @@ export function LoadingSelectField({
       <Label htmlFor={id} className="font-bold">
         {label}
       </Label>
-      <Select
-        value={value}
-        onValueChange={value => {
-          setError(null)
-          setIsLoading(true)
-          updateField(value)
-            .catch(err => {
-              console.error(`Failed to update field: ${err}`)
-              setError("Failed to update field")
-            })
-            .finally(() => {
-              setIsLoading(false)
-            })
-        }}
-      >
-        <SelectTrigger className="w-[40ch]">
-          <SelectValue placeholder="Select Geocode" />
-        </SelectTrigger>
-        <SelectContent id="selectGeocode" className="w-[40ch]">
-          {choices.map(choice => (
-            <SelectItem key={choice} value={choice}>
-              {choiceRenderer(choice)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-row gap-2 items-center">
+        <Select
+          value={value}
+          disabled={isLoading}
+          onValueChange={value => {
+            setError(null)
+            setIsLoading(true)
+            updateField(value)
+              .catch(err => {
+                console.error(`Failed to update field: ${err}`)
+                setError("Failed to update field")
+              })
+              .finally(() => {
+                setIsLoading(false)
+              })
+          }}
+        >
+          <SelectTrigger className="w-[40ch]">
+            <SelectValue placeholder="Select Geocode" />
+          </SelectTrigger>
+          <SelectContent id="selectGeocode" className="w-[40ch]">
+            {choices.map(choice => (
+              <SelectItem key={choice} value={choice}>
+                {choiceRenderer(choice)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {isLoading && <Loader2 className="size-4 animate-spin" />}
+      </div>
     </div>
   )
 }

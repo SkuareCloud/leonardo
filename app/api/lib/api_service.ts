@@ -9,7 +9,7 @@ import {
   patchAvatarAvatarsAvatarIdPatch,
   pingProxyProxiesProxyIdPingPut,
 } from "@lib/api/avatars/sdk.gen"
-import { CombinedAvatar } from "@lib/api/models"
+import { CategoryWithChatCount, ChatWithCategory, CombinedAvatar } from "@lib/api/models"
 import { Scenario, ScenarioWithResult } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
@@ -20,12 +20,15 @@ import {
   stopProfileCharactersCharacterIdStopPost,
   submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
-import { CharacterRead, ChatRead, MissionRead } from "@lib/api/orchestrator"
+import { CategoryRead, CharacterRead, ChatRead, MissionRead } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
   getAllChatsChatsGet,
+  getCategoryChatsCategoriesCategoryIdChatsGet,
+  getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
   getMissionsMissionsGet,
+  getRootCategoryCategoriesRootGet,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { Web1Client } from "@lib/web1/web1-client"
@@ -231,6 +234,81 @@ export class ApiService {
     }
     logger.info("Successfully got orchestrator chats")
     return response.data ?? []
+  }
+
+  async getOrchestratorChatsWithCategories(): Promise<[CategoryWithChatCount[], Record<string, ChatWithCategory[]>]> {
+    const rootCategory = await this.getOrchestratorRootCategory()
+    logger.info("Getting orchestrator chats descendants")
+    const response = await getCategoryDescendantsCategoriesCategoryIdDescendantsGet({
+      client: orchestratorClient,
+      path: {
+        category_id: rootCategory.id,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chat descendants: ${JSON.stringify(response.error)}`)
+    }
+    if (!response.data) {
+      throw new Error("Failed to get orchestrator chat descendants")
+    }
+    const categories = [rootCategory, ...response.data]
+
+    const uniqueCategories: CategoryRead[] = []
+    for (const category of categories) {
+      if (!uniqueCategories.some(cat => cat.id === category.id)) {
+        uniqueCategories.push(category)
+      }
+    }
+    const chatsWithCategory = await Promise.all(
+      uniqueCategories.map(async category => {
+        const chatsWithinCategory = await getCategoryChatsCategoriesCategoryIdChatsGet({
+          client: orchestratorClient,
+          path: {
+            category_id: category.id,
+          },
+        })
+        if (chatsWithinCategory.error || !chatsWithinCategory.data) {
+          throw new Error(`Failed to get orchestrator chat category: ${JSON.stringify(chatsWithinCategory.error)}`)
+        }
+        console.log(`Fetched ${chatsWithinCategory.data.length} chats for category ${category.id}`)
+        return {
+          chats: chatsWithinCategory.data,
+          category,
+        }
+      }),
+    )
+
+    const chatsByCategory: Record<string, ChatWithCategory[]> = {}
+    for (const { chats, category } of chatsWithCategory) {
+      chatsByCategory[category.id] = chats.map(
+        chat =>
+          ({
+            chat,
+            category,
+          } as ChatWithCategory),
+      )
+    }
+
+    logger.info("Successfully got orchestrator chats descendants")
+    return [
+      uniqueCategories.map(category => ({ category, count: chatsByCategory[category.id].length })),
+      chatsByCategory,
+    ] satisfies [CategoryWithChatCount[], Record<string, ChatWithCategory[]>]
+  }
+
+  async getOrchestratorRootCategory(): Promise<CategoryRead> {
+    logger.info("Getting orchestrator root category")
+    const response = await getRootCategoryCategoriesRootGet({
+      client: orchestratorClient,
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator root category: ${JSON.stringify(response.error)}`)
+    }
+    logger.info("Successfully got orchestrator root category")
+    if (!response.data) {
+      throw new Error("Failed to get orchestrator root category")
+    }
+    return response.data
   }
 
   async getOrchestratorMissions(): Promise<MissionRead[]> {
