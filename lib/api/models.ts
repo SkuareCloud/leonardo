@@ -3,6 +3,16 @@ import { zAvatarModelWithProxy } from "./avatars/zod.gen"
 import { zProfileWorkerView } from "./operator/zod.gen"
 import { CategoryRead, ChatRead } from "./orchestrator"
 
+export const MissionTypes = [
+  "EchoMission",
+  "AllocateProfilesGroupsMission",
+  "PuppetShowMission",
+  "FluffMission",
+  "RandomDistributionMission",
+] as const
+
+export type MissionType = (typeof MissionTypes)[number]
+
 export const zCombinedAvatar = z.object({
   profile_worker_view: zProfileWorkerView.optional(),
   avatar: zAvatarModelWithProxy.optional(),

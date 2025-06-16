@@ -134,25 +134,17 @@ export const zForwardMessageResponseContent = z.object({
     message_info: zMessageInfo
 });
 
-export const zDialogValue = z.object({
-    peer_id: z.number().int(),
-    read_inbox_max_id: z.number().int(),
-    read_outbox_max_id: z.number().int(),
-    top_message: z.number().int(),
-    unread_count: z.number().int(),
-    unread_mentions_count: z.number().int(),
-    unread_reactions_count: z.number().int()
-});
-
 export const zBehaviouralResponseContent = z.object({
     current_context: z.union([
         z.unknown(),
         z.null()
     ]).optional(),
     chats: z.union([
-        z.array(zDialogValue),
+        z.array(z.unknown()),
         z.null()
-    ]).optional()
+    ]).optional(),
+    personal_details_synced: z.boolean().optional().default(false),
+    auto_download_media_disabled: z.boolean().optional().default(false)
 });
 
 export const zSendBulkMessagesResponseContent = z.object({
@@ -199,6 +191,7 @@ export const zActivationStatus = z.enum([
     'CHECKING_IF_WAITING_FOR_PASSWORD',
     'WAITING_FOR_PASSWORD',
     'ENTERING_PASSWORD',
+    'WAITING_10_SECONDS',
     'VERIFYING_LOGIN',
     'LOGIN_VERIFICATION_FAILED',
     'SKIPPED',
@@ -247,7 +240,9 @@ export const zAuthRequest = z.object({
 export const zBehaviouralArgs = z.object({
     wait_time: z.number().int().optional().default(0),
     sync_context: z.boolean().optional().default(false),
-    get_chats: z.boolean().optional().default(false)
+    get_chats: z.boolean().optional().default(false),
+    sync_personal_details: z.boolean().optional().default(false),
+    disable_auto_download_media: z.boolean().optional().default(false)
 });
 
 export const zBehaviouralAction = z.object({
@@ -518,7 +513,11 @@ export const zProfileWorkerView = z.object({
         zScenarioResult,
         z.null()
     ]),
-    pending_actions: z.number().int()
+    pending_actions: z.number().int(),
+    browser_port: z.union([
+        z.number().int(),
+        z.null()
+    ])
 });
 
 export const zScenarioWithResult = z.object({

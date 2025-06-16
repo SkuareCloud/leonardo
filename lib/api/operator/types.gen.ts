@@ -41,7 +41,7 @@ export type ActivationResponse = {
     status: ActivationStatus;
 };
 
-export type ActivationStatus = 'CHECKING_PROFILE' | 'STARTED' | 'ALREADY_LOGGED_IN' | 'WAITING_FOR_OTP' | 'ENTERING_OTP' | 'CHECKING_IF_WAITING_FOR_PASSWORD' | 'WAITING_FOR_PASSWORD' | 'ENTERING_PASSWORD' | 'VERIFYING_LOGIN' | 'LOGIN_VERIFICATION_FAILED' | 'SKIPPED' | 'FAILED' | 'SUCCESS';
+export type ActivationStatus = 'CHECKING_PROFILE' | 'STARTED' | 'ALREADY_LOGGED_IN' | 'WAITING_FOR_OTP' | 'ENTERING_OTP' | 'CHECKING_IF_WAITING_FOR_PASSWORD' | 'WAITING_FOR_PASSWORD' | 'ENTERING_PASSWORD' | 'WAITING_10_SECONDS' | 'VERIFYING_LOGIN' | 'LOGIN_VERIFICATION_FAILED' | 'SKIPPED' | 'FAILED' | 'SUCCESS';
 
 export type AsyncWorkerState = 'init' | 'starting' | 'stopping' | 'stopped' | 'idle' | 'working' | 'paused';
 
@@ -68,11 +68,15 @@ export type BehaviouralArgs = {
     wait_time?: number;
     sync_context?: boolean;
     get_chats?: boolean;
+    sync_personal_details?: boolean;
+    disable_auto_download_media?: boolean;
 };
 
 export type BehaviouralResponseContent = {
     current_context?: unknown | null;
-    chats?: Array<DialogValue> | null;
+    chats?: Array<GroupInfo | ChannelInfo> | null;
+    personal_details_synced?: boolean;
+    auto_download_media_disabled?: boolean;
 };
 
 export type ChannelInfo = {
@@ -97,20 +101,6 @@ export type ChatInfo = {
 };
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
-
-/**
- * Class representing the model of the dialog model of TL in IndexedDB
- * TODO: Should not be in common, needs to be translated to a contact_info...
- */
-export type DialogValue = {
-    peer_id: number;
-    read_inbox_max_id: number;
-    read_outbox_max_id: number;
-    top_message: number;
-    unread_count: number;
-    unread_mentions_count: number;
-    unread_reactions_count: number;
-};
 
 export type ForwardMessageAction = {
     id?: string;
@@ -206,6 +196,7 @@ export type ProfileWorkerView = {
     current_scenario: Scenario | null;
     current_scenario_result: ScenarioResult | null;
     pending_actions: number;
+    browser_port: number | null;
 };
 
 export type ReplyToMessageAction = {

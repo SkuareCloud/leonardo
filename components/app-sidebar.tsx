@@ -2,6 +2,7 @@
 
 import {
   ActivityIcon,
+  BrickWallIcon,
   Clapperboard,
   Crosshair,
   LucideIcon,
@@ -101,6 +102,11 @@ const data = {
           title: "Missions",
           url: "/orchestrator/missions",
           icon: Crosshair,
+        },
+        {
+          title: "Mission Builder",
+          url: "/orchestrator/mission-builder",
+          icon: BrickWallIcon,
         },
         {
           title: "Scenarios",

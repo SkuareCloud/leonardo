@@ -25,27 +25,24 @@ export type ActionRead = {
     content?: {
         [key: string]: unknown;
     } | null;
+    status_code?: AppModelsActionsActionStatus;
+    error?: string | null;
 };
 
 export type ActionResponseInput = {
     id?: string;
     status: AppModelsOperatorActivityActionsActionStatusActionStatus;
     type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContent | SendBulkMessagesResponseContentInput | null;
+    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContentInput | SendBulkMessagesResponseContentInput | null;
     start_time: string;
 };
 
 export type ActionResponseOutput = {
     id?: string;
-    status: ActionStatusOutput;
+    status: AppModelsOperatorActivityActionsActionStatusActionStatus;
     type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContent | SendBulkMessagesResponseContentOutput | null;
+    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContentOutput | SendBulkMessagesResponseContentOutput | null;
     start_time: string;
-};
-
-export type ActionStatusOutput = {
-    status_code: ActionStatusCode;
-    error?: string | null;
 };
 
 export type ActionStatusCode = 'success' | 'failed' | 'cancelled';
@@ -59,7 +56,7 @@ export type ActionStatusUpdate = {
 };
 
 export type AllocateProfilesGroupsMissionInput = {
-    origin_ids?: Array<string> | null;
+    characters_categories?: Array<string> | null;
     chat_categories?: Array<string> | null;
     diversify_chats?: boolean | null;
     start_time: string;
@@ -88,9 +85,14 @@ export type BehaviouralArgs = {
     get_chats?: boolean;
 };
 
-export type BehaviouralResponseContent = {
+export type BehaviouralResponseContentInput = {
     current_context?: unknown | null;
-    chats?: Array<DialogValue> | null;
+    chats?: Array<GroupInfo | ChannelInfo> | null;
+};
+
+export type BehaviouralResponseContentOutput = {
+    current_context?: unknown | null;
+    chats?: Array<GroupInfo | ChannelInfo> | null;
 };
 
 export type CategoryCreate = {
@@ -217,154 +219,6 @@ export type ChatCreate = {
      * Category of the chat
      */
     category_id?: string | null;
-    /**
-     * Whether the chat can view participants
-     */
-    can_view_participants?: boolean | null;
-    /**
-     * Whether the chat is antispam
-     */
-    antispam?: boolean | null;
-    /**
-     * Number of participants in the chat
-     */
-    participants_count?: number | null;
-    /**
-     * Linked chat id
-     */
-    linked_chat_id?: number | null;
-    /**
-     * Slowmode in seconds
-     */
-    slowmode_seconds?: number | null;
-    /**
-     * Whether the chat is a bot
-     */
-    bot_verification?: boolean | null;
-    /**
-     * Whether the chat has slowmode enabled
-     */
-    chats_slowmode_enabled?: boolean | null;
-    /**
-     * Whether the chat has no forwards enabled
-     */
-    chats_noforwards?: boolean | null;
-    /**
-     * Whether the chat has join to send enabled
-     */
-    chats_join_to_send?: boolean | null;
-    /**
-     * Whether the chat has join request enabled
-     */
-    chats_join_request?: boolean | null;
-    /**
-     * Whether the chat can view messages
-     */
-    view_messages?: boolean | null;
-    /**
-     * Whether the chat can send messages
-     */
-    send_messages?: boolean | null;
-    /**
-     * Whether the chat can send media
-     */
-    send_media?: boolean | null;
-    /**
-     * Whether the chat can send stickers
-     */
-    send_stickers?: boolean | null;
-    /**
-     * Whether the chat can send gifs
-     */
-    send_gifs?: boolean | null;
-    /**
-     * Whether the chat can send games
-     */
-    send_games?: boolean | null;
-    /**
-     * Whether the chat can send inline
-     */
-    send_inline?: boolean | null;
-    /**
-     * Whether the chat can embed links
-     */
-    embed_links?: boolean | null;
-    /**
-     * Whether the chat can send polls
-     */
-    send_polls?: boolean | null;
-    /**
-     * Whether the chat can change info
-     */
-    change_info?: boolean | null;
-    /**
-     * Whether the chat can invite users
-     */
-    invite_users?: boolean | null;
-    /**
-     * Whether the chat can pin messages
-     */
-    pin_messages?: boolean | null;
-    /**
-     * Whether the chat can manage topics
-     */
-    manage_topics?: boolean | null;
-    /**
-     * Whether the chat can send photos
-     */
-    send_photos?: boolean | null;
-    /**
-     * Whether the chat can send videos
-     */
-    send_videos?: boolean | null;
-    /**
-     * Whether the chat can send round videos
-     */
-    send_roundvideos?: boolean | null;
-    /**
-     * Whether the chat can send audios
-     */
-    send_audios?: boolean | null;
-    /**
-     * Whether the chat can send voices
-     */
-    send_voices?: boolean | null;
-    /**
-     * Whether the chat can send docs
-     */
-    send_docs?: boolean | null;
-    /**
-     * Whether the chat can send plain
-     */
-    send_plain?: boolean | null;
-    /**
-     * Whether the chat can broadcast
-     */
-    chats_broadcast?: boolean | null;
-    /**
-     * Number of messages in the latest month
-     */
-    analysis_message_count_last_month?: number | null;
-    /**
-     * Number of active participants in the chat
-     */
-    analysis_active_participants?: number | null;
-    /**
-     * Number of times the chat was forwarded
-     */
-    analysis_num_of_times_forwarded?: number | null;
-    /**
-     * Number of channels forwarding the chat
-     */
-    analysis_num_of_channels_forwarding?: number | null;
-    /**
-     * Number of times the chat was forwarded
-     */
-    analysis_num_of_times_forwards?: number | null;
-    /**
-     * Number of channels forwarding the chat
-     */
-    analysis_num_of_channels_forwards?: number | null;
 };
 
 export type ChatInfo = {
@@ -448,177 +302,15 @@ export type ChatRead = {
      * Category of the chat
      */
     category_id?: string | null;
-    /**
-     * Whether the chat can view participants
-     */
-    can_view_participants?: boolean | null;
-    /**
-     * Whether the chat is antispam
-     */
-    antispam?: boolean | null;
-    /**
-     * Number of participants in the chat
-     */
-    participants_count?: number | null;
-    /**
-     * Linked chat id
-     */
-    linked_chat_id?: number | null;
-    /**
-     * Slowmode in seconds
-     */
-    slowmode_seconds?: number | null;
-    /**
-     * Whether the chat is a bot
-     */
-    bot_verification?: boolean | null;
-    /**
-     * Whether the chat has slowmode enabled
-     */
-    chats_slowmode_enabled?: boolean | null;
-    /**
-     * Whether the chat has no forwards enabled
-     */
-    chats_noforwards?: boolean | null;
-    /**
-     * Whether the chat has join to send enabled
-     */
-    chats_join_to_send?: boolean | null;
-    /**
-     * Whether the chat has join request enabled
-     */
-    chats_join_request?: boolean | null;
-    /**
-     * Whether the chat can view messages
-     */
-    view_messages?: boolean | null;
-    /**
-     * Whether the chat can send messages
-     */
-    send_messages?: boolean | null;
-    /**
-     * Whether the chat can send media
-     */
-    send_media?: boolean | null;
-    /**
-     * Whether the chat can send stickers
-     */
-    send_stickers?: boolean | null;
-    /**
-     * Whether the chat can send gifs
-     */
-    send_gifs?: boolean | null;
-    /**
-     * Whether the chat can send games
-     */
-    send_games?: boolean | null;
-    /**
-     * Whether the chat can send inline
-     */
-    send_inline?: boolean | null;
-    /**
-     * Whether the chat can embed links
-     */
-    embed_links?: boolean | null;
-    /**
-     * Whether the chat can send polls
-     */
-    send_polls?: boolean | null;
-    /**
-     * Whether the chat can change info
-     */
-    change_info?: boolean | null;
-    /**
-     * Whether the chat can invite users
-     */
-    invite_users?: boolean | null;
-    /**
-     * Whether the chat can pin messages
-     */
-    pin_messages?: boolean | null;
-    /**
-     * Whether the chat can manage topics
-     */
-    manage_topics?: boolean | null;
-    /**
-     * Whether the chat can send photos
-     */
-    send_photos?: boolean | null;
-    /**
-     * Whether the chat can send videos
-     */
-    send_videos?: boolean | null;
-    /**
-     * Whether the chat can send round videos
-     */
-    send_roundvideos?: boolean | null;
-    /**
-     * Whether the chat can send audios
-     */
-    send_audios?: boolean | null;
-    /**
-     * Whether the chat can send voices
-     */
-    send_voices?: boolean | null;
-    /**
-     * Whether the chat can send docs
-     */
-    send_docs?: boolean | null;
-    /**
-     * Whether the chat can send plain
-     */
-    send_plain?: boolean | null;
-    /**
-     * Whether the chat can broadcast
-     */
-    chats_broadcast?: boolean | null;
-    /**
-     * Number of messages in the latest month
-     */
-    analysis_message_count_last_month?: number | null;
-    /**
-     * Number of active participants in the chat
-     */
-    analysis_active_participants?: number | null;
-    /**
-     * Number of times the chat was forwarded
-     */
-    analysis_num_of_times_forwarded?: number | null;
-    /**
-     * Number of channels forwarding the chat
-     */
-    analysis_num_of_channels_forwarding?: number | null;
-    /**
-     * Number of times the chat was forwarded
-     */
-    analysis_num_of_times_forwards?: number | null;
-    /**
-     * Number of channels forwarding the chat
-     */
-    analysis_num_of_channels_forwards?: number | null;
 };
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
 
-/**
- * Class representing the model of the dialog model of TL in IndexedDB
- * TODO: Should not be in common, needs to be translated to a contact_info...
- */
-export type DialogValue = {
-    peer_id: number;
-    read_inbox_max_id: number;
-    read_outbox_max_id: number;
-    top_message: number;
-    unread_count: number;
-    unread_mentions_count: number;
-    unread_reactions_count: number;
-};
-
 export type EchoMissionInput = {
     target_group_id: string;
     message: MessageForwardRequest;
-    origin_ids: Array<string>;
-    categories: Array<string>;
+    characters_categories: Array<string>;
+    chats_categories: Array<string>;
     /**
      * The time to start the mission - in UTC timezone
      */
@@ -636,14 +328,11 @@ export type FirstPuppetShowMessage = {
 };
 
 export type FluffMissionInput = {
+    character_ids?: Array<string> | null;
     /**
      * If character_ids is provided, this field is ignored
      */
-    origin_ids?: Array<string> | null;
-    /**
-     * If origin_ids is provided, this field is ignored
-     */
-    character_ids?: Array<string> | null;
+    characters_categories?: Array<string> | null;
     is_routine?: boolean | null;
     batch_size?: number | null;
 };
@@ -733,7 +422,7 @@ export type LeaveGroupResponseContent = {
 
 export type Message = {
     message_content: InputMessage;
-    metadata: MessageMetadata;
+    metadata?: MessageMetadata | null;
     replies?: Array<Message>;
 };
 
@@ -798,6 +487,15 @@ export type Prefrences = {
 
 export type PuppetShowInput = {
     first_messages: Array<FirstPuppetShowMessage>;
+    max_retries?: number | null;
+};
+
+export type RandomDistributionMissionInput = {
+    messages: Array<InputMessage>;
+    messages_amount: number;
+    messages_amount_per_character?: number | null;
+    max_messages_per_chat?: number | null;
+    start_time: string;
     max_retries?: number | null;
 };
 
@@ -1743,60 +1441,6 @@ export type GetSlotsCountCharactersSlotsCountGetResponses = {
 
 export type GetSlotsCountCharactersSlotsCountGetResponse = GetSlotsCountCharactersSlotsCountGetResponses[keyof GetSlotsCountCharactersSlotsCountGetResponses];
 
-export type GetOriginsCharactersOriginsGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/characters/origins/';
-};
-
-export type GetOriginsCharactersOriginsGetErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-};
-
-export type GetOriginsCharactersOriginsGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: Array<string>;
-};
-
-export type GetOriginsCharactersOriginsGetResponse = GetOriginsCharactersOriginsGetResponses[keyof GetOriginsCharactersOriginsGetResponses];
-
-export type GetOriginsCharactersOriginsOriginCharactersGetData = {
-    body?: never;
-    path: {
-        origin: string;
-    };
-    query?: never;
-    url: '/characters/origins/{origin}/characters/';
-};
-
-export type GetOriginsCharactersOriginsOriginCharactersGetErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetOriginsCharactersOriginsOriginCharactersGetError = GetOriginsCharactersOriginsOriginCharactersGetErrors[keyof GetOriginsCharactersOriginsOriginCharactersGetErrors];
-
-export type GetOriginsCharactersOriginsOriginCharactersGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: Array<CharacterRead>;
-};
-
-export type GetOriginsCharactersOriginsOriginCharactersGetResponse = GetOriginsCharactersOriginsOriginCharactersGetResponses[keyof GetOriginsCharactersOriginsOriginCharactersGetResponses];
-
 export type GetCharacterCategoriesCharactersCharacterIdCategoriesGetData = {
     body?: never;
     path: {
@@ -1920,16 +1564,14 @@ export type GetAllChatsChatsGetResponses = {
 
 export type GetAllChatsChatsGetResponse = GetAllChatsChatsGetResponses[keyof GetAllChatsChatsGetResponses];
 
-export type CreateChatsFromCsvChatsPostData = {
-    body?: never;
+export type CreateChatChatsPostData = {
+    body: ChatCreate;
     path?: never;
-    query: {
-        csv_path: string;
-    };
+    query?: never;
     url: '/chats/';
 };
 
-export type CreateChatsFromCsvChatsPostErrors = {
+export type CreateChatChatsPostErrors = {
     /**
      * Not found
      */
@@ -1940,16 +1582,47 @@ export type CreateChatsFromCsvChatsPostErrors = {
     422: HttpValidationError;
 };
 
-export type CreateChatsFromCsvChatsPostError = CreateChatsFromCsvChatsPostErrors[keyof CreateChatsFromCsvChatsPostErrors];
+export type CreateChatChatsPostError = CreateChatChatsPostErrors[keyof CreateChatChatsPostErrors];
 
-export type CreateChatsFromCsvChatsPostResponses = {
+export type CreateChatChatsPostResponses = {
     /**
      * Successful Response
      */
     200: ChatRead;
 };
 
-export type CreateChatsFromCsvChatsPostResponse = CreateChatsFromCsvChatsPostResponses[keyof CreateChatsFromCsvChatsPostResponses];
+export type CreateChatChatsPostResponse = CreateChatChatsPostResponses[keyof CreateChatChatsPostResponses];
+
+export type CreateChatsFromCsvChatsFromCsvPostData = {
+    body?: never;
+    path?: never;
+    query: {
+        csv_path: string;
+    };
+    url: '/chats/from_csv/';
+};
+
+export type CreateChatsFromCsvChatsFromCsvPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateChatsFromCsvChatsFromCsvPostError = CreateChatsFromCsvChatsFromCsvPostErrors[keyof CreateChatsFromCsvChatsFromCsvPostErrors];
+
+export type CreateChatsFromCsvChatsFromCsvPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ChatRead>;
+};
+
+export type CreateChatsFromCsvChatsFromCsvPostResponse = CreateChatsFromCsvChatsFromCsvPostResponses[keyof CreateChatsFromCsvChatsFromCsvPostResponses];
 
 export type DeleteChatChatsChatIdDeleteData = {
     body?: never;
@@ -2133,59 +1806,6 @@ export type RemoveCharacterFromChatChatsChatIdCharactersCharacterIdDeleteRespons
      */
     200: unknown;
 };
-
-export type AddCharacterToChatChatsChatIdCharactersCharacterIdPostData = {
-    body?: never;
-    path: {
-        chat_id: string;
-        character_id: string;
-    };
-    query?: never;
-    url: '/chats/{chat_id}/characters/{character_id}';
-};
-
-export type AddCharacterToChatChatsChatIdCharactersCharacterIdPostErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddCharacterToChatChatsChatIdCharactersCharacterIdPostError = AddCharacterToChatChatsChatIdCharactersCharacterIdPostErrors[keyof AddCharacterToChatChatsChatIdCharactersCharacterIdPostErrors];
-
-export type AddCharacterToChatChatsChatIdCharactersCharacterIdPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type GetCategoriesChatsCategoriesGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/chats/categories/';
-};
-
-export type GetCategoriesChatsCategoriesGetErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-};
-
-export type GetCategoriesChatsCategoriesGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: Array<string>;
-};
-
-export type GetCategoriesChatsCategoriesGetResponse = GetCategoriesChatsCategoriesGetResponses[keyof GetCategoriesChatsCategoriesGetResponses];
 
 export type GetChatsByCategoryChatsCategoriesCategoryChatsGetData = {
     body?: never;
@@ -2741,7 +2361,7 @@ export type CancelMissionMissionsCancelMissionMissionIdPostResponses = {
 export type CancelMissionMissionsCancelMissionMissionIdPostResponse = CancelMissionMissionsCancelMissionMissionIdPostResponses[keyof CancelMissionMissionsCancelMissionMissionIdPostResponses];
 
 export type CreateMission2MissionsCreateMission2PostData = {
-    body: FluffMissionInput | AllocateProfilesGroupsMissionInput | EchoMissionInput | PuppetShowInput;
+    body: FluffMissionInput | AllocateProfilesGroupsMissionInput | EchoMissionInput | PuppetShowInput | RandomDistributionMissionInput;
     path?: never;
     query?: never;
     url: '/missions/create_mission2/';
@@ -3070,66 +2690,6 @@ export type GetCategoryCharactersCategoriesCategoryIdCharactersGetResponses = {
 
 export type GetCategoryCharactersCategoriesCategoryIdCharactersGetResponse = GetCategoryCharactersCategoriesCategoryIdCharactersGetResponses[keyof GetCategoryCharactersCategoriesCategoryIdCharactersGetResponses];
 
-export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteData = {
-    body?: never;
-    path: {
-        category_id: string;
-        character_id: string;
-    };
-    query?: never;
-    url: '/categories/{category_id}/characters/{character_id}';
-};
-
-export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteError = RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteErrors[keyof RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteErrors];
-
-export type RemoveCharacterFromCategoryCategoriesCategoryIdCharactersCharacterIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostData = {
-    body?: never;
-    path: {
-        category_id: string;
-        character_id: string;
-    };
-    query?: never;
-    url: '/categories/{category_id}/characters/{character_id}';
-};
-
-export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostError = AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostErrors[keyof AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostErrors];
-
-export type AddCharacterToCategoryCategoriesCategoryIdCharactersCharacterIdPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
 export type GetCategoryChatsCategoriesCategoryIdChatsGetData = {
     body?: never;
     path: {
@@ -3162,66 +2722,6 @@ export type GetCategoryChatsCategoriesCategoryIdChatsGetResponses = {
 };
 
 export type GetCategoryChatsCategoriesCategoryIdChatsGetResponse = GetCategoryChatsCategoriesCategoryIdChatsGetResponses[keyof GetCategoryChatsCategoriesCategoryIdChatsGetResponses];
-
-export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteData = {
-    body?: never;
-    path: {
-        category_id: string;
-        chat_id: string;
-    };
-    query?: never;
-    url: '/categories/{category_id}/chats/{chat_id}';
-};
-
-export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteError = RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteErrors[keyof RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteErrors];
-
-export type RemoveChatFromCategoryCategoriesCategoryIdChatsChatIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
-export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostData = {
-    body?: never;
-    path: {
-        category_id: string;
-        chat_id: string;
-    };
-    query?: never;
-    url: '/categories/{category_id}/chats/{chat_id}';
-};
-
-export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostErrors = {
-    /**
-     * Not found
-     */
-    404: unknown;
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostError = AddChatToCategoryCategoriesCategoryIdChatsChatIdPostErrors[keyof AddChatToCategoryCategoriesCategoryIdChatsChatIdPostErrors];
-
-export type AddChatToCategoryCategoriesCategoryIdChatsChatIdPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
 
 export type RootGetData = {
     body?: never;

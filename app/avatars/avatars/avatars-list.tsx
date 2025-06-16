@@ -2,9 +2,12 @@
 
 import TelegramIcon from "@/assets/telegram.svg"
 import { DataTable } from "@/components/table"
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
 import { ProxyData } from "@lib/api/models"
@@ -17,6 +20,7 @@ import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { AvatarDrawer } from "./avatar-drawer"
+import { getBadgeClassNamesByActivationSource } from "./avatars-utils"
 import { Proxy } from "./proxy"
 
 export type ViewMode = "Grid" | "Table"
@@ -42,6 +46,7 @@ export interface ProfileDataRow {
   proxy: ProxyData | undefined
   phone: string | undefined
   socialNetworks: { [network: string]: boolean }
+  activationSource: string | undefined
 }
 
 function avatarToRow(avatar: AvatarModelWithProxy): ProfileDataRow {
@@ -59,6 +64,7 @@ function avatarToRow(avatar: AvatarModelWithProxy): ProfileDataRow {
     proxy: avatar?.proxy || null,
     phone: (avatar?.data.phone_number as string) || undefined,
     socialNetworks: getSocialNetworkStatus(avatar),
+    activationSource: ((avatar?.data.social_network_accounts as any)?.telegram?.activation_source || "").toUpperCase(),
   }
 }
 
@@ -138,6 +144,26 @@ const profileColumns: ColumnDef<ProfileDataRow>[] = [
     },
   },
   {
+    accessorKey: "activationSource",
+    header: "Activation Source",
+    size: 60,
+    cell: ({ row }) => {
+      const profile = row.original
+      return (
+        <Badge
+          variant="outline"
+          // style={{ backgroundColor: getBadgeColorByActivationSource(profile.activationSource || "", true) }}
+          className={cn(
+            "font-bold tracking-wide",
+            getBadgeClassNamesByActivationSource(profile.activationSource || ""),
+          )}
+        >
+          {profile.activationSource}
+        </Badge>
+      )
+    },
+  },
+  {
     accessorFn: row => row.geocode + "," + row.city,
     header: "Location",
     cell: ({ row }) => {
@@ -203,6 +229,14 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
   const searchParams = useSearchParams()
   const id = searchParams.get("id")
 
+  const activationSources = new Set(
+    initialAvatars.map(
+      avatar => (avatar.data.social_network_accounts as any)?.telegram?.activation_source?.toUpperCase() || "",
+    ),
+  )
+
+  const activationSourcesArray = Array.from(activationSources)
+
   useEffect(() => {
     if (id) {
       const avatar = initialAvatars.find(avatar => avatar.id === id)
@@ -257,23 +291,6 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
       >
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel className="pr-8">
-            {/* <div className="">
-              <div className="mb-12 flex flex-row items-center gap-6 h-4 w-full">
-                <Button
-                  variant="link"
-                  className="bg-gray-100 p-1 rounded-full hover:bg-gray-200"
-                  onClick={async () => {
-                    setIsRefreshing(true)
-                    // TODO: Implement refresh functionality
-                    setIsRefreshing(false)
-                  }}
-                >
-                  <RefreshCcwIcon
-                    className={cn("size-3 text-gray-500", isRefreshing && "animate-[spin_1s_linear_reverse_infinite]")}
-                  />
-                </Button>
-              </div>
-            </div> */}
             <div className="flex flex-col gap-4 max-w-[1280px]" ref={tableRef}>
               <DataTable
                 columns={profileColumns}
@@ -285,18 +302,51 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
                 header={({ table }) => {
                   return (
                     <div className="flex flex-row gap-2">
-                      <Input
-                        placeholder="Filter by name..."
-                        value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                        onChange={event => table.getColumn("name")?.setFilterValue(event.target.value)}
-                        className="max-w-sm"
-                      />
-                      <Input
-                        placeholder="Filter by ID..."
-                        value={(table.getColumn("profileId")?.getFilterValue() as string) ?? ""}
-                        onChange={event => table.getColumn("profileId")?.setFilterValue(event.target.value)}
-                        className="max-w-sm"
-                      />
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                          id="name"
+                          placeholder="Filter by name..."
+                          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                          onChange={event => table.getColumn("name")?.setFilterValue(event.target.value)}
+                          className="w-[30ch]"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="profileId">Profile ID</Label>
+                        <Input
+                          id="profileId"
+                          placeholder="Filter by ID..."
+                          value={(table.getColumn("profileId")?.getFilterValue() as string) ?? ""}
+                          onChange={event => table.getColumn("profileId")?.setFilterValue(event.target.value)}
+                          className="w-[30ch]"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="activationSource">Activation Source</Label>
+                        <Select
+                          onValueChange={value => {
+                            if (value === "all") {
+                              table.getColumn("activationSource")?.setFilterValue(undefined)
+                            } else {
+                              table.getColumn("activationSource")?.setFilterValue(value)
+                            }
+                          }}
+                          defaultValue={table.getColumn("activationSource")?.getFilterValue() as string}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Filter by activation source..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            {activationSourcesArray.map(source => (
+                              <SelectItem key={source} value={source}>
+                                {source}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   )
                 }}
