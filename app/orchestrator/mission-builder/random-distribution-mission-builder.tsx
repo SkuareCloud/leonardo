@@ -9,11 +9,9 @@ import { cn } from "@lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
-import { FieldWithLabel, InputWithLabel, ModeButtonSelector } from "./mission-builder-utils"
+import { FieldWithLabel } from "./mission-builder-utils"
 
-export type EchoMissionMode = "message-plain" | "message-reference" | "scenario-id"
-
-export function EchoMissionBuilder({
+export function RandomDistributionMissionBuilder({
   scenarios,
   categories,
   chats,
@@ -24,7 +22,6 @@ export function EchoMissionBuilder({
 }) {
   const [maximumRetries, setMaximumRetries] = useState(3)
   const [messagePlain, setMessagePlain] = useState("")
-  const [mode, setMode] = useState<EchoMissionMode>("message-plain")
   const [scenarioId, setScenarioId] = useState("")
   const [chatId, setChatId] = useState("")
   const [chatCategories, setChatCategories] = useState<{ id: string; label: string }[]>([])
@@ -51,27 +48,6 @@ export function EchoMissionBuilder({
     payload.chats_categories = chatCategories.length > 0 ? chatCategories.map(c => c.label) : []
     payload.characters_categories = profileCategories.length > 0 ? profileCategories.map(c => c.label) : []
 
-    if (mode === "message-plain") {
-      if (messagePlain) {
-        payload.message = {
-          message_content: {
-            text: messagePlain,
-            attachments: [],
-          },
-        }
-      }
-    } else {
-      payload.message = undefined
-    }
-
-    if (mode === "scenario-id") {
-      if (scenarioId) {
-        payload.scenario_external_id = scenarioId
-      } else {
-        payload.scenario_external_id = undefined
-      }
-    }
-
     onChangeMissionPayload(payload as MissionInput<EchoMissionInput>)
   }, [
     messagePlain,
@@ -82,7 +58,6 @@ export function EchoMissionBuilder({
     profileCategories,
     triggerTime,
     sendAtTriggerTime,
-    mode,
   ])
 
   const triggerTimeFromNow =
@@ -95,26 +70,6 @@ export function EchoMissionBuilder({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-row gap-4">
-        <ModeButtonSelector
-          active={mode === "message-plain"}
-          title="Plain Message"
-          subtitle="Enter the message you wish to echo"
-          onClick={() => setMode("message-plain")}
-        />
-        <ModeButtonSelector
-          active={mode === "message-reference"}
-          title="Message Reference"
-          subtitle="Select a message by reference"
-          onClick={() => setMode("message-reference")}
-        />
-        <ModeButtonSelector
-          active={mode === "scenario-id"}
-          title="External Scenario"
-          subtitle="Select a scenario from the list of scenarios"
-          onClick={() => setMode("scenario-id")}
-        />
-      </div>
       <div className="flex flex-col gap-8 p-2">
         <FieldWithLabel required label="Select chat">
           <Combobox
@@ -126,28 +81,7 @@ export function EchoMissionBuilder({
             onValueChange={value => setChatId(value)}
           />
         </FieldWithLabel>
-        {mode === "message-plain" && (
-          <InputWithLabel
-            required
-            label="Message"
-            value={messagePlain}
-            onChange={e => setMessagePlain(e.target.value)}
-          />
-        )}
-        {mode === "scenario-id" && (
-          <Combobox
-            options={scenarios
-              .filter(s => s.external_id)
-              .map(scenario => ({
-                value: scenario.external_id!,
-                label: scenario.external_id!,
-              }))}
-            label="Select external scenario"
-            value={scenarioId}
-            onValueChange={value => setScenarioId(value)}
-          />
-        )}
-        <FieldWithLabel label="Trigger time">
+        <FieldWithLabel label="Start time">
           <div className="flex flex-col gap-3 w-full">
             <div className="flex flex-row gap-2">
               <DateTimePicker

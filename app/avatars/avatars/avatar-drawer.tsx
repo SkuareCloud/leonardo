@@ -243,7 +243,7 @@ export function AvatarDrawer({
             />
             <BasicFieldSection label="Proxy">{avatar.proxy && <Proxy proxy={avatar.proxy} />}</BasicFieldSection>
             <BasicFieldSection label="Date of Birth">
-              {new Date(avatar.data?.date_of_birth).toLocaleDateString()}
+              {new Date(avatar.data?.date_of_birth).toDateString()}
             </BasicFieldSection>
             <BasicFieldSection label="Phone Number">{avatar.data?.phone_number}</BasicFieldSection>
           </div>

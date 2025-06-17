@@ -5,10 +5,12 @@ import {
   BrickWallIcon,
   Clapperboard,
   Crosshair,
+  HardHat,
   LucideIcon,
   MessageCircleMore,
   MessagesSquare,
   ScrollText,
+  SpeechIcon,
   Users2Icon,
   VenetianMask,
   Waypoints,
@@ -16,9 +18,19 @@ import {
 import * as React from "react"
 
 import { NavMain } from "@/components/nav-main"
-import { Sidebar, SidebarContent, SidebarHeader, SidebarMenuButton, SidebarRail } from "@/components/ui/sidebar"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenuButton,
+  SidebarRail,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { read_client_env } from "@lib/client-env"
+import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Separator } from "./ui/separator"
 
 export interface NavItem {
   title: string
@@ -35,6 +47,7 @@ const data = {
       title: "Avatars",
       url: "#",
       isActive: true,
+      icon: Users2Icon,
       items: [
         {
           title: "Avatars",
@@ -70,6 +83,7 @@ const data = {
       title: "Operator",
       url: "#",
       isActive: true,
+      icon: HardHat,
       items: [
         {
           title: "Scenarios",
@@ -87,6 +101,7 @@ const data = {
       title: "Orchestrator",
       url: "#",
       isActive: true,
+      icon: SpeechIcon,
       items: [
         {
           title: "Characters",
@@ -120,7 +135,11 @@ const data = {
   navMain: NavItem[]
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ pathname, ...props }: React.ComponentProps<typeof Sidebar> & { pathname: string }) {
+  const { open } = useSidebar()
+  const clientPathname = usePathname()
+  const effectivePathname = clientPathname || pathname
+
   const isLocal = read_client_env().isLocal
   const navItems = data.navMain.filter(item => !(!isLocal && item.localOnly))
   for (const item of navItems) {
@@ -137,15 +156,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             size="lg"
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"></div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">Shepherd</span>
+            <div className="flex flex-row items-center gap-2">
+              <Image
+                src="/logo.png"
+                width={32}
+                height={32}
+                className="relative bottom-0.5 text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"
+                alt="Shepherd Logo"
+              />
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-extrabold uppercase">Shepherd</span>
+              </div>
             </div>
           </SidebarMenuButton>
         </SidebarHeader>
       </Link>
+      <Separator className="mt-4 mb-5" />
       <SidebarContent>
-        <NavMain items={navItems} />
+        <NavMain items={navItems} pathname={effectivePathname} open={open} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

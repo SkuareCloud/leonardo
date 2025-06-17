@@ -20,15 +20,21 @@ import {
   stopProfileCharactersCharacterIdStopPost,
   submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
-import { CategoryRead, CharacterRead, ChatRead, MissionRead } from "@lib/api/orchestrator"
+import { CategoryRead, CharacterRead, ChatRead, MissionCreate, MissionRead, ScenarioRead } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
+  createMissionMissionsPost,
+  deleteMissionMissionsMissionIdDelete,
+  getAllCategoriesCategoriesGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
   getAllChatsChatsGet,
+  getScenariosScenariosGet as getAllOrchestratorScenariosGet,
   getCategoryChatsCategoriesCategoryIdChatsGet,
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
+  getMissionMissionsMissionIdGet,
   getMissionsMissionsGet,
   getRootCategoryCategoriesRootGet,
+  planMissionMissionsPlanMissionMissionIdPost,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { Web1Client } from "@lib/web1/web1-client"
@@ -224,15 +230,47 @@ export class ApiService {
     return response.data ?? []
   }
 
-  async getOrchestratorChats(): Promise<ChatRead[]> {
-    logger.info("Getting orchestrator chats")
-    const response = await getAllChatsChatsGet({
+  async getOrchestratorScenarios(): Promise<ScenarioRead[]> {
+    const limit = process.env.ORCHESTRATOR_SCENARIOS_LIMIT ? parseInt(process.env.ORCHESTRATOR_SCENARIOS_LIMIT) : 5000
+    logger.info(`Getting orchestrator scenarios (limit: ${limit})`)
+    const response = await getAllOrchestratorScenariosGet({
       client: orchestratorClient,
+      query: {
+        limit,
+      },
     })
     if (response.error) {
       throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
     }
     logger.info("Successfully got orchestrator chats")
+    return response.data ?? []
+  }
+
+  async getOrchestratorChats(): Promise<ChatRead[]> {
+    const limit = process.env.ORCHESTRATOR_CHATS_LIMIT ? parseInt(process.env.ORCHESTRATOR_CHATS_LIMIT) : 5000
+    logger.info(`Getting orchestrator chats (limit: ${limit})`)
+    const response = await getAllChatsChatsGet({
+      client: orchestratorClient,
+      query: {
+        limit,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got ${response.data?.length} orchestrator chats`)
+    return response.data ?? []
+  }
+
+  async getOrchestratorCategories(): Promise<CategoryRead[]> {
+    logger.info("Getting orchestrator categories")
+    const response = await getAllCategoriesCategoriesGet({
+      client: orchestratorClient,
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator categories: ${JSON.stringify(response.error)}`)
+    }
+    logger.info("Successfully got orchestrator categories")
     return response.data ?? []
   }
 
@@ -320,6 +358,62 @@ export class ApiService {
       throw new Error(`Failed to get orchestrator missions: ${JSON.stringify(response.error)}`)
     }
     logger.info("Successfully got orchestrator missions")
+    return response.data ?? []
+  }
+
+  async getOrchestratorMission(missionId: string): Promise<MissionRead> {
+    logger.info(`Getting orchestrator mission: ${missionId}`)
+    const response = await getMissionMissionsMissionIdGet({
+      client: orchestratorClient,
+      path: {
+        mission_id: missionId,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator missions: ${JSON.stringify(response.error)}`)
+    }
+    if (!response.data) {
+      throw new Error(`Failed to get orchestrator mission: ${missionId}`)
+    }
+    logger.info(`Successfully got orchestrator mission: ${missionId}`)
+    return response.data
+  }
+
+  async deleteOrchestratorMission(missionId: string) {
+    logger.info(`Deleting orchestrator mission: ${missionId}`)
+    const response = await deleteMissionMissionsMissionIdDelete({
+      client: orchestratorClient,
+      path: { mission_id: missionId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to delete orchestrator mission: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully deleted orchestrator mission: ${missionId}`)
+  }
+
+  async submitOrchestratorMission(mission: MissionCreate): Promise<MissionRead | null> {
+    logger.info(`Submitting orchestrator mission: ${mission.description}`)
+    const response = await createMissionMissionsPost({
+      client: orchestratorClient,
+      body: mission,
+    })
+    if (response.error) {
+      throw new Error(`Failed to submit orchestrator mission: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully submitted orchestrator mission: ${mission.description}`)
+    return response.data ?? null
+  }
+
+  async planOrchestratorMission(missionId: string): Promise<ScenarioRead[]> {
+    logger.info(`Planning orchestrator mission: ${missionId}`)
+    const response = await planMissionMissionsPlanMissionMissionIdPost({
+      client: orchestratorClient,
+      path: { mission_id: missionId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to plan orchestrator mission: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully planned orchestrator mission: ${missionId}`)
     return response.data ?? []
   }
 

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ServiceClient } from "@lib/service-client"
 import Link from "next/link"
-import Scenarios from "./scenarios"
+import ScenariosList from "./scenarios"
 
 export default async function Page() {
   const serviceClient = new ServiceClient()
@@ -21,7 +21,7 @@ export default async function Page() {
         </div>
       </div>
       <div className="flex flex-col gap-4 max-w-[1280px]">
-        <Scenarios scenarios={scenarios} avatarsData={avatars} />
+        <ScenariosList scenarios={scenarios} avatarsData={avatars} />
       </div>
     </div>
   )

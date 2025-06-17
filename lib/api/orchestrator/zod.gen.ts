@@ -187,7 +187,10 @@ export const zBehaviouralResponseContentInput = z.object({
     chats: z.union([
         z.array(z.unknown()),
         z.null()
-    ]).optional()
+    ]).optional(),
+    personal_details_synced: z.boolean().optional().default(false),
+    auto_download_media_disabled: z.boolean().optional().default(false),
+    all_active_sessions_deleted: z.boolean().optional().default(false)
 });
 
 export const zSendBulkMessagesResponseContentInput = z.object({
@@ -276,7 +279,10 @@ export const zBehaviouralResponseContentOutput = z.object({
     chats: z.union([
         z.array(z.unknown()),
         z.null()
-    ]).optional()
+    ]).optional(),
+    personal_details_synced: z.boolean().optional().default(false),
+    auto_download_media_disabled: z.boolean().optional().default(false),
+    all_active_sessions_deleted: z.boolean().optional().default(false)
 });
 
 export const zSendBulkMessagesResponseContentOutput = z.object({
@@ -353,12 +359,12 @@ export const zAttachment = z.object({
 });
 
 export const zBehaviouralArgs = z.object({
-    wait_time: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
+    wait_time: z.number().int().optional().default(0),
     sync_context: z.boolean().optional().default(false),
-    get_chats: z.boolean().optional().default(false)
+    get_chats: z.boolean().optional().default(false),
+    sync_personal_details: z.boolean().optional().default(false),
+    disable_auto_download_media: z.boolean().optional().default(false),
+    delete_all_active_sessions: z.boolean().optional().default(false)
 });
 
 export const zBehaviouralAction = z.object({
@@ -717,15 +723,28 @@ export const zFluffMissionInput = z.object({
     batch_size: z.union([
         z.number().int(),
         z.null()
+    ]).optional(),
+    get_chats: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    sync_personal_details: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    disable_auto_download_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    delete_all_active_sessions: z.union([
+        z.boolean(),
+        z.null()
     ]).optional()
 });
 
 export const zForwardMessageArgs = z.object({
     from_chat: zChatInfo,
-    message_info: z.union([
-        zAppModelsOperatorCommonMessageInfoMessageInfo,
-        z.string()
-    ]),
+    message_info: zAppModelsOperatorCommonMessageInfoMessageInfo,
     target_chat: zChatInfo,
     message: z.union([
         zInputMessage,
@@ -942,6 +961,14 @@ export const zPuppetShowInput = z.object({
 });
 
 export const zRandomDistributionMissionInput = z.object({
+    characters_categories: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional(),
+    chat_categories: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional(),
     messages: z.array(zInputMessage),
     messages_amount: z.number().int(),
     messages_amount_per_character: z.union([
@@ -961,10 +988,7 @@ export const zRandomDistributionMissionInput = z.object({
 
 export const zReplyToMessageArgs = z.object({
     chat: zChatInfo,
-    message_info: z.union([
-        zAppModelsOperatorCommonMessageInfoMessageInfo,
-        z.string()
-    ]),
+    message_info: zAppModelsOperatorCommonMessageInfoMessageInfo,
     input_message_content: zInputMessage
 });
 
@@ -1027,7 +1051,7 @@ export const zSendBulkMessagesAction = z.object({
 export const zScenario = z.object({
     id: z.string().optional(),
     profile: zCharacter,
-    prefrences: zPrefrences,
+    prefrences: zPrefrences.optional(),
     actions: z.array(z.unknown())
 });
 
@@ -1169,6 +1193,10 @@ export const zGetCharacterChatsCharactersCharacterIdChatsGetResponse = z.union([
 export const zGetSlotsCountCharactersSlotsCountGetResponse = z.object({});
 
 export const zGetCharacterCategoriesCharactersCharacterIdCategoriesGetResponse = z.array(zCategoryRead);
+
+export const zGetCharactersStatesCharactersStatisticsGetResponse = z.array(z.object({}));
+
+export const zGetCharactersStatesByDateCharactersStatisticsByDateGetResponse = z.array(z.object({}));
 
 export const zGetAllChatsChatsGetResponse = z.array(zChatRead);
 

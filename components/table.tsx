@@ -19,6 +19,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -26,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Separator } from "@radix-ui/react-separator"
 
 export interface DataTableProps<T> {
   columns: ColumnDef<T>[]
@@ -34,7 +36,9 @@ export interface DataTableProps<T> {
   pageSize?: number
   header?: ({ table }: { table: TTable<T> }) => React.ReactElement
   onClickRow?: (rowData: T) => void
+  enableRowSelection?: boolean
 }
+
 export function DataTable<T>({
   columns,
   data,
@@ -42,6 +46,7 @@ export function DataTable<T>({
   initialSortingState = [],
   header,
   onClickRow,
+  enableRowSelection = false,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSortingState)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -52,9 +57,41 @@ export function DataTable<T>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  React.useEffect(() => {
+    setPagination({ pageIndex: 0, pageSize })
+  }, [data])
+
+  // Add selection column if row selection is enabled
+  const columnsWithSelection = React.useMemo(() => {
+    if (!enableRowSelection) return columns
+
+    const selectionColumn: ColumnDef<T> = {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={value => row.toggleSelected(!!value)}
+          onClick={e => e.stopPropagation()}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    }
+
+    return [selectionColumn, ...columns]
+  }, [columns, enableRowSelection])
+
   const table = useReactTable({
     data,
-    columns,
+    columns: columnsWithSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -64,6 +101,7 @@ export function DataTable<T>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    enableRowSelection,
     state: {
       sorting,
       columnFilters,
@@ -83,7 +121,13 @@ export function DataTable<T>({
       <div className="flex items-center py-4">
         {header && header({ table })}
         <div className="flex-1" />
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          {enableRowSelection && table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => table.resetRowSelection()}>
+              Reset selection
+            </Button>
+          )}
+          <Separator orientation="vertical" className="h-4 border-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto h-8">
@@ -114,7 +158,7 @@ export function DataTable<T>({
         </div>
       </div>
       <div className="flex-1 pt-8">
-        <div className="rounded-md border">
+        <div className="rounded-md border bg-white">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map(headerGroup => (

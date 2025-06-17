@@ -1,5 +1,6 @@
 import { AvatarModelWithProxy } from "./api/avatars"
 import { CombinedAvatar } from "./api/models"
+import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
 import { ClientEnv, read_client_env } from "./client-env"
 import { Web1Account } from "./web1/web1-models"
 
@@ -51,6 +52,53 @@ export class ServiceBrowserClient {
     if (!resp.ok) {
       throw new Error(`Failed to assign proxy: ${resp.statusText}`)
     }
+  }
+
+  async getOrchestratorMissions(): Promise<MissionRead[]> {
+    const resp = await fetch("/api/orchestrator/missions")
+    const json = (await resp.json()) as MissionRead[]
+    return json
+  }
+
+  async submitMission(mission: MissionCreate): Promise<MissionRead> {
+    const resp = await fetch("/api/orchestrator/missions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(mission),
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to submit mission: ${resp.statusText}`)
+    }
+    const json = (await resp.json()) as MissionRead
+    if (json.status_code !== "submitted") {
+      throw new Error(`Failed to submit mission: ${json.status_code}`)
+    }
+    return json
+  }
+
+  async planMission(missionId: string): Promise<ScenarioRead[]> {
+    const resp = await fetch(`/api/orchestrator/missions/plan?id=${missionId}`, {
+      method: "POST",
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to plan mission: ${resp.statusText}`)
+    }
+    const json = (await resp.json()) as ScenarioRead[]
+    return json
+  }
+
+  async deleteMission(missionId: string) {
+    const resp = await fetch(`/api/orchestrator/missions?id=${missionId}`, {
+      method: "DELETE",
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to delete mission: ${resp.statusText}`)
+    }
+    const json = await resp.json()
+    return json
   }
 
   async activate(profileId: string) {

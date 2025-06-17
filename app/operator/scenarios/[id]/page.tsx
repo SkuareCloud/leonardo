@@ -401,14 +401,17 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <PageHeader title={`Scenario ${scenario.scenario.id}`}>
-          <Link href={`/avatars/avatars?id=${scenario.scenario.profile.id}`}>
-            <div className="flex text-sm text-gray-600 flex-row gap-2 my-2">
-              <b>Profile ID:</b> <span className="underline">{scenario.scenario.profile.id}</span>{" "}
-              <SquareArrowUpRightIcon className="size-4" />
-            </div>
-          </Link>
-        </PageHeader>
+        <PageHeader
+          title={`Scenario ${scenario.scenario.id}`}
+          subtitle={
+            <Link href={`/avatars/avatars?id=${scenario.scenario.profile.id}`}>
+              <div className="flex text-sm text-gray-600 flex-row gap-2 my-2">
+                <b>Profile ID:</b> <span className="underline">{scenario.scenario.profile.id}</span>{" "}
+                <SquareArrowUpRightIcon className="size-4" />
+              </div>
+            </Link>
+          }
+        ></PageHeader>
         <div className="flex gap-2">
           <ReplayScenarioButton scenario={scenario.scenario} />
         </div>

@@ -107,7 +107,7 @@ const chatColumns: ColumnDef<ChatRead>[] = [
     size: 100,
     cell: ({ row }) => {
       const chat = row.original
-      return <Badge variant="outline">{chat.categoryName || "Uncategorized"}</Badge>
+      return <Badge variant="outline">{chat.category_id || "Uncategorized"}</Badge>
     },
   },
   {
@@ -138,11 +138,14 @@ export function ChatsList({
     }
     return chatsWithCategory
       .filter(chatWithCategory => chatWithCategory.category.id === activeCategoryId)
-      .map(cat => ({
-        ...cat.chat,
-        // patch the category name to appear as the name
-        categoryName: cat.category.name,
-      }) as ChatRead)
+      .map(
+        cat =>
+          ({
+            ...cat.chat,
+            // patch the category name to appear as the name
+            categoryName: cat.category.name,
+          } as ChatRead),
+      )
   }, [chatsWithCategory, activeCategoryId])
 
   return (
@@ -155,7 +158,6 @@ export function ChatsList({
               value={activeCategoryId ?? undefined}
               onValueChange={value => {
                 const url = new URL(window.location.href)
-                console.log("value", value)
                 url.searchParams.set("category", value)
                 setActiveCategoryId(value)
               }}
@@ -178,7 +180,7 @@ export function ChatsList({
       <div className="flex flex-col gap-4">
         <DataTable
           columns={chatColumns}
-          data={data}
+          data={data as ChatRead[]}
           header={({ table }) => {
             return (
               <div>

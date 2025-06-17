@@ -13,12 +13,14 @@ export default async function Page() {
   return (
     <div className="flex flex-col">
       <PageHeader title="Chats" subtitle="Manage and monitor all chats in the system." />
-      <ChatsView
-        categoriesWithChatCount={categories}
-        chatsByCategoryId={chatsByCategoryId}
-        category={categoryFromQuery}
-        tab={tabFromQuery}
-      />
+      <div className="flex flex-col pt-6">
+        <ChatsView
+          categoriesWithChatCount={categories}
+          chatsByCategoryId={chatsByCategoryId}
+          category={categoryFromQuery}
+          tab={tabFromQuery}
+        />
+      </div>
     </div>
   )
 }

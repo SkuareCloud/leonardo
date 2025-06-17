@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { zAvatarModelWithProxy } from "./avatars/zod.gen"
 import { zProfileWorkerView } from "./operator/zod.gen"
-import { CategoryRead, ChatRead } from "./orchestrator"
+import { CategoryRead, ChatRead, EchoMissionInput, MissionCreate } from "./orchestrator"
 
 export const MissionTypes = [
   "EchoMission",
@@ -41,3 +41,8 @@ export interface CategoryWithChatCount {
   category: CategoryRead
   count: number
 }
+
+export type MissionInput<T> = MissionCreate & { payload: T }
+
+// wrappers to enforce type safety
+export type EffectiveEchoMissionInput = MissionInput<EchoMissionInput>

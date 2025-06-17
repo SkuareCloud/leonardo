@@ -1,0 +1,200 @@
+"use client"
+
+import { PageHeader } from "@/components/page-header"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { MissionType } from "@lib/api/models"
+import { CategoryRead, ChatRead, MissionCreate, ScenarioRead } from "@lib/api/orchestrator"
+import { zEchoMissionInput, zMissionCreate } from "@lib/api/orchestrator/zod.gen"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
+import { cn } from "@lib/utils"
+import { DicesIcon, DramaIcon, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import React from "react"
+import { toast } from "sonner"
+import { MissionBuilderCreateView } from "./mission-builder-create-view"
+
+const MissionMetadata: Record<
+  MissionType,
+  {
+    name: string
+    description: string
+    icon: React.ElementType
+    supported?: boolean
+  }
+> = {
+  EchoMission: {
+    name: "Echo",
+    description: "Relay a message to a group of profiles.",
+    supported: true,
+    icon: PodcastIcon,
+  },
+  RandomDistributionMission: {
+    name: "Random Distribution",
+    description: "Distribute messages to multiple groups by multiple profiles.",
+    supported: true,
+    icon: DicesIcon,
+  },
+  AllocateProfilesGroupsMission: {
+    name: "Allocate Profiles/Groups",
+    description: "Allocate a group of profiles to a group of scenarios.",
+    supported: false,
+    icon: ShuffleIcon,
+  },
+  PuppetShowMission: {
+    name: "Puppet Show",
+    description: "Orchestrate an interactive reply session.",
+    supported: false,
+    icon: DramaIcon,
+  },
+  FluffMission: {
+    name: "Fluff",
+    description: "Fluff a group of profiles.",
+    supported: false,
+    icon: RabbitIcon,
+  },
+}
+
+export function MissionBuilderView({
+  scenarios,
+  chats,
+  categories,
+}: {
+  scenarios: ScenarioRead[]
+  chats: ChatRead[]
+  categories: CategoryRead[]
+}) {
+  const router = useRouter()
+  const [selectedMissionType, setSelectedMissionType] = React.useState<MissionType>("EchoMission")
+  const [missionCreateRequest, setMissionCreateRequest] = React.useState<Partial<MissionCreate>>()
+  const [error, setError] = React.useState<string | null>(null)
+
+  const MissionIcon = selectedMissionType && MissionMetadata[selectedMissionType].icon
+
+  return (
+    <div className="w-full gap-8">
+      <PageHeader
+        title="Mission Builder"
+        subtitle="Create a new mission in 3 steps: author, plan and run"
+        className="z-10"
+      >
+        <div className="flex flex-row gap-6">
+          <div className="flex flex-row gap-2 text-[16px] tracking-wide text-nowrap items-center">
+            <div className="text-gray-600">Mission:</div>
+            <Badge className="text-blue-600 bg-blue-50 text-[16px] uppercase flex flex-row items-center justify-center font-bold px-4 py-1">
+              {selectedMissionType && <MissionIcon className="size-8 mr-2" />}
+              <div className="normal-case">{MissionMetadata[selectedMissionType].name}</div>
+            </Badge>
+          </div>
+
+          <Separator orientation="vertical" className="h-2 bg-gray-200" />
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  className="uppercase font-bold cursor-pointer scale-100 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={async () => {
+                    if (!selectedMissionType) return
+
+                    if (selectedMissionType === "EchoMission") {
+                      if (!missionCreateRequest) {
+                        toast.error("No request found. Check the JSON.")
+                        return
+                      }
+                      if (!missionCreateRequest.payload) {
+                        toast.error("No payload found. Check the JSON.")
+                        setError("No payload found. Check the JSON.")
+                        return
+                      }
+                      console.log("missionCreateRequest", missionCreateRequest)
+                      const validatedMissionRequest = zMissionCreate.safeParse(missionCreateRequest)
+                      console.log("validatedMissionRequest", validatedMissionRequest)
+                      if (validatedMissionRequest.error) {
+                        toast.error("Invalid mission request: " + validatedMissionRequest.error.message)
+                        setError(validatedMissionRequest.error.message)
+                        return
+                      }
+                      const validatedPayload = zEchoMissionInput.safeParse(missionCreateRequest.payload)
+                      if (validatedPayload.error) {
+                        toast.error("Invalid payload: " + validatedPayload.error.message)
+                        setError(validatedPayload.error.message)
+                        return
+                      }
+                      const serviceBrowserClient = new ServiceBrowserClient()
+                      try {
+                        const response = await serviceBrowserClient.submitMission(missionCreateRequest as MissionCreate)
+                        if (response) {
+                          toast.success("Mission submitted successfully")
+                          router.push(`/orchestrator/missions/${response.id}`)
+                        } else {
+                          toast.error("Failed to submit mission")
+                        }
+                      } catch (error) {
+                        toast.error("Failed to submit mission: " + error)
+                        setError(error instanceof Error ? error.message : "Unknown error")
+                      }
+                    }
+                  }}
+                >
+                  <PlusIcon className="size-4" />
+                  Create Mission
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="w-64 py-4 flex flex-row items-center">
+                This will create a new mission and redirect you to the mission page to plan the mission
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </PageHeader>
+      <ul className="w-full flex flex-row gap-8 mb-16">
+        {Object.entries(MissionMetadata).map(([type, data]) => {
+          return (
+            <li key={type}>
+              <Card
+                className={cn(
+                  "h-42 w-[280px] select-none px-4 py-1 text-left flex flex-col gap-2 relative border-2 text-[16px]",
+                  data.supported &&
+                    "cursor-pointer scale-100 select-none hover:scale-105 active:scale-95 transition-all hover:bg-gray-50",
+                  !data.supported &&
+                    "bg-[repeating-linear-gradient(45deg,theme(colors.yellow.50/10),theme(colors.yellow.50/10)_10px,transparent_10px,transparent_20px)]",
+                  selectedMissionType === type && "border-blue-400",
+                )}
+                onClick={() => {
+                  if (!data.supported) return
+                  return setSelectedMissionType(type as MissionType)
+                }}
+              >
+                {!data.supported && (
+                  <div className="uppercase tracking-wide absolute top-2 right-2 bg-yellow-100 text-yellow-900 text-xs px-3 py-1 rounded-full font-medium">
+                    Unsupported
+                  </div>
+                )}
+                <CardHeader className="flex flex-row text-left p-2">
+                  <CardTitle className="flex flex-col gap-2 pt-4">
+                    <data.icon className="size-4 mb-2" />
+                    <div>{data.name}</div>
+                  </CardTitle>
+                </CardHeader>
+                <CardDescription className="px-2 text-left">{data.description}</CardDescription>
+              </Card>
+            </li>
+          )
+        })}
+      </ul>
+      {selectedMissionType && (
+        <MissionBuilderCreateView
+          mission={selectedMissionType}
+          scenarios={scenarios}
+          chats={chats}
+          categories={categories}
+          onChangeRequest={setMissionCreateRequest}
+        />
+      )}
+    </div>
+  )
+}

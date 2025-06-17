@@ -1,14 +1,19 @@
 "use client"
 
+import { Combobox } from "@/components/combobox"
+import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { MissionRead, MissionStatus } from "@lib/api/orchestrator/types.gen"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
-import { RefreshCcwIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 
 const missionColumns: ColumnDef<MissionRead>[] = [
   {
@@ -91,42 +96,83 @@ const missionColumns: ColumnDef<MissionRead>[] = [
 ]
 
 export function MissionsList({ missions: initialMissions }: { missions: MissionRead[] }) {
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const router = useRouter()
+  const [missions, setMissions] = useState<MissionRead[]>(initialMissions)
+
+  const refreshMissions = async () => {
+    const missions = await new ServiceBrowserClient().getOrchestratorMissions()
+    setMissions(missions)
+  }
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex flex-row w-full pr-16">
-        <div className="mb-12 flex flex-row items-center gap-6 h-4 w-full">
-          <Button
-            variant="link"
-            className="bg-gray-100 p-1 rounded-full hover:bg-gray-200"
-            onClick={async () => {
-              setIsRefreshing(true)
-              // TODO: Implement refresh functionality
-              setIsRefreshing(false)
-            }}
-          >
-            <RefreshCcwIcon
-              className={cn("size-3 text-gray-500", isRefreshing && "animate-[spin_1s_linear_reverse_infinite]")}
-            />
-          </Button>
-        </div>
-      </div>
+      <PageHeader title="Missions" subtitle="View and manage missions" />
       <div className="flex flex-col gap-4 max-w-[1280px]">
         <DataTable
           columns={missionColumns}
-          data={initialMissions}
+          data={missions}
+          enableRowSelection
           header={({ table }) => {
             return (
-              <div>
+              <div className="flex flex-row gap-6 h-full items-center">
                 <Input
                   placeholder="Filter by type..."
                   value={(table.getColumn("mission_type")?.getFilterValue() as string) ?? ""}
                   onChange={event => table.getColumn("mission_type")?.setFilterValue(event.target.value)}
                   className="max-w-sm"
                 />
+                <Combobox
+                  options={(
+                    [
+                      "submitted",
+                      "planning",
+                      "failed_planning",
+                      "running",
+                      "completed",
+                      "canceled",
+                      "planned",
+                    ] satisfies MissionStatus[]
+                  ).map(status => ({
+                    label: status.charAt(0).toUpperCase() + status.slice(1),
+                    value: status,
+                  }))}
+                  placeholder="Filter by status..."
+                  value={(table.getColumn("status_code")?.getFilterValue() as string) ?? ""}
+                  onValueChange={value => table.getColumn("status_code")?.setFilterValue(value)}
+                  className="max-w-sm"
+                />
+                {table.getFilteredSelectedRowModel().rows.length > 0 && (
+                  <>
+                    <Separator orientation="vertical" className="mx-4 max-h-6 border-1" />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={async () => {
+                        const selectedMissions = table.getFilteredSelectedRowModel().rows.map(row => row.original)
+                        try {
+                          for (const mission of selectedMissions) {
+                            await new ServiceBrowserClient().deleteMission(mission.id)
+                          }
+                          toast.success("Missions deleted")
+                          table.resetRowSelection()
+                        } catch (error) {
+                          toast.error("Failed to delete at least one mission: " + error)
+                          console.error(error)
+                        } finally {
+                          await new Promise(resolve => setTimeout(resolve, 1000))
+                          await refreshMissions()
+                        }
+                      }}
+                    >
+                      Delete selected
+                    </Button>
+                  </>
+                )}
               </div>
             )
+          }}
+          onClickRow={row => {
+            router.push(`/orchestrator/missions/${row.id}`)
           }}
         />
       </div>

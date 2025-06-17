@@ -80,19 +80,28 @@ export type BehaviouralAction = {
 };
 
 export type BehaviouralArgs = {
-    wait_time?: number | null;
+    wait_time?: number;
     sync_context?: boolean;
     get_chats?: boolean;
+    sync_personal_details?: boolean;
+    disable_auto_download_media?: boolean;
+    delete_all_active_sessions?: boolean;
 };
 
 export type BehaviouralResponseContentInput = {
     current_context?: unknown | null;
     chats?: Array<GroupInfo | ChannelInfo> | null;
+    personal_details_synced?: boolean;
+    auto_download_media_disabled?: boolean;
+    all_active_sessions_deleted?: boolean;
 };
 
 export type BehaviouralResponseContentOutput = {
     current_context?: unknown | null;
     chats?: Array<GroupInfo | ChannelInfo> | null;
+    personal_details_synced?: boolean;
+    auto_download_media_disabled?: boolean;
+    all_active_sessions_deleted?: boolean;
 };
 
 export type CategoryCreate = {
@@ -335,6 +344,10 @@ export type FluffMissionInput = {
     characters_categories?: Array<string> | null;
     is_routine?: boolean | null;
     batch_size?: number | null;
+    get_chats?: boolean | null;
+    sync_personal_details?: boolean | null;
+    disable_auto_download_media?: boolean | null;
+    delete_all_active_sessions?: boolean | null;
 };
 
 export type ForwardMessageAction = {
@@ -346,7 +359,7 @@ export type ForwardMessageAction = {
 
 export type ForwardMessageArgs = {
     from_chat: ChatInfo;
-    message_info: AppModelsOperatorCommonMessageInfoMessageInfo | string;
+    message_info: AppModelsOperatorCommonMessageInfoMessageInfo;
     target_chat: ChatInfo;
     message?: InputMessage | null;
 };
@@ -491,6 +504,8 @@ export type PuppetShowInput = {
 };
 
 export type RandomDistributionMissionInput = {
+    characters_categories?: Array<string> | null;
+    chat_categories?: Array<string> | null;
     messages: Array<InputMessage>;
     messages_amount: number;
     messages_amount_per_character?: number | null;
@@ -508,7 +523,7 @@ export type ReplyToMessageAction = {
 
 export type ReplyToMessageArgs = {
     chat: ChatInfo;
-    message_info: AppModelsOperatorCommonMessageInfoMessageInfo | string;
+    message_info: AppModelsOperatorCommonMessageInfoMessageInfo;
     input_message_content: InputMessage;
 };
 
@@ -523,7 +538,7 @@ export type ReplyToMessageResponseContentOutput = {
 export type Scenario = {
     id?: string;
     profile: Character;
-    prefrences: Prefrences;
+    prefrences?: Prefrences;
     actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
 };
 
@@ -1532,6 +1547,107 @@ export type AddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostR
     200: unknown;
 };
 
+export type GetCharactersStatesCharactersStatisticsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * List of characters IDs
+         */
+        characters_ids?: Array<string>;
+    };
+    url: '/characters/statistics/';
+};
+
+export type GetCharactersStatesCharactersStatisticsGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCharactersStatesCharactersStatisticsGetError = GetCharactersStatesCharactersStatisticsGetErrors[keyof GetCharactersStatesCharactersStatisticsGetErrors];
+
+export type GetCharactersStatesCharactersStatisticsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type GetCharactersStatesCharactersStatisticsGetResponse = GetCharactersStatesCharactersStatisticsGetResponses[keyof GetCharactersStatesCharactersStatisticsGetResponses];
+
+export type GetCharactersStatesByDateCharactersStatisticsByDateGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * List of characters IDs
+         */
+        characters_ids?: Array<string>;
+    };
+    url: '/characters/statistics/by_date/';
+};
+
+export type GetCharactersStatesByDateCharactersStatisticsByDateGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCharactersStatesByDateCharactersStatisticsByDateGetError = GetCharactersStatesByDateCharactersStatisticsByDateGetErrors[keyof GetCharactersStatesByDateCharactersStatisticsByDateGetErrors];
+
+export type GetCharactersStatesByDateCharactersStatisticsByDateGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+export type GetCharactersStatesByDateCharactersStatisticsByDateGetResponse = GetCharactersStatesByDateCharactersStatisticsByDateGetResponses[keyof GetCharactersStatesByDateCharactersStatisticsByDateGetResponses];
+
+export type GetCharacterChatsCountCharactersCharacterIdChatCountGetData = {
+    body?: never;
+    path: {
+        character_id: string;
+    };
+    query?: never;
+    url: '/characters/{character_id}/chat_count';
+};
+
+export type GetCharacterChatsCountCharactersCharacterIdChatCountGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCharacterChatsCountCharactersCharacterIdChatCountGetError = GetCharacterChatsCountCharactersCharacterIdChatCountGetErrors[keyof GetCharacterChatsCountCharactersCharacterIdChatCountGetErrors];
+
+export type GetCharacterChatsCountCharactersCharacterIdChatCountGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type GetAllChatsChatsGetData = {
     body?: never;
     path?: never;
@@ -1923,6 +2039,35 @@ export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostErrors = {
 export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostError = AddChatToCategoryChatsChatIdCategoriesCategoryIdPostErrors[keyof AddChatToCategoryChatsChatIdCategoriesCategoryIdPostErrors];
 
 export type AddChatToCategoryChatsChatIdCategoriesCategoryIdPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetChatCharactersCountChatsChatIdCharacterCountGetData = {
+    body?: never;
+    path: {
+        chat_id: string;
+    };
+    query?: never;
+    url: '/chats/{chat_id}/character_count';
+};
+
+export type GetChatCharactersCountChatsChatIdCharacterCountGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetChatCharactersCountChatsChatIdCharacterCountGetError = GetChatCharactersCountChatsChatIdCharacterCountGetErrors[keyof GetChatCharactersCountChatsChatIdCharacterCountGetErrors];
+
+export type GetChatCharactersCountChatsChatIdCharacterCountGetResponses = {
     /**
      * Successful Response
      */
@@ -2722,6 +2867,64 @@ export type GetCategoryChatsCategoriesCategoryIdChatsGetResponses = {
 };
 
 export type GetCategoryChatsCategoriesCategoryIdChatsGetResponse = GetCategoryChatsCategoriesCategoryIdChatsGetResponses[keyof GetCategoryChatsCategoriesCategoryIdChatsGetResponses];
+
+export type GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetData = {
+    body?: never;
+    path: {
+        category_id: string;
+    };
+    query?: never;
+    url: '/categories/{category_id}/character_count';
+};
+
+export type GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetError = GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetErrors[keyof GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetErrors];
+
+export type GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetCategoryChatsCountCategoriesCategoryIdChatCountGetData = {
+    body?: never;
+    path: {
+        category_id: string;
+    };
+    query?: never;
+    url: '/categories/{category_id}/chat_count';
+};
+
+export type GetCategoryChatsCountCategoriesCategoryIdChatCountGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCategoryChatsCountCategoriesCategoryIdChatCountGetError = GetCategoryChatsCountCategoriesCategoryIdChatCountGetErrors[keyof GetCategoryChatsCountCategoriesCategoryIdChatCountGetErrors];
+
+export type GetCategoryChatsCountCategoriesCategoryIdChatCountGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type RootGetData = {
     body?: never;

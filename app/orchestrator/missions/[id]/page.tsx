@@ -1,0 +1,22 @@
+import { ApiService } from "@/app/api/lib/api_service"
+import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { MissionRead } from "@lib/api/orchestrator/types.gen"
+import { notFound } from "next/navigation"
+import { MissionPlannerView } from "./mission-planner-view"
+
+export default async function Page({ params }: { params: { id: string } }) {
+  const apiService = new ApiService()
+  let mission: MissionRead
+  let avatars: AvatarModelWithProxy[]
+  try {
+    ;[mission, avatars] = await Promise.all([apiService.getOrchestratorMission(params.id), apiService.getAvatars()])
+  } catch (error) {
+    return notFound()
+  }
+
+  return (
+    <div className="flex flex-col w-full">
+      <MissionPlannerView mission={mission} avatars={avatars} />
+    </div>
+  )
+}
