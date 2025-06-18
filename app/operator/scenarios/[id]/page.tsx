@@ -343,7 +343,13 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
       case "leave_group": {
         const leaveContent = content as LeaveGroupResponseContent
         return (
-          <div className="space-y-2">{leaveContent.chat_info && <ChatInfoDisplay chat={leaveContent.chat_info} />}</div>
+          <div className="space-y-2">
+            <div className="text-sm text-gray-600">
+              {Object.keys(leaveContent).length > 0
+                ? JSON.stringify(leaveContent, null, 2)
+                : "No additional information available"}
+            </div>
+          </div>
         )
       }
       case "forward_message": {
@@ -369,27 +375,60 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
           <div className="space-y-2">
             {behaviouralContent.chats && behaviouralContent.chats.length > 0 && (
               <div>
-                <div className="text-sm font-medium mb-1">Available Chats:</div>
-                <div className="space-y-2">
-                  {behaviouralContent.chats.map((chat, idx) => (
-                    <div key={idx} className="text-sm text-gray-600">
-                      <div>Peer ID: {chat.peer_id}</div>
-                      <div>Unread Messages: {chat.unread_count}</div>
-                      <div>Unread Mentions: {chat.unread_mentions_count}</div>
-                      <div>Unread Reactions: {chat.unread_reactions_count}</div>
-                    </div>
-                  ))}
+                <div className="text-sm font-medium mb-2">Available Chats:</div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name/Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Members/Subscribers</TableHead>
+                        <TableHead>Description</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {behaviouralContent.chats.map((chat, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>
+                            <div className="font-medium">{chat.title || chat.name || "Unnamed"}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {chat.type || "Unknown"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-600">{chat.id || "N/A"}</TableCell>
+                          <TableCell className="text-sm text-gray-600">
+                            {(() => {
+                              if (
+                                chat.type === "Channel" &&
+                                "subscribers" in chat &&
+                                chat.subscribers !== undefined &&
+                                chat.subscribers !== null
+                              ) {
+                                return `${chat.subscribers} subscribers`
+                              } else if (
+                                chat.type === "Group" &&
+                                "members" in chat &&
+                                chat.members !== undefined &&
+                                chat.members !== null
+                              ) {
+                                return `${chat.members} members`
+                              }
+                              return "N/A"
+                            })()}
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-600 max-w-xs truncate">
+                            {chat.description || "No description"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             )}
-            {
-              <div className="mt-2">
-                <div className="text-sm font-medium mb-1">Current Context:</div>
-                <div className="text-sm text-gray-600">
-                  {JSON.stringify(behaviouralContent.current_context, null, 2)}
-                </div>
-              </div>
-            }
           </div>
         )
       }
@@ -473,14 +512,15 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                {Object.entries(scenario.scenario.prefrences).map(([key, value]) => (
-                  <div key={key} className="flex justify-between">
-                    <span className="text-gray-600">
-                      {key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                    </span>
-                    <span className="font-medium">{value?.toString() ?? "N/A"}</span>
-                  </div>
-                ))}
+                {scenario.scenario.prefrences &&
+                  Object.entries(scenario.scenario.prefrences).map(([key, value]) => (
+                    <div key={key} className="flex justify-between">
+                      <span className="text-gray-600">
+                        {key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                      <span className="font-medium">{value?.toString() ?? "N/A"}</span>
+                    </div>
+                  ))}
               </div>
             </CardContent>
           </Card>
