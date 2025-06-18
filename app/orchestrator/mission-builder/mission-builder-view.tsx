@@ -8,7 +8,8 @@ import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MissionType } from "@lib/api/models"
 import { CategoryRead, ChatRead, MissionCreate, ScenarioRead } from "@lib/api/orchestrator"
-import { zEchoMissionInput, zMissionCreate } from "@lib/api/orchestrator/zod.gen"
+import { zEchoMissionInput, zMissionCreate, zRandomDistributionMissionInput } from "@lib/api/orchestrator/zod.gen"
+import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import { DicesIcon, DramaIcon, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
@@ -76,11 +77,7 @@ export function MissionBuilderView({
 
   return (
     <div className="w-full gap-8">
-      <PageHeader
-        title="Mission Builder"
-        subtitle="Create a new mission in 3 steps: author, plan and run"
-        className="z-10"
-      >
+      <PageHeader title="Mission Builder" subtitle="Create a new mission" className="z-10">
         <div className="flex flex-row gap-6">
           <div className="flex flex-row gap-2 text-[16px] tracking-wide text-nowrap items-center">
             <div className="text-gray-600">Mission:</div>
@@ -100,48 +97,65 @@ export function MissionBuilderView({
                   onClick={async () => {
                     if (!selectedMissionType) return
 
+                    if (!missionCreateRequest) {
+                      toast.error("No request found. Check the JSON.")
+                      return
+                    }
+                    if (!missionCreateRequest.payload) {
+                      toast.error("No payload found. Check the JSON.")
+                      setError("No payload found. Check the JSON.")
+                      return
+                    }
+                    logger.info("Validating mission request", missionCreateRequest)
+                    const validatedMissionRequest = zMissionCreate.safeParse(missionCreateRequest)
+                    logger.info("Validated mission request", validatedMissionRequest)
+                    if (validatedMissionRequest.error) {
+                      toast.error("Invalid mission request: " + validatedMissionRequest.error.message)
+                      setError(validatedMissionRequest.error.message)
+                      return
+                    }
+
+                    // validate specific mission payload
                     if (selectedMissionType === "EchoMission") {
-                      if (!missionCreateRequest) {
-                        toast.error("No request found. Check the JSON.")
-                        return
-                      }
-                      if (!missionCreateRequest.payload) {
-                        toast.error("No payload found. Check the JSON.")
-                        setError("No payload found. Check the JSON.")
-                        return
-                      }
-                      console.log("missionCreateRequest", missionCreateRequest)
-                      const validatedMissionRequest = zMissionCreate.safeParse(missionCreateRequest)
-                      console.log("validatedMissionRequest", validatedMissionRequest)
-                      if (validatedMissionRequest.error) {
-                        toast.error("Invalid mission request: " + validatedMissionRequest.error.message)
-                        setError(validatedMissionRequest.error.message)
-                        return
-                      }
                       const validatedPayload = zEchoMissionInput.safeParse(missionCreateRequest.payload)
                       if (validatedPayload.error) {
                         toast.error("Invalid payload: " + validatedPayload.error.message)
                         setError(validatedPayload.error.message)
                         return
                       }
-                      const serviceBrowserClient = new ServiceBrowserClient()
-                      try {
-                        const response = await serviceBrowserClient.submitMission(missionCreateRequest as MissionCreate)
-                        if (response) {
-                          toast.success("Mission submitted successfully")
-                          router.push(`/orchestrator/missions/${response.id}`)
-                        } else {
-                          toast.error("Failed to submit mission")
-                        }
-                      } catch (error) {
-                        toast.error("Failed to submit mission: " + error)
-                        setError(error instanceof Error ? error.message : "Unknown error")
+                    } else if (selectedMissionType === "RandomDistributionMission") {
+                      const validatedPayload = zRandomDistributionMissionInput.safeParse(missionCreateRequest.payload)
+                      if (validatedPayload.error) {
+                        toast.error("Invalid payload: " + validatedPayload.error.message)
+                        setError(validatedPayload.error.message)
+                        return
                       }
+                    }
+
+                    const serviceBrowserClient = new ServiceBrowserClient()
+                    try {
+                      const response = await serviceBrowserClient.submitMission(missionCreateRequest as MissionCreate)
+                      if (response) {
+                        toast.success("Mission submitted successfully")
+                        router.push(`/orchestrator/missions/${response.id}`)
+                      } else {
+                        toast.error("Failed to submit mission")
+                      }
+                      const plannedMissionScenarios = await new ServiceBrowserClient().planMission(response.id)
+                      if (plannedMissionScenarios) {
+                        toast.success("Mission planned successfully")
+                        router.push(`/orchestrator/missions/${response.id}`)
+                      } else {
+                        toast.error("Failed to plan mission")
+                      }
+                    } catch (error) {
+                      toast.error("Failed to submit mission: " + error)
+                      setError(error instanceof Error ? error.message : "Unknown error")
                     }
                   }}
                 >
-                  <PlusIcon className="size-4" />
-                  Create Mission
+                  <PlusIcon className="size-4 mr-2" />
+                  Create and Plan
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="w-64 py-4 flex flex-row items-center">

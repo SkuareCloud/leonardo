@@ -110,6 +110,14 @@ export type CategoryCreate = {
     parent_id?: string | null;
 };
 
+export type CategoryNodePayload = {
+    id: string;
+    name: string;
+    description: string;
+    chats_count: number | null;
+    characters_count: number | null;
+};
+
 export type CategoryRead = {
     id: string;
     created_at: string;
@@ -117,6 +125,8 @@ export type CategoryRead = {
     name?: string;
     description?: string;
     parent_id?: string | null;
+    character_count?: number | null;
+    chat_count?: number | null;
 };
 
 export type ChannelInfo = {
@@ -167,6 +177,11 @@ export type ChatCreate = {
      * Type of the chat
      */
     chat_type?: ChatType | null;
+    max_capacity?: number | null;
+    /**
+     * Category of the chat
+     */
+    category_id?: string | null;
     /**
      * Unique identifier for the chat on the platform
      */
@@ -179,6 +194,30 @@ export type ChatCreate = {
      * Invite link for the chat
      */
     invite_link?: string | null;
+    /**
+     * Whether the chat is a broadcast channel
+     */
+    broadcast?: boolean | null;
+    /**
+     * Whether the chat is a megagroup
+     */
+    megagroup?: boolean | null;
+    /**
+     * Whether the chat is a gigagroup
+     */
+    gigagroup?: boolean | null;
+    /**
+     * Whether the chat is verified
+     */
+    verified?: boolean | null;
+    /**
+     * Whether the chat is a scam
+     */
+    scam?: boolean | null;
+    /**
+     * Whether the chat is a fake
+     */
+    fake?: boolean | null;
     /**
      * Title of the chat
      */
@@ -194,7 +233,7 @@ export type ChatCreate = {
     /**
      * Total number of participants in the chat
      */
-    platform_participants_count?: number;
+    participants_count?: number | null;
     /**
      * Number of active participants in the chat
      */
@@ -210,7 +249,11 @@ export type ChatCreate = {
     /**
      * Count the number of appearences in other groups
      */
-    forwards_count_last_month?: number | null;
+    forward_from_count_last_month?: number | null;
+    /**
+     * Count the number of appearences on this group of other groups/channels
+     */
+    forward_to_count_last_month?: number | null;
     /**
      * Median number of views per message
      */
@@ -223,11 +266,112 @@ export type ChatCreate = {
      * sum of each forwarder's chats participants with overlap
      */
     exposure?: number | null;
-    max_capacity?: number | null;
     /**
-     * Category of the chat
+     * Linked chat id
      */
-    category_id?: string | null;
+    linked_chat_id?: number | null;
+    /**
+     * Slowmode in seconds
+     */
+    slowmode_seconds?: number | null;
+    /**
+     * Whether the chat has slowmode enabled
+     */
+    slowmode_enabled?: boolean | null;
+    /**
+     * Whether the chat has no forwards enabled
+     */
+    noforwards?: boolean | null;
+    /**
+     * Whether the chat has join to send enabled
+     */
+    join_to_send?: boolean | null;
+    /**
+     * Whether the chat has join request enabled
+     */
+    join_request?: boolean | null;
+    /**
+     * Whether the chat can view messages
+     */
+    view_messages?: boolean | null;
+    /**
+     * Whether the chat can send messages
+     */
+    send_messages?: boolean | null;
+    /**
+     * Whether the chat can send media
+     */
+    send_media?: boolean | null;
+    /**
+     * Whether the chat can send stickers
+     */
+    send_stickers?: boolean | null;
+    /**
+     * Whether the chat can send gifs
+     */
+    send_gifs?: boolean | null;
+    /**
+     * Whether the chat can send games
+     */
+    send_games?: boolean | null;
+    /**
+     * Whether the chat can send inline
+     */
+    send_inline?: boolean | null;
+    /**
+     * Whether the chat can embed links
+     */
+    embed_links?: boolean | null;
+    /**
+     * Whether the chat can send polls
+     */
+    send_polls?: boolean | null;
+    /**
+     * Whether the chat can change info
+     */
+    change_info?: boolean | null;
+    /**
+     * Whether the chat can invite users
+     */
+    invite_users?: boolean | null;
+    /**
+     * Whether the chat can pin messages
+     */
+    pin_messages?: boolean | null;
+    /**
+     * Whether the chat can send photos
+     */
+    send_photos?: boolean | null;
+    /**
+     * Whether the chat can send videos
+     */
+    send_videos?: boolean | null;
+    /**
+     * Whether the chat can send round videos
+     */
+    send_roundvideos?: boolean | null;
+    /**
+     * Whether the chat can send audios
+     */
+    send_audios?: boolean | null;
+    /**
+     * Whether the chat can send voices
+     */
+    send_voices?: boolean | null;
+    /**
+     * Whether the chat can send docs
+     */
+    send_docs?: boolean | null;
+    /**
+     * Whether the chat can send plain
+     */
+    send_plain?: boolean | null;
+    /**
+     * JSON object containing information about bots in the chat
+     */
+    bots?: Array<{
+        [key: string]: unknown;
+    }> | null;
 };
 
 export type ChatInfo = {
@@ -250,6 +394,11 @@ export type ChatRead = {
      * Type of the chat
      */
     chat_type?: ChatType | null;
+    max_capacity?: number | null;
+    /**
+     * Category of the chat
+     */
+    category_id?: string | null;
     /**
      * Unique identifier for the chat on the platform
      */
@@ -262,6 +411,30 @@ export type ChatRead = {
      * Invite link for the chat
      */
     invite_link?: string | null;
+    /**
+     * Whether the chat is a broadcast channel
+     */
+    broadcast?: boolean | null;
+    /**
+     * Whether the chat is a megagroup
+     */
+    megagroup?: boolean | null;
+    /**
+     * Whether the chat is a gigagroup
+     */
+    gigagroup?: boolean | null;
+    /**
+     * Whether the chat is verified
+     */
+    verified?: boolean | null;
+    /**
+     * Whether the chat is a scam
+     */
+    scam?: boolean | null;
+    /**
+     * Whether the chat is a fake
+     */
+    fake?: boolean | null;
     /**
      * Title of the chat
      */
@@ -277,7 +450,7 @@ export type ChatRead = {
     /**
      * Total number of participants in the chat
      */
-    platform_participants_count?: number;
+    participants_count?: number | null;
     /**
      * Number of active participants in the chat
      */
@@ -293,7 +466,11 @@ export type ChatRead = {
     /**
      * Count the number of appearences in other groups
      */
-    forwards_count_last_month?: number | null;
+    forward_from_count_last_month?: number | null;
+    /**
+     * Count the number of appearences on this group of other groups/channels
+     */
+    forward_to_count_last_month?: number | null;
     /**
      * Median number of views per message
      */
@@ -306,11 +483,112 @@ export type ChatRead = {
      * sum of each forwarder's chats participants with overlap
      */
     exposure?: number | null;
-    max_capacity?: number | null;
     /**
-     * Category of the chat
+     * Linked chat id
      */
-    category_id?: string | null;
+    linked_chat_id?: number | null;
+    /**
+     * Slowmode in seconds
+     */
+    slowmode_seconds?: number | null;
+    /**
+     * Whether the chat has slowmode enabled
+     */
+    slowmode_enabled?: boolean | null;
+    /**
+     * Whether the chat has no forwards enabled
+     */
+    noforwards?: boolean | null;
+    /**
+     * Whether the chat has join to send enabled
+     */
+    join_to_send?: boolean | null;
+    /**
+     * Whether the chat has join request enabled
+     */
+    join_request?: boolean | null;
+    /**
+     * Whether the chat can view messages
+     */
+    view_messages?: boolean | null;
+    /**
+     * Whether the chat can send messages
+     */
+    send_messages?: boolean | null;
+    /**
+     * Whether the chat can send media
+     */
+    send_media?: boolean | null;
+    /**
+     * Whether the chat can send stickers
+     */
+    send_stickers?: boolean | null;
+    /**
+     * Whether the chat can send gifs
+     */
+    send_gifs?: boolean | null;
+    /**
+     * Whether the chat can send games
+     */
+    send_games?: boolean | null;
+    /**
+     * Whether the chat can send inline
+     */
+    send_inline?: boolean | null;
+    /**
+     * Whether the chat can embed links
+     */
+    embed_links?: boolean | null;
+    /**
+     * Whether the chat can send polls
+     */
+    send_polls?: boolean | null;
+    /**
+     * Whether the chat can change info
+     */
+    change_info?: boolean | null;
+    /**
+     * Whether the chat can invite users
+     */
+    invite_users?: boolean | null;
+    /**
+     * Whether the chat can pin messages
+     */
+    pin_messages?: boolean | null;
+    /**
+     * Whether the chat can send photos
+     */
+    send_photos?: boolean | null;
+    /**
+     * Whether the chat can send videos
+     */
+    send_videos?: boolean | null;
+    /**
+     * Whether the chat can send round videos
+     */
+    send_roundvideos?: boolean | null;
+    /**
+     * Whether the chat can send audios
+     */
+    send_audios?: boolean | null;
+    /**
+     * Whether the chat can send voices
+     */
+    send_voices?: boolean | null;
+    /**
+     * Whether the chat can send docs
+     */
+    send_docs?: boolean | null;
+    /**
+     * Whether the chat can send plain
+     */
+    send_plain?: boolean | null;
+    /**
+     * JSON object containing information about bots in the chat
+     */
+    bots?: Array<{
+        [key: string]: unknown;
+    }> | null;
 };
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
@@ -344,6 +622,10 @@ export type FluffMissionInput = {
     characters_categories?: Array<string> | null;
     is_routine?: boolean | null;
     batch_size?: number | null;
+    /**
+     * in minutes
+     */
+    batch_interval?: number | null;
     get_chats?: boolean | null;
     sync_personal_details?: boolean | null;
     disable_auto_download_media?: boolean | null;
@@ -359,7 +641,7 @@ export type ForwardMessageAction = {
 
 export type ForwardMessageArgs = {
     from_chat: ChatInfo;
-    message_info: AppModelsOperatorCommonMessageInfoMessageInfo;
+    message_info?: AppModelsOperatorCommonMessageInfoMessageInfo | string | null;
     target_chat: ChatInfo;
     message?: InputMessage | null;
 };
@@ -510,6 +792,8 @@ export type RandomDistributionMissionInput = {
     messages_amount: number;
     messages_amount_per_character?: number | null;
     max_messages_per_chat?: number | null;
+    batch_size?: number | null;
+    batch_interval?: number | null;
     start_time: string;
     max_retries?: number | null;
 };
@@ -523,7 +807,7 @@ export type ReplyToMessageAction = {
 
 export type ReplyToMessageArgs = {
     chat: ChatInfo;
-    message_info: AppModelsOperatorCommonMessageInfoMessageInfo;
+    message_info?: AppModelsOperatorCommonMessageInfoMessageInfo | string | null;
     input_message_content: InputMessage;
 };
 
@@ -656,6 +940,11 @@ export type SendMessageResponseContentInput = {
 
 export type SendMessageResponseContentOutput = {
     message_info: MessageInfoOutput;
+};
+
+export type TreeNodeCategoryNodePayload = {
+    payload: CategoryNodePayload;
+    children: Array<TreeNodeCategoryNodePayload> | null;
 };
 
 export type ValidationError = {
@@ -1862,6 +2151,37 @@ export type GetChatByUsernameChatsUsernameUsernameGetResponses = {
 
 export type GetChatByUsernameChatsUsernameUsernameGetResponse = GetChatByUsernameChatsUsernameUsernameGetResponses[keyof GetChatByUsernameChatsUsernameUsernameGetResponses];
 
+export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetData = {
+    body?: never;
+    path: {
+        platform_id: number;
+    };
+    query?: never;
+    url: '/chats/platform_id/{platform_id}';
+};
+
+export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetError = GetChatByPlatformIdChatsPlatformIdPlatformIdGetErrors[keyof GetChatByPlatformIdChatsPlatformIdPlatformIdGetErrors];
+
+export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ChatRead;
+};
+
+export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses[keyof GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses];
+
 export type GetChatCharactersChatsChatIdCharactersGetData = {
     body?: never;
     path: {
@@ -2867,6 +3187,29 @@ export type GetCategoryChatsCategoriesCategoryIdChatsGetResponses = {
 };
 
 export type GetCategoryChatsCategoriesCategoryIdChatsGetResponse = GetCategoryChatsCategoriesCategoryIdChatsGetResponses[keyof GetCategoryChatsCategoriesCategoryIdChatsGetResponses];
+
+export type GetCategoriesTreeCategoriesTreeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/categories/tree/';
+};
+
+export type GetCategoriesTreeCategoriesTreeGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+};
+
+export type GetCategoriesTreeCategoriesTreeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: TreeNodeCategoryNodePayload;
+};
+
+export type GetCategoriesTreeCategoriesTreeGetResponse = GetCategoriesTreeCategoriesTreeGetResponses[keyof GetCategoriesTreeCategoriesTreeGetResponses];
 
 export type GetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetData = {
     body?: never;

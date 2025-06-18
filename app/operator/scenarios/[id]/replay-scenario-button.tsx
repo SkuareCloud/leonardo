@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { Scenario } from "@lib/api/operator";
-import { ServiceClient } from "@lib/service-client";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button"
+import { Scenario } from "@lib/api/operator"
+import { logger } from "@lib/logger"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 export const ReplayScenarioButton = ({ scenario }: { scenario: Scenario }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       const response = await fetch("/api/operator/scenario", {
@@ -23,34 +23,34 @@ export const ReplayScenarioButton = ({ scenario }: { scenario: Scenario }) => {
         body: JSON.stringify({
           ...scenario,
           id: undefined,
-          actions: scenario.actions.map((action) => ({
+          actions: scenario.actions.map(action => ({
             ...action,
             id: undefined,
           })),
         }),
-      });
+      })
 
       if (!response.ok) {
-        toast.error("Failed to create scenario");
-        console.error(response);
-        return;
+        toast.error("Failed to create scenario")
+        logger.error(response)
+        return
       }
 
-      const newScenario: Scenario = await response.json();
+      const newScenario: Scenario = await response.json()
 
-      toast.success("Scenario created successfully");
-      router.push(`/operator/scenarios/${newScenario.id}`);
+      toast.success("Scenario created successfully")
+      router.push(`/operator/scenarios/${newScenario.id}`)
     } catch (error) {
-      toast.error("Failed to create scenario");
-      console.error(error);
+      toast.error("Failed to create scenario")
+      logger.error(error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Button onClick={handleSubmit} disabled={isSubmitting}>
       {isSubmitting ? "Replaying..." : "Replay Scenario"}
     </Button>
-  );
-};
+  )
+}

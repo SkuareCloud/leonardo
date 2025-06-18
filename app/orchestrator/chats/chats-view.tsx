@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CategoryWithChatCount, ChatWithCategory } from "@lib/api/models"
 import { CategoryRead } from "@lib/api/orchestrator"
+import { logger } from "@lib/logger"
 import { Handle, Position } from "@xyflow/react"
 import { ListIcon, NetworkIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -66,7 +67,7 @@ export function ChatsView({
   const tree = generateTree(categoriesWithChatCount)
 
   useEffect(() => {
-    console.log("tab", tab)
+    logger.info("tab", tab)
     setActiveTab(tab || "tree")
   }, [tab])
 

@@ -17,19 +17,18 @@ import { NavItem } from "./app-sidebar"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 
 export function NavMain({ items, pathname, open }: { items: NavItem[]; pathname: string; open?: boolean }) {
-  console.log({ pathname })
   return (
     <SidebarGroup>
       <SidebarMenu>
         {items.map(item => {
           const isActive = pathname && pathname.startsWith(item.url)
           return (
-            <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="group/collapsible">
+            <Collapsible key={item.title} asChild defaultOpen={true} className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    className={cn("text-blue-600 flex flex-row", isActive && "text-blue-600 font-bold")}
+                    className={cn("text-blue-600 flex flex-row", isActive && "font-bold")}
                   >
                     {item.icon && <item.icon className="size-6" />}
                     {open && <span className="font-bold">{item.title}</span>}
@@ -49,7 +48,7 @@ export function NavMain({ items, pathname, open }: { items: NavItem[]; pathname:
                                   href={subItem.url}
                                   className={cn(
                                     "flex flex-row items-center gap-2 text-sm",
-                                    isActive && "text-blue-600 font-bold",
+                                    isActive && "font-bold",
                                   )}
                                 >
                                   {subItem.icon && <subItem.icon className="size-5" />}

@@ -1,7 +1,9 @@
 import { AvatarModelWithProxy } from "./api/avatars"
-import { CombinedAvatar } from "./api/models"
+import { CombinedAvatar, MissionStatistics } from "./api/models"
+import { ScenarioWithResult } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
 import { ClientEnv, read_client_env } from "./client-env"
+import { logger } from "./logger"
 import { Web1Account } from "./web1/web1-models"
 
 /**
@@ -54,9 +56,27 @@ export class ServiceBrowserClient {
     }
   }
 
+  async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
+    const resp = await fetch("/api/operator/scenario")
+    const json = (await resp.json()) as { [key: string]: ScenarioWithResult }
+    return json
+  }
+
+  async getOrchestratorMission(missionId: string): Promise<MissionRead> {
+    const resp = await fetch(`/api/orchestrator/mission?id=${missionId}`)
+    const json = (await resp.json()) as MissionRead
+    return json
+  }
+
   async getOrchestratorMissions(): Promise<MissionRead[]> {
     const resp = await fetch("/api/orchestrator/missions")
     const json = (await resp.json()) as MissionRead[]
+    return json
+  }
+
+  async getOrchestratorMissionScenarios(missionId: string): Promise<ScenarioRead[]> {
+    const resp = await fetch(`/api/orchestrator/missions/scenarios?mission_id=${missionId}`)
+    const json = (await resp.json()) as ScenarioRead[]
     return json
   }
 
@@ -90,8 +110,25 @@ export class ServiceBrowserClient {
     return json
   }
 
+  async getMissionStatistics(missionId: string): Promise<MissionStatistics> {
+    const resp = await fetch(`/api/orchestrator/missions/statistics?mission_id=${missionId}`)
+    const json = (await resp.json()) as MissionStatistics
+    return json
+  }
+
+  async runMission(missionId: string): Promise<ScenarioRead[]> {
+    const resp = await fetch(`/api/orchestrator/missions/run?id=${missionId}`, {
+      method: "POST",
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to run mission: ${resp.statusText}`)
+    }
+    const json = (await resp.json()) as ScenarioRead[]
+    return json
+  }
+
   async deleteMission(missionId: string) {
-    const resp = await fetch(`/api/orchestrator/missions?id=${missionId}`, {
+    const resp = await fetch(`/api/orchestrator/mission?id=${missionId}`, {
       method: "DELETE",
     })
     if (!resp.ok) {
@@ -115,7 +152,7 @@ export class ServiceBrowserClient {
   }
 
   async assignWeb1Account(profileId: string): Promise<Web1Account> {
-    console.log(`Assigning WEB1 account for profile ${profileId}.`)
+    logger.info(`Assigning WEB1 account for profile ${profileId}.`)
     const resp = await fetch("/api/activation/web1/assign", {
       method: "POST",
       headers: {

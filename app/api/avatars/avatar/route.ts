@@ -1,4 +1,5 @@
 import { ApiService } from "@/app/api/lib/api_service"
+import { logger } from "@lib/logger"
 
 /**
  * Fetch all profiles from DB.
@@ -9,9 +10,9 @@ export async function GET(req: Request) {
   if (!profileId) {
     return new Response("Profile ID is required", { status: 400 })
   }
-  console.log(`Retrieving avatar with profile ID: ${profileId}...`)
+  logger.info(`Retrieving avatar with profile ID: ${profileId}...`)
   const avatar = await new ApiService().getAvatar(profileId)
-  console.log(`Successfully retrieved avatar.`)
+  logger.info(`Successfully retrieved avatar.`)
 
   return new Response(JSON.stringify(avatar), {
     status: 200,

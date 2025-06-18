@@ -5,10 +5,11 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { MissionTypes } from "@lib/api/models"
 import { MissionRead, MissionStatus } from "@lib/api/orchestrator/types.gen"
+import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
 import { useRouter } from "next/navigation"
@@ -115,10 +116,14 @@ export function MissionsList({ missions: initialMissions }: { missions: MissionR
           header={({ table }) => {
             return (
               <div className="flex flex-row gap-6 h-full items-center">
-                <Input
+                <Combobox
+                  options={MissionTypes.map(missionType => ({
+                    label: missionType,
+                    value: missionType,
+                  }))}
                   placeholder="Filter by type..."
                   value={(table.getColumn("mission_type")?.getFilterValue() as string) ?? ""}
-                  onChange={event => table.getColumn("mission_type")?.setFilterValue(event.target.value)}
+                  onValueChange={value => table.getColumn("mission_type")?.setFilterValue(value)}
                   className="max-w-sm"
                 />
                 <Combobox
@@ -157,7 +162,7 @@ export function MissionsList({ missions: initialMissions }: { missions: MissionR
                           table.resetRowSelection()
                         } catch (error) {
                           toast.error("Failed to delete at least one mission: " + error)
-                          console.error(error)
+                          logger.error(error)
                         } finally {
                           await new Promise(resolve => setTimeout(resolve, 1000))
                           await refreshMissions()

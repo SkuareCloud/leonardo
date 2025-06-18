@@ -1,8 +1,9 @@
 import { ApiService } from "@/app/api/lib/api_service"
+import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
 import { MissionRead } from "@lib/api/orchestrator/types.gen"
 import { notFound } from "next/navigation"
-import { MissionPlannerView } from "./mission-planner-view"
+import { MissionView } from "./mission-view"
 
 export default async function Page({ params }: { params: { id: string } }) {
   const apiService = new ApiService()
@@ -16,7 +17,9 @@ export default async function Page({ params }: { params: { id: string } }) {
 
   return (
     <div className="flex flex-col w-full">
-      <MissionPlannerView mission={mission} avatars={avatars} />
+      <QueryClientWrapper>
+        <MissionView mission={mission} avatars={avatars} />
+      </QueryClientWrapper>
     </div>
   )
 }

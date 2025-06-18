@@ -1,28 +1,17 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
-import { ServiceClient } from "@lib/service-client";
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen";
-import { useState } from "react";
-import { PlusIcon, TrashIcon } from "lucide-react";
-import { Scenario, Attachment } from "@lib/api/operator/types.gen";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { Attachment, Scenario } from "@lib/api/operator/types.gen"
+import { logger } from "@lib/logger"
+import { ChevronDown, PlusIcon, TrashIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 type ActionType =
   | "send_message"
@@ -31,38 +20,38 @@ type ActionType =
   | "leave_group"
   | "reply_to_message"
   | "forward_message"
-  | "behavioural";
+  | "behavioural"
 
 interface ActionFormData {
-  type: ActionType;
-  args: any;
+  type: ActionType
+  args: any
 }
 
 interface ElizaCharacter {
-  name: string;
-  [key: string]: unknown;
+  name: string
+  [key: string]: unknown
 }
 
 interface AvatarData {
-  eliza_character?: ElizaCharacter;
-  [key: string]: unknown;
+  eliza_character?: ElizaCharacter
+  [key: string]: unknown
 }
 
 interface AvatarModel {
-  id: string;
-  data: AvatarData;
-  [key: string]: unknown;
+  id: string
+  data: AvatarData
+  [key: string]: unknown
 }
 
 interface ScenarioFormProps {
-  avatars: AvatarModelWithProxy[];
+  avatars: AvatarModelWithProxy[]
 }
 
 export function ScenarioForm({ avatars }: ScenarioFormProps) {
-  const [selectedAvatar, setSelectedAvatar] = useState<string>("");
-  const [actions, setActions] = useState<ActionFormData[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+  const [selectedAvatar, setSelectedAvatar] = useState<string>("")
+  const [actions, setActions] = useState<ActionFormData[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
   const [preferences, setPreferences] = useState({
     actions_timeout: 300,
     action_interval: 5,
@@ -70,33 +59,33 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
     should_login_telegram: false,
     verify_proxy_working: true,
     fail_fast: false,
-  });
-  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
-  const [isChatInfoOpen, setIsChatInfoOpen] = useState(false);
+  })
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
+  const [isChatInfoOpen, setIsChatInfoOpen] = useState(false)
   const addAction = () => {
-    setActions([...actions, { type: "send_message", args: {} }]);
-  };
+    setActions([...actions, { type: "send_message", args: {} }])
+  }
 
   const removeAction = (index: number) => {
-    setActions(actions.filter((_, i) => i !== index));
-  };
+    setActions(actions.filter((_, i) => i !== index))
+  }
 
   const updateAction = (index: number, updates: Partial<ActionFormData>) => {
-    const newActions = [...actions];
-    newActions[index] = { ...newActions[index], ...updates };
-    setActions(newActions);
-  };
+    const newActions = [...actions]
+    newActions[index] = { ...newActions[index], ...updates }
+    setActions(newActions)
+  }
 
   const validateChatId = (value: string): boolean => {
     // Allow empty string (since name might be provided instead)
-    if (!value) return true;
+    if (!value) return true
     // Check if it's a valid number (positive or negative)
-    return /^-?\d+$/.test(value);
-  };
+    return /^-?\d+$/.test(value)
+  }
 
-  const handleChatIdChange = (index: number, value: string, field: 'chat' | 'from_chat' | 'target_chat') => {
-    if (!validateChatId(value)) return;
-    
+  const handleChatIdChange = (index: number, value: string, field: "chat" | "from_chat" | "target_chat") => {
+    if (!validateChatId(value)) return
+
     updateAction(index, {
       args: {
         ...actions[index].args,
@@ -105,77 +94,81 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
           id: value,
         },
       },
-    });
-  };
+    })
+  }
 
   const handleSubmit = async () => {
     if (!selectedAvatar) {
-      toast.error("Please select an avatar");
-      return;
+      toast.error("Please select an avatar")
+      return
     }
 
     if (actions.length === 0) {
-      toast.error("Please add at least one action");
-      return;
+      toast.error("Please add at least one action")
+      return
     }
 
     // Validate chat inputs
     for (const action of actions) {
-      if (action.type === "send_message" || action.type === "send_bulk_messages" || 
-          action.type === "join_group" || action.type === "leave_group" || 
-          action.type === "reply_to_message") {
+      if (
+        action.type === "send_message" ||
+        action.type === "send_bulk_messages" ||
+        action.type === "join_group" ||
+        action.type === "leave_group" ||
+        action.type === "reply_to_message"
+      ) {
         if (action.args.chat && !action.args.chat?.id && !action.args.chat?.name) {
-          toast.error("Please provide either Chat ID or Chat Name");
-          return;
+          toast.error("Please provide either Chat ID or Chat Name")
+          return
         }
       } else if (action.type === "forward_message") {
         if (!action.args.from_chat?.id && !action.args.from_chat?.name) {
-          toast.error("Please provide either From Chat ID or From Chat Name");
-          return;
+          toast.error("Please provide either From Chat ID or From Chat Name")
+          return
         }
         if (!action.args.target_chat?.id && !action.args.target_chat?.name) {
-          toast.error("Please provide either Target Chat ID or Target Chat Name");
-          return;
+          toast.error("Please provide either Target Chat ID or Target Chat Name")
+          return
         }
       }
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       const scenario: Scenario = {
         profile: { id: selectedAvatar },
         prefrences: preferences,
-        actions: actions.map((action) => ({
+        actions: actions.map(action => ({
           type: action.type,
           args: action.args,
         })),
-      };
+      }
       const response = await fetch("/api/operator/scenario", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(scenario),
-      });
+      })
 
       if (!response.ok) {
-        toast.error("Failed to create scenario");
-        console.error(response);
-        return;
+        toast.error("Failed to create scenario")
+        logger.error(response)
+        return
       }
 
-      const newScenario: Scenario = await response.json();
+      const newScenario: Scenario = await response.json()
 
-      toast.success("Scenario created successfully");
-      router.push(`/operator/scenarios/${newScenario.id}`);
+      toast.success("Scenario created successfully")
+      router.push(`/operator/scenarios/${newScenario.id}`)
     } catch (error) {
-      toast.error("Failed to create scenario");
-      console.error(error);
+      toast.error("Failed to create scenario")
+      logger.error(error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -186,7 +179,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
             <SelectValue placeholder="Select an avatar" />
           </SelectTrigger>
           <SelectContent>
-            {avatars.map((avatar) => (
+            {avatars.map(avatar => (
               <SelectItem key={avatar.id} value={avatar.id}>
                 {avatar.data.eliza_character?.name || "Unknown Avatar"}
               </SelectItem>
@@ -199,7 +192,9 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
         <Collapsible open={isPreferencesOpen} onOpenChange={setIsPreferencesOpen}>
           <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-80">
             <Label>Preferences</Label>
-            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isPreferencesOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${isPreferencesOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg mt-2">
@@ -208,7 +203,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                 <Input
                   type="number"
                   value={preferences.actions_timeout}
-                  onChange={(e) =>
+                  onChange={e =>
                     setPreferences({
                       ...preferences,
                       actions_timeout: parseInt(e.target.value) || 300,
@@ -222,7 +217,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                 <Input
                   type="number"
                   value={preferences.action_interval}
-                  onChange={(e) =>
+                  onChange={e =>
                     setPreferences({
                       ...preferences,
                       action_interval: parseInt(e.target.value) || 2,
@@ -236,7 +231,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                   type="checkbox"
                   id="close-browser"
                   checked={preferences.close_browser_when_finished}
-                  onChange={(e) =>
+                  onChange={e =>
                     setPreferences({
                       ...preferences,
                       close_browser_when_finished: e.target.checked,
@@ -250,7 +245,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                   type="checkbox"
                   id="login-telegram"
                   checked={preferences.should_login_telegram}
-                  onChange={(e) =>
+                  onChange={e =>
                     setPreferences({
                       ...preferences,
                       should_login_telegram: e.target.checked,
@@ -264,7 +259,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                   type="checkbox"
                   id="verify-proxy"
                   checked={preferences.verify_proxy_working}
-                  onChange={(e) =>
+                  onChange={e =>
                     setPreferences({
                       ...preferences,
                       verify_proxy_working: e.target.checked,
@@ -278,7 +273,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                   type="checkbox"
                   id="fail-fast"
                   checked={preferences.fail_fast}
-                  onChange={(e) =>
+                  onChange={e =>
                     setPreferences({
                       ...preferences,
                       fail_fast: e.target.checked,
@@ -305,11 +300,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
           <div key={index} className="p-4 border rounded-lg space-y-4">
             <div className="flex justify-between items-center">
               <Label>Action {index + 1}</Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeAction(index)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => removeAction(index)}>
                 <TrashIcon className="h-4 w-4" />
               </Button>
             </div>
@@ -319,26 +310,18 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                 <Label>Type</Label>
                 <Select
                   value={action.type}
-                  onValueChange={(value: ActionType) =>
-                    updateAction(index, { type: value, args: {} })
-                  }
+                  onValueChange={(value: ActionType) => updateAction(index, { type: value, args: {} })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select action type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="send_message">Send Message</SelectItem>
-                    <SelectItem value="send_bulk_messages">
-                      Send Bulk Messages
-                    </SelectItem>
+                    <SelectItem value="send_bulk_messages">Send Bulk Messages</SelectItem>
                     <SelectItem value="join_group">Join Group</SelectItem>
                     <SelectItem value="leave_group">Leave Group</SelectItem>
-                    <SelectItem value="reply_to_message">
-                      Reply to Message
-                    </SelectItem>
-                    <SelectItem value="forward_message">
-                      Forward Message
-                    </SelectItem>
+                    <SelectItem value="reply_to_message">Reply to Message</SelectItem>
+                    <SelectItem value="forward_message">Forward Message</SelectItem>
                     <SelectItem value="behavioural">Behavioural</SelectItem>
                   </SelectContent>
                 </Select>
@@ -347,20 +330,22 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
               {action.type === "send_message" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>Chat <span className="text-red-500">*</span></Label>
+                    <Label>
+                      Chat <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
                         value={action.args.chat?.id || ""}
-                        onChange={(e) => handleChatIdChange(index, e.target.value, 'chat')}
+                        onChange={e => handleChatIdChange(index, e.target.value, "chat")}
                         placeholder="Chat ID (number)"
                         className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
                       />
                       <Input
                         value={action.args.chat?.name || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -380,7 +365,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <Label>Message</Label>
                     <Input
                       value={action.args.input_message_content?.text || ""}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -396,69 +381,71 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <div className="flex flex-col gap-2">
                       <Label>Attachments</Label>
                       <div className="space-y-2">
-                        {(action.args.input_message_content?.attachments || []).map((attachment: Attachment, attIndex: number) => (
-                          <div key={attIndex} className="flex gap-2 items-center">
-                            <Input
-                              value={attachment.url}
-                              onChange={(e) => {
-                                const newAttachments = [...(action.args.input_message_content?.attachments || [])];
-                                newAttachments[attIndex] = {
-                                  ...newAttachments[attIndex],
-                                  url: e.target.value,
-                                };
-                                updateAction(index, {
-                                  args: {
-                                    ...action.args,
-                                    input_message_content: {
-                                      ...action.args.input_message_content,
-                                      attachments: newAttachments,
+                        {(action.args.input_message_content?.attachments || []).map(
+                          (attachment: Attachment, attIndex: number) => (
+                            <div key={attIndex} className="flex gap-2 items-center">
+                              <Input
+                                value={attachment.url}
+                                onChange={e => {
+                                  const newAttachments = [...(action.args.input_message_content?.attachments || [])]
+                                  newAttachments[attIndex] = {
+                                    ...newAttachments[attIndex],
+                                    url: e.target.value,
+                                  }
+                                  updateAction(index, {
+                                    args: {
+                                      ...action.args,
+                                      input_message_content: {
+                                        ...action.args.input_message_content,
+                                        attachments: newAttachments,
+                                      },
                                     },
-                                  },
-                                });
-                              }}
-                              placeholder="Attachment URL"
-                            />
-                            <Input
-                              value={attachment.name || ""}
-                              onChange={(e) => {
-                                const newAttachments = [...(action.args.input_message_content?.attachments || [])];
-                                newAttachments[attIndex] = {
-                                  ...newAttachments[attIndex],
-                                  name: e.target.value,
-                                };
-                                updateAction(index, {
-                                  args: {
-                                    ...action.args,
-                                    input_message_content: {
-                                      ...action.args.input_message_content,
-                                      attachments: newAttachments,
+                                  })
+                                }}
+                                placeholder="Attachment URL"
+                              />
+                              <Input
+                                value={attachment.name || ""}
+                                onChange={e => {
+                                  const newAttachments = [...(action.args.input_message_content?.attachments || [])]
+                                  newAttachments[attIndex] = {
+                                    ...newAttachments[attIndex],
+                                    name: e.target.value,
+                                  }
+                                  updateAction(index, {
+                                    args: {
+                                      ...action.args,
+                                      input_message_content: {
+                                        ...action.args.input_message_content,
+                                        attachments: newAttachments,
+                                      },
                                     },
-                                  },
-                                });
-                              }}
-                              placeholder="Attachment Name (optional)"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newAttachments = [...(action.args.input_message_content?.attachments || [])];
-                                newAttachments.splice(attIndex, 1);
-                                updateAction(index, {
-                                  args: {
-                                    ...action.args,
-                                    input_message_content: {
-                                      ...action.args.input_message_content,
-                                      attachments: newAttachments,
+                                  })
+                                }}
+                                placeholder="Attachment Name (optional)"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newAttachments = [...(action.args.input_message_content?.attachments || [])]
+                                  newAttachments.splice(attIndex, 1)
+                                  updateAction(index, {
+                                    args: {
+                                      ...action.args,
+                                      input_message_content: {
+                                        ...action.args.input_message_content,
+                                        attachments: newAttachments,
+                                      },
                                     },
-                                  },
-                                });
-                              }}
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                                  })
+                                }}
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ),
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -474,7 +461,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                                   ],
                                 },
                               },
-                            });
+                            })
                           }}
                         >
                           <PlusIcon className="h-4 w-4 mr-2" />
@@ -489,20 +476,22 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
               {action.type === "send_bulk_messages" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>Chat <span className="text-red-500">*</span></Label>
+                    <Label>
+                      Chat <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
                         value={action.args.chat?.id || ""}
-                        onChange={(e) => handleChatIdChange(index, e.target.value, 'chat')}
+                        onChange={e => handleChatIdChange(index, e.target.value, "chat")}
                         placeholder="Chat ID (number)"
                         className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
                       />
                       <Input
                         value={action.args.chat?.name || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -523,13 +512,11 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <textarea
                       className="w-full min-h-[100px] p-2 border rounded-md"
                       value={action.args.messages?.join("\n") || ""}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
-                            messages: e.target.value
-                              .split("\n")
-                              .filter(Boolean),
+                            messages: e.target.value.split("\n").filter(Boolean),
                           },
                         })
                       }
@@ -541,7 +528,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <Input
                       type="number"
                       value={action.args.interval || ""}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -601,20 +588,22 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
 
                   {action.args.invite_link === undefined ? (
                     <div className="flex flex-col gap-2">
-                      <Label>Chat <span className="text-red-500">*</span></Label>
+                      <Label>
+                        Chat <span className="text-red-500">*</span>
+                      </Label>
                       <div className="grid grid-cols-2 gap-2">
                         <Input
                           type="text"
                           inputMode="numeric"
                           pattern="-?[0-9]*"
                           value={action.args.chat?.id || ""}
-                          onChange={(e) => handleChatIdChange(index, e.target.value, 'chat')}
+                          onChange={e => handleChatIdChange(index, e.target.value, "chat")}
                           placeholder="Chat ID (number)"
                           className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
                         />
                         <Input
                           value={action.args.chat?.name || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -632,10 +621,12 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <Label>Invite Link <span className="text-red-500">*</span></Label>
+                      <Label>
+                        Invite Link <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         value={action.args.invite_link || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -656,10 +647,8 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <input
                       type="checkbox"
                       id={`join-discussion-${index}`}
-                      checked={
-                        action.args.join_discussion_group_if_availble || false
-                      }
-                      onChange={(e) =>
+                      checked={action.args.join_discussion_group_if_availble || false}
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -668,9 +657,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         })
                       }
                     />
-                    <Label htmlFor={`join-discussion-${index}`}>
-                      Join discussion group if available
-                    </Label>
+                    <Label htmlFor={`join-discussion-${index}`}>Join discussion group if available</Label>
                   </div>
                 </div>
               )}
@@ -678,20 +665,22 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
               {action.type === "leave_group" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>Chat <span className="text-red-500">*</span></Label>
+                    <Label>
+                      Chat <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
                         value={action.args.chat?.id || ""}
-                        onChange={(e) => handleChatIdChange(index, e.target.value, 'chat')}
+                        onChange={e => handleChatIdChange(index, e.target.value, "chat")}
                         placeholder="Chat ID (number)"
                         className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
                       />
                       <Input
                         value={action.args.chat?.name || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -713,20 +702,22 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
               {action.type === "reply_to_message" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>Chat <span className="text-red-500">*</span></Label>
+                    <Label>
+                      Chat <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
                         value={action.args.chat?.id || ""}
-                        onChange={(e) => handleChatIdChange(index, e.target.value, 'chat')}
+                        onChange={e => handleChatIdChange(index, e.target.value, "chat")}
                         placeholder="Chat ID (number)"
                         className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
                       />
                       <Input
                         value={action.args.chat?.name || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -748,7 +739,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Message ID</Label>
                         <Input
                           value={action.args.message_info?.message_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -767,7 +758,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Input
                           type="text"
                           value={action.args.message_info?.timestamp || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -785,7 +776,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Peer ID</Label>
                         <Input
                           value={action.args.message_info?.peer_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -803,7 +794,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>From ID</Label>
                         <Input
                           value={action.args.message_info?.from_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -821,7 +812,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Text Hash</Label>
                         <Input
                           value={action.args.message_info?.text_hash || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -839,7 +830,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Viewer ID</Label>
                         <Input
                           value={action.args.message_info?.viewer_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -859,7 +850,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <Label>Reply Message</Label>
                     <Input
                       value={action.args.input_message_content?.text || ""}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -875,69 +866,71 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <div className="flex flex-col gap-2">
                       <Label>Attachments</Label>
                       <div className="space-y-2">
-                        {(action.args.input_message_content?.attachments || []).map((attachment: Attachment, attIndex: number) => (
-                          <div key={attIndex} className="flex gap-2 items-center">
-                            <Input
-                              value={attachment.url}
-                              onChange={(e) => {
-                                const newAttachments = [...(action.args.input_message_content?.attachments || [])];
-                                newAttachments[attIndex] = {
-                                  ...newAttachments[attIndex],
-                                  url: e.target.value,
-                                };
-                                updateAction(index, {
-                                  args: {
-                                    ...action.args,
-                                    input_message_content: {
-                                      ...action.args.input_message_content,
-                                      attachments: newAttachments,
+                        {(action.args.input_message_content?.attachments || []).map(
+                          (attachment: Attachment, attIndex: number) => (
+                            <div key={attIndex} className="flex gap-2 items-center">
+                              <Input
+                                value={attachment.url}
+                                onChange={e => {
+                                  const newAttachments = [...(action.args.input_message_content?.attachments || [])]
+                                  newAttachments[attIndex] = {
+                                    ...newAttachments[attIndex],
+                                    url: e.target.value,
+                                  }
+                                  updateAction(index, {
+                                    args: {
+                                      ...action.args,
+                                      input_message_content: {
+                                        ...action.args.input_message_content,
+                                        attachments: newAttachments,
+                                      },
                                     },
-                                  },
-                                });
-                              }}
-                              placeholder="Attachment URL"
-                            />
-                            <Input
-                              value={attachment.name || ""}
-                              onChange={(e) => {
-                                const newAttachments = [...(action.args.input_message_content?.attachments || [])];
-                                newAttachments[attIndex] = {
-                                  ...newAttachments[attIndex],
-                                  name: e.target.value,
-                                };
-                                updateAction(index, {
-                                  args: {
-                                    ...action.args,
-                                    input_message_content: {
-                                      ...action.args.input_message_content,
-                                      attachments: newAttachments,
+                                  })
+                                }}
+                                placeholder="Attachment URL"
+                              />
+                              <Input
+                                value={attachment.name || ""}
+                                onChange={e => {
+                                  const newAttachments = [...(action.args.input_message_content?.attachments || [])]
+                                  newAttachments[attIndex] = {
+                                    ...newAttachments[attIndex],
+                                    name: e.target.value,
+                                  }
+                                  updateAction(index, {
+                                    args: {
+                                      ...action.args,
+                                      input_message_content: {
+                                        ...action.args.input_message_content,
+                                        attachments: newAttachments,
+                                      },
                                     },
-                                  },
-                                });
-                              }}
-                              placeholder="Attachment Name (optional)"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newAttachments = [...(action.args.input_message_content?.attachments || [])];
-                                newAttachments.splice(attIndex, 1);
-                                updateAction(index, {
-                                  args: {
-                                    ...action.args,
-                                    input_message_content: {
-                                      ...action.args.input_message_content,
-                                      attachments: newAttachments,
+                                  })
+                                }}
+                                placeholder="Attachment Name (optional)"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newAttachments = [...(action.args.input_message_content?.attachments || [])]
+                                  newAttachments.splice(attIndex, 1)
+                                  updateAction(index, {
+                                    args: {
+                                      ...action.args,
+                                      input_message_content: {
+                                        ...action.args.input_message_content,
+                                        attachments: newAttachments,
+                                      },
                                     },
-                                  },
-                                });
-                              }}
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                                  })
+                                }}
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ),
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -953,7 +946,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                                   ],
                                 },
                               },
-                            });
+                            })
                           }}
                         >
                           <PlusIcon className="h-4 w-4 mr-2" />
@@ -968,20 +961,22 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
               {action.type === "forward_message" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>From Chat <span className="text-red-500">*</span></Label>
+                    <Label>
+                      From Chat <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
                         value={action.args.from_chat?.id || ""}
-                        onChange={(e) => handleChatIdChange(index, e.target.value, 'from_chat')}
+                        onChange={e => handleChatIdChange(index, e.target.value, "from_chat")}
                         placeholder="Chat ID (number)"
                         className={!action.args.from_chat?.id && !action.args.from_chat?.name ? "border-red-500" : ""}
                       />
                       <Input
                         value={action.args.from_chat?.name || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -1007,7 +1002,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Message ID</Label>
                         <Input
                           value={action.args.message_info?.message_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -1026,7 +1021,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Input
                           type="text"
                           value={action.args.message_info?.timestamp || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -1044,7 +1039,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Peer ID</Label>
                         <Input
                           value={action.args.message_info?.peer_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -1062,7 +1057,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>From ID</Label>
                         <Input
                           value={action.args.message_info?.from_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -1080,7 +1075,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Text Hash</Label>
                         <Input
                           value={action.args.message_info?.text_hash || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -1098,7 +1093,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         <Label>Viewer ID</Label>
                         <Input
                           value={action.args.message_info?.viewer_id || ""}
-                          onChange={(e) =>
+                          onChange={e =>
                             updateAction(index, {
                               args: {
                                 ...action.args,
@@ -1115,20 +1110,24 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label>Target Chat <span className="text-red-500">*</span></Label>
+                    <Label>
+                      Target Chat <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
                         value={action.args.target_chat?.id || ""}
-                        onChange={(e) => handleChatIdChange(index, e.target.value, 'target_chat')}
+                        onChange={e => handleChatIdChange(index, e.target.value, "target_chat")}
                         placeholder="Chat ID (number)"
-                        className={!action.args.target_chat?.id && !action.args.target_chat?.name ? "border-red-500" : ""}
+                        className={
+                          !action.args.target_chat?.id && !action.args.target_chat?.name ? "border-red-500" : ""
+                        }
                       />
                       <Input
                         value={action.args.target_chat?.name || ""}
-                        onChange={(e) =>
+                        onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
@@ -1140,7 +1139,9 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                           })
                         }
                         placeholder="Chat Name"
-                        className={!action.args.target_chat?.id && !action.args.target_chat?.name ? "border-red-500" : ""}
+                        className={
+                          !action.args.target_chat?.id && !action.args.target_chat?.name ? "border-red-500" : ""
+                        }
                       />
                     </div>
                     {!action.args.target_chat?.id && !action.args.target_chat?.name && (
@@ -1151,7 +1152,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <Label>Additional Message (optional)</Label>
                     <Input
                       value={action.args.message?.text || ""}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -1171,12 +1172,12 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                           <div key={attIndex} className="flex gap-2 items-center">
                             <Input
                               value={attachment.url}
-                              onChange={(e) => {
-                                const newAttachments = [...(action.args.message?.attachments || [])];
+                              onChange={e => {
+                                const newAttachments = [...(action.args.message?.attachments || [])]
                                 newAttachments[attIndex] = {
                                   ...newAttachments[attIndex],
                                   url: e.target.value,
-                                };
+                                }
                                 updateAction(index, {
                                   args: {
                                     ...action.args,
@@ -1185,18 +1186,18 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                                       attachments: newAttachments,
                                     },
                                   },
-                                });
+                                })
                               }}
                               placeholder="Attachment URL"
                             />
                             <Input
                               value={attachment.name || ""}
-                              onChange={(e) => {
-                                const newAttachments = [...(action.args.message?.attachments || [])];
+                              onChange={e => {
+                                const newAttachments = [...(action.args.message?.attachments || [])]
                                 newAttachments[attIndex] = {
                                   ...newAttachments[attIndex],
                                   name: e.target.value,
-                                };
+                                }
                                 updateAction(index, {
                                   args: {
                                     ...action.args,
@@ -1205,7 +1206,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                                       attachments: newAttachments,
                                     },
                                   },
-                                });
+                                })
                               }}
                               placeholder="Attachment Name (optional)"
                             />
@@ -1213,8 +1214,8 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                const newAttachments = [...(action.args.message?.attachments || [])];
-                                newAttachments.splice(attIndex, 1);
+                                const newAttachments = [...(action.args.message?.attachments || [])]
+                                newAttachments.splice(attIndex, 1)
                                 updateAction(index, {
                                   args: {
                                     ...action.args,
@@ -1223,7 +1224,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                                       attachments: newAttachments,
                                     },
                                   },
-                                });
+                                })
                               }}
                             >
                               <TrashIcon className="h-4 w-4" />
@@ -1245,7 +1246,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                                   ],
                                 },
                               },
-                            });
+                            })
                           }}
                         >
                           <PlusIcon className="h-4 w-4 mr-2" />
@@ -1264,7 +1265,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     <Input
                       type="number"
                       value={action.args.wait_time || ""}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -1280,7 +1281,7 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                       type="checkbox"
                       id={`sync-context-${index}`}
                       checked={action.args.sync_context || false}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -1289,16 +1290,14 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                         })
                       }
                     />
-                    <Label htmlFor={`sync-context-${index}`}>
-                      Sync Context
-                    </Label>
+                    <Label htmlFor={`sync-context-${index}`}>Sync Context</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={`get-chats-${index}`}
                       checked={action.args.get_chats || false}
-                      onChange={(e) =>
+                      onChange={e =>
                         updateAction(index, {
                           args: {
                             ...action.args,
@@ -1322,5 +1321,5 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
         </Button>
       </div>
     </div>
-  );
+  )
 }

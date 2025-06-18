@@ -1,12 +1,15 @@
 "use client"
 
+import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { DataTable } from "@/components/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ScenarioWithResult } from "@lib/api/operator"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
+import { useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table"
 import { CopyIcon } from "lucide-react"
 import { toast } from "sonner"
@@ -116,32 +119,61 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
   },
 ]
 
-const ScenariosList = ({
+export function ScenariosList({
   scenarios,
   avatarsData,
 }: {
   scenarios: { [key: string]: ScenarioWithResult }
   avatarsData: AvatarModelWithProxy[]
-}) => {
-  const data: ScenarioDataRow[] = Object.entries(scenarios).flatMap(([scenarioId, scenarioWithResult]) => {
-    const profileName =
-      avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)?.data.eliza_character?.name ||
-      "Unknown Profile"
+}) {
+  return (
+    <QueryClientWrapper>
+      <ScenariosListInner scenarios={scenarios} avatarsData={avatarsData} />
+    </QueryClientWrapper>
+  )
+}
 
-    return {
-      scenarioId,
-      profileId: scenarioWithResult.scenario.profile.id || scenarioId,
-      profileName,
-      status: scenarioWithResult.result?.status.status_code || "pending",
-      startTime: scenarioWithResult.result?.scenario_info.start_time || "",
-      endTime: scenarioWithResult.result?.scenario_info.end_time || null,
-      error: scenarioWithResult.result?.status.error || null,
-    }
+const ScenariosListInner = ({
+  scenarios: initialScenarios,
+  avatarsData,
+}: {
+  scenarios: { [key: string]: ScenarioWithResult }
+  avatarsData: AvatarModelWithProxy[]
+}) => {
+  const {
+    isPending,
+    isRefetching,
+    error,
+    data: scenarios,
+  } = useQuery({
+    queryKey: ["operator-scenarios"],
+    queryFn: () => new ServiceBrowserClient().getOperatorScenarios(),
+    initialData: initialScenarios,
+    refetchInterval: 10000, // poll every 10 seconds
   })
+
+  const data: ScenarioDataRow[] = Object.entries(scenarios || initialScenarios || {}).flatMap(
+    ([scenarioId, scenarioWithResult]) => {
+      const profileName =
+        avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)?.data.eliza_character?.name ||
+        "Unknown Profile"
+
+      return {
+        scenarioId,
+        profileId: scenarioWithResult.scenario.profile.id || scenarioId,
+        profileName,
+        status: scenarioWithResult.result?.status.status_code || "pending",
+        startTime: scenarioWithResult.result?.scenario_info.start_time || "",
+        endTime: scenarioWithResult.result?.scenario_info.end_time || null,
+        error: scenarioWithResult.result?.status.error || null,
+      }
+    },
+  )
 
   return (
     <DataTable
       columns={columns}
+      isRefreshing={isRefetching}
       initialSortingState={[{ id: "startTime", desc: true }]}
       data={data}
       onClickRow={row => {

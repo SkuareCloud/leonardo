@@ -2,6 +2,7 @@ import { read_server_env, ServerEnv } from "@lib/server-env"
 import { AvatarModelWithProxy } from "./api/avatars/types.gen"
 import { CombinedAvatar, zCombinedAvatar } from "./api/models"
 import { Scenario, ScenarioWithResult } from "./api/operator/types.gen"
+import { ScenarioRead } from "./api/orchestrator"
 import { logger } from "./logger"
 import { Web1Client } from "./web1/web1-client"
 import { Web1Account } from "./web1/web1-models"
@@ -39,13 +40,13 @@ export class ServiceClient {
         this.env.allowedCountries.includes(account.country) && !allProfilePhoneNumbers.has(account.phoneNumber),
     )
     if (!selectedAccount) {
-      console.error(`No WEB1 account found for country '${this.env.allowedCountries}'`)
+      logger.error(`No WEB1 account found for country '${this.env.allowedCountries}'`)
       return null
     }
     return selectedAccount
   }
 
-  async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
+  async getOperatorScenarios(): Promise<ScenarioRead[]> {
     const response = await fetch(`${this.env.serverUrl}/api/operator/scenario`)
     return response.json()
   }

@@ -391,6 +391,20 @@ export const zCategoryCreate = z.object({
     ]).optional()
 });
 
+export const zCategoryNodePayload = z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    description: z.string(),
+    chats_count: z.union([
+        z.number().int(),
+        z.null()
+    ]),
+    characters_count: z.union([
+        z.number().int(),
+        z.null()
+    ])
+});
+
 export const zCategoryRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -399,6 +413,14 @@ export const zCategoryRead = z.object({
     description: z.string().optional().default(''),
     parent_id: z.union([
         z.string().uuid(),
+        z.null()
+    ]).optional(),
+    character_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    chat_count: z.union([
+        z.number().int(),
         z.null()
     ]).optional()
 });
@@ -442,6 +464,14 @@ export const zChatCreate = z.object({
         zChatType,
         z.null()
     ]).optional(),
+    max_capacity: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    category_id: z.union([
+        z.string().uuid(),
+        z.null()
+    ]).optional(),
     platform_id: z.union([
         z.number().int(),
         z.null()
@@ -452,6 +482,30 @@ export const zChatCreate = z.object({
     ]).optional(),
     invite_link: z.union([
         z.string(),
+        z.null()
+    ]).optional(),
+    broadcast: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    megagroup: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    gigagroup: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    verified: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    scam: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    fake: z.union([
+        z.boolean(),
         z.null()
     ]).optional(),
     title: z.union([
@@ -466,7 +520,10 @@ export const zChatCreate = z.object({
         z.string(),
         z.null()
     ]).optional(),
-    platform_participants_count: z.number().int().optional(),
+    participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     active_participants_count: z.union([
         z.number().int(),
         z.null()
@@ -479,7 +536,11 @@ export const zChatCreate = z.object({
         z.number().int(),
         z.null()
     ]).optional(),
-    forwards_count_last_month: z.union([
+    forward_from_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    forward_to_count_last_month: z.union([
         z.number().int(),
         z.null()
     ]).optional(),
@@ -495,12 +556,108 @@ export const zChatCreate = z.object({
         z.number(),
         z.null()
     ]).optional(),
-    max_capacity: z.union([
+    linked_chat_id: z.union([
         z.number().int(),
         z.null()
     ]).optional(),
-    category_id: z.union([
-        z.string().uuid(),
+    slowmode_seconds: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    slowmode_enabled: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    noforwards: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    join_to_send: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    join_request: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    view_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_stickers: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_gifs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_games: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_inline: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    embed_links: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_polls: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    change_info: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    invite_users: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    pin_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_photos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_videos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_roundvideos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_audios: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_voices: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_docs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_plain: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    bots: z.union([
+        z.array(z.object({})),
         z.null()
     ]).optional()
 });
@@ -540,6 +697,14 @@ export const zChatRead = z.object({
         zChatType,
         z.null()
     ]).optional(),
+    max_capacity: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    category_id: z.union([
+        z.string().uuid(),
+        z.null()
+    ]).optional(),
     platform_id: z.union([
         z.number().int(),
         z.null()
@@ -550,6 +715,30 @@ export const zChatRead = z.object({
     ]).optional(),
     invite_link: z.union([
         z.string(),
+        z.null()
+    ]).optional(),
+    broadcast: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    megagroup: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    gigagroup: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    verified: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    scam: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    fake: z.union([
+        z.boolean(),
         z.null()
     ]).optional(),
     title: z.union([
@@ -564,7 +753,10 @@ export const zChatRead = z.object({
         z.string(),
         z.null()
     ]).optional(),
-    platform_participants_count: z.number().int().optional(),
+    participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     active_participants_count: z.union([
         z.number().int(),
         z.null()
@@ -577,7 +769,11 @@ export const zChatRead = z.object({
         z.number().int(),
         z.null()
     ]).optional(),
-    forwards_count_last_month: z.union([
+    forward_from_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    forward_to_count_last_month: z.union([
         z.number().int(),
         z.null()
     ]).optional(),
@@ -593,12 +789,108 @@ export const zChatRead = z.object({
         z.number(),
         z.null()
     ]).optional(),
-    max_capacity: z.union([
+    linked_chat_id: z.union([
         z.number().int(),
         z.null()
     ]).optional(),
-    category_id: z.union([
-        z.string().uuid(),
+    slowmode_seconds: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    slowmode_enabled: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    noforwards: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    join_to_send: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    join_request: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    view_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_stickers: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_gifs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_games: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_inline: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    embed_links: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_polls: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    change_info: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    invite_users: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    pin_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_photos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_videos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_roundvideos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_audios: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_voices: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_docs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_plain: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    bots: z.union([
+        z.array(z.object({})),
         z.null()
     ]).optional()
 });
@@ -724,6 +1016,10 @@ export const zFluffMissionInput = z.object({
         z.number().int(),
         z.null()
     ]).optional(),
+    batch_interval: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     get_chats: z.union([
         z.boolean(),
         z.null()
@@ -744,7 +1040,11 @@ export const zFluffMissionInput = z.object({
 
 export const zForwardMessageArgs = z.object({
     from_chat: zChatInfo,
-    message_info: zAppModelsOperatorCommonMessageInfoMessageInfo,
+    message_info: z.union([
+        zAppModelsOperatorCommonMessageInfoMessageInfo,
+        z.string(),
+        z.null()
+    ]).optional(),
     target_chat: zChatInfo,
     message: z.union([
         zInputMessage,
@@ -979,6 +1279,14 @@ export const zRandomDistributionMissionInput = z.object({
         z.number().int(),
         z.null()
     ]).optional(),
+    batch_size: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    batch_interval: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     start_time: z.string().datetime(),
     max_retries: z.union([
         z.number().int(),
@@ -988,7 +1296,11 @@ export const zRandomDistributionMissionInput = z.object({
 
 export const zReplyToMessageArgs = z.object({
     chat: zChatInfo,
-    message_info: zAppModelsOperatorCommonMessageInfoMessageInfo,
+    message_info: z.union([
+        zAppModelsOperatorCommonMessageInfoMessageInfo,
+        z.string(),
+        z.null()
+    ]).optional(),
     input_message_content: zInputMessage
 });
 
@@ -1147,6 +1459,16 @@ export const zScheduledEventRead = z.object({
     character_id: z.string().uuid()
 });
 
+export const zTreeNodeCategoryNodePayload: z.AnyZodObject = z.object({
+    payload: zCategoryNodePayload,
+    children: z.union([
+        z.array(z.lazy(() => {
+            return zTreeNodeCategoryNodePayload;
+        })),
+        z.null()
+    ])
+});
+
 export const zGetScenariosScenariosGetResponse = z.array(zScenarioRead);
 
 export const zCreateScenarioScenariosPostResponse = zScenarioRead;
@@ -1210,6 +1532,8 @@ export const zUpdateChatChatsChatIdPutResponse = zChatRead;
 
 export const zGetChatByUsernameChatsUsernameUsernameGetResponse = z.array(zChatRead);
 
+export const zGetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = zChatRead;
+
 export const zGetChatCharactersChatsChatIdCharactersGetResponse = z.array(zCharacterRead);
 
 export const zGetChatsByCategoryChatsCategoriesCategoryChatsGetResponse = z.array(zChatRead);
@@ -1261,3 +1585,5 @@ export const zGetCategoryDescendantsCategoriesCategoryIdDescendantsGetResponse =
 export const zGetCategoryCharactersCategoriesCategoryIdCharactersGetResponse = z.array(zCharacterRead);
 
 export const zGetCategoryChatsCategoriesCategoryIdChatsGetResponse = z.array(zChatRead);
+
+export const zGetCategoriesTreeCategoriesTreeGetResponse = zTreeNodeCategoryNodePayload;

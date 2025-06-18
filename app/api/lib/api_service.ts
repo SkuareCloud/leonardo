@@ -1,3 +1,5 @@
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
 import { client as avatarsClient } from "@lib/api/avatars/client.gen"
 import {
@@ -9,7 +11,7 @@ import {
   patchAvatarAvatarsAvatarIdPatch,
   pingProxyProxiesProxyIdPingPut,
 } from "@lib/api/avatars/sdk.gen"
-import { CategoryWithChatCount, ChatWithCategory, CombinedAvatar } from "@lib/api/models"
+import { CategoryWithChatCount, ChatWithCategory, CombinedAvatar, MediaItem, MissionStatistics } from "@lib/api/models"
 import { Scenario, ScenarioWithResult } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
@@ -33,15 +35,20 @@ import {
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
   getMissionMissionsMissionIdGet,
   getMissionsMissionsGet,
+  getMissionsStatisticsMissionsStatisticsGet,
   getRootCategoryCategoriesRootGet,
   planMissionMissionsPlanMissionMissionIdPost,
+  runMissionMissionsRunMissionMissionIdPost,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { Web1Client } from "@lib/web1/web1-client"
 import { Web1Account } from "@lib/web1/web1-models"
-import { read_server_env } from "../../../lib/server-env"
+import { read_server_env, ServerEnv } from "../../../lib/server-env"
 
 export class ApiService {
+  private mediaS3Client: S3Client
+  private env: ServerEnv
+
   constructor(
     avatarsApiEndpoint: string | null = null,
     avatarsApiKey: string | null = null,
@@ -50,6 +57,7 @@ export class ApiService {
     orchestratorApiKey: string | null = null,
   ) {
     const env = read_server_env()
+    this.env = env
 
     const effectiveAvatarsApiEndpoint = avatarsApiEndpoint || env.avatarsApiEndpoint
     if (!effectiveAvatarsApiEndpoint) {
@@ -87,10 +95,12 @@ export class ApiService {
         "X-Api-Key": effectiveOrchestratorApiKey,
       },
     })
+
+    this.mediaS3Client = new S3Client({ region: env.mediaBucketRegion })
   }
 
   async listProfiles(): Promise<CombinedAvatar[]> {
-    console.log("Listing all avatars...")
+    logger.info("Listing all avatars...")
     const [allAvatarsResponse, runningAvatarsResponse] = await Promise.all([
       avatarsAvatarsGet(),
       getAllCharactersCharactersGetOperator(),
@@ -101,7 +111,7 @@ export class ApiService {
     if (runningAvatarsResponse.error || !runningAvatarsResponse.data) {
       throw new Error(`Failed to fetch running avatars: ${JSON.stringify(runningAvatarsResponse.error)}`)
     }
-    console.log("Successfully fetched all avatars.")
+    logger.info("Successfully fetched all avatars.")
 
     return allAvatarsResponse.data.map(avatar => {
       const character = runningAvatarsResponse.data.find(profile => profile.id === avatar.id)
@@ -164,12 +174,12 @@ export class ApiService {
   }
 
   async updateProfileField(profileId: string, path: string, value: string) {
-    console.log(`Updating profile field ${path} for ${profileId}...`)
+    logger.info(`Updating profile field ${path} for ${profileId}...`)
     const body = {
       path: path.split("."),
       new_value: value,
     }
-    console.log("Payload: ", body)
+    logger.info("Payload: ", body)
     const response = await patchAvatarAvatarsAvatarIdPatch({
       path: {
         avatar_id: profileId,
@@ -308,7 +318,7 @@ export class ApiService {
         if (chatsWithinCategory.error || !chatsWithinCategory.data) {
           throw new Error(`Failed to get orchestrator chat category: ${JSON.stringify(chatsWithinCategory.error)}`)
         }
-        console.log(`Fetched ${chatsWithinCategory.data.length} chats for category ${category.id}`)
+        logger.info(`Fetched ${chatsWithinCategory.data.length} chats for category ${category.id}`)
         return {
           chats: chatsWithinCategory.data,
           category,
@@ -361,6 +371,22 @@ export class ApiService {
     return response.data ?? []
   }
 
+  async getOrchestratorMissionStatistics(missionId: string): Promise<MissionStatistics> {
+    logger.info(`Getting orchestrator mission statistics: ${missionId}`)
+    const response = await getMissionsStatisticsMissionsStatisticsGet({
+      client: orchestratorClient,
+      query: { mission_ids: [missionId] },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator mission statistics: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got orchestrator mission statistics: ${missionId}`)
+    if (!response.data) {
+      throw new Error(`Failed to get orchestrator mission statistics: ${missionId}`)
+    }
+    return (response.data[0] as any as MissionStatistics) ?? null
+  }
+
   async getOrchestratorMission(missionId: string): Promise<MissionRead> {
     logger.info(`Getting orchestrator mission: ${missionId}`)
     const response = await getMissionMissionsMissionIdGet({
@@ -389,6 +415,19 @@ export class ApiService {
       throw new Error(`Failed to delete orchestrator mission: ${JSON.stringify(response.error)}`)
     }
     logger.info(`Successfully deleted orchestrator mission: ${missionId}`)
+  }
+
+  async runOrchestratorMission(missionId: string): Promise<ScenarioRead[]> {
+    logger.info(`Running orchestrator mission: ${missionId}`)
+    const response = await runMissionMissionsRunMissionMissionIdPost({
+      client: orchestratorClient,
+      path: { mission_id: missionId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to run orchestrator mission: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully ran orchestrator mission: ${missionId}`)
+    return response.data ?? []
   }
 
   async submitOrchestratorMission(mission: MissionCreate): Promise<MissionRead | null> {
@@ -530,5 +569,40 @@ export class ApiService {
       throw new Error(`Avatar not found: ${profileId}`)
     }
     return response.data
+  }
+
+  async getMedia(): Promise<MediaItem[]> {
+    const media = await this.mediaS3Client.send(
+      new ListObjectsV2Command({
+        Bucket: this.env.mediaBucketName,
+        Prefix: "attachments/",
+      }),
+    )
+    const mediaItems = await Promise.all(
+      media.Contents?.map(async item => {
+        if (item.Key === "attachments/") {
+          return null
+        }
+        const attachmentName = item.Key?.split("/").pop()
+        const previewPath = `previews/${attachmentName}`
+        logger.info(`Creating presigned url for ${previewPath}`)
+        const previewUrl = await this.createPresignedUrlWithClient(previewPath)
+        return {
+          name: attachmentName || "",
+          key: item.Key || "",
+          lastUpdated: item.LastModified || new Date(),
+          size: item.Size || 0,
+          previewS3Url: previewUrl,
+        }
+      }) || [],
+    )
+    const filteredMediaItems = mediaItems.filter(item => item !== null)
+    return filteredMediaItems
+  }
+
+  private async createPresignedUrlWithClient(key: string) {
+    const client = new S3Client({ region: this.env.mediaBucketRegion })
+    const command = new GetObjectCommand({ Bucket: this.env.mediaBucketName, Key: key })
+    return getSignedUrl(client, command, { expiresIn: 3600 })
   }
 }

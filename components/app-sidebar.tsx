@@ -3,17 +3,18 @@
 import {
   ActivityIcon,
   BrickWallIcon,
-  Clapperboard,
   Crosshair,
   HardHat,
+  ImageIcon,
   LucideIcon,
   MessageCircleMore,
   MessagesSquare,
+  PackageIcon,
   ScrollText,
   SpeechIcon,
   Users2Icon,
   VenetianMask,
-  Waypoints,
+  Waypoints
 } from "lucide-react"
 import * as React from "react"
 
@@ -36,7 +37,6 @@ export interface NavItem {
   title: string
   url: string
   icon?: LucideIcon
-  isActive?: boolean
   localOnly?: boolean
   items?: NavItem[]
 }
@@ -46,7 +46,6 @@ const data = {
     {
       title: "Avatars",
       url: "#",
-      isActive: true,
       icon: Users2Icon,
       items: [
         {
@@ -69,7 +68,6 @@ const data = {
     {
       title: "WEB1",
       url: "#",
-      isActive: true,
       localOnly: true,
       items: [
         {
@@ -82,7 +80,6 @@ const data = {
     {
       title: "Operator",
       url: "#",
-      isActive: true,
       icon: HardHat,
       items: [
         {
@@ -100,7 +97,6 @@ const data = {
     {
       title: "Orchestrator",
       url: "#",
-      isActive: true,
       icon: SpeechIcon,
       items: [
         {
@@ -123,10 +119,17 @@ const data = {
           url: "/orchestrator/mission-builder",
           icon: BrickWallIcon,
         },
+      ],
+    },
+    {
+      title: "Inventory",
+      url: "#",
+      icon: PackageIcon,
+      items: [
         {
-          title: "Scenarios",
-          url: "/orchestrator/scenarios",
-          icon: Clapperboard,
+          title: "Media",
+          url: "/inventory/media",
+          icon: ImageIcon,
         },
       ],
     },

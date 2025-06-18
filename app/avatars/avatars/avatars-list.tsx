@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
 import { ProxyData } from "@lib/api/models"
+import { logger } from "@lib/logger"
 import { getSocialNetworkStatus } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
@@ -253,9 +254,9 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
       throw new Error("No active row")
     }
 
-    console.log(`Refreshing field for profile ${activeRow.original.id}...`)
+    logger.info(`Refreshing field for profile ${activeRow.original.id}...`)
     const avatar = await new ServiceBrowserClient().getProfile(activeRow.original.id)
-    console.log("Refreshed profile: ", avatar)
+    logger.info("Refreshed profile: ", avatar)
     setActiveRow(avatarToRow(avatar))
     return avatar
   }
@@ -264,7 +265,7 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
     if (!activeRow) {
       return
     }
-    console.log("Updating avatar...")
+    logger.info("Updating avatar...")
     await new ServiceBrowserClient().updateProfile(activeRow.original.id, path, value)
     await refreshAvatar()
   }
@@ -295,7 +296,7 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
               <DataTable
                 columns={profileColumns}
                 onClickRow={row => {
-                  console.log("Clicked row: ", row.original)
+                  logger.info("Clicked row: ", row.original)
                   setActiveRow(row)
                 }}
                 data={initialAvatars.map(avatar => avatarToRow(avatar))}

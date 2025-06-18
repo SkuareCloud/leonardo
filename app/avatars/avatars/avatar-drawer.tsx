@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
@@ -41,7 +42,7 @@ export function LoadingInputField({
         setIsLoading(true)
         updateField(e.target.value)
           .catch(err => {
-            console.error(`Failed to update field: ${err}`)
+            logger.error(`Failed to update field: ${err}`)
             setError("Failed to update field")
           })
           .then(() => {
@@ -113,7 +114,7 @@ export function LoadingSelectField({
             setIsLoading(true)
             updateField(value)
               .catch(err => {
-                console.error(`Failed to update field: ${err}`)
+                logger.error(`Failed to update field: ${err}`)
                 setError("Failed to update field")
               })
               .finally(() => {
@@ -215,7 +216,7 @@ export function AvatarDrawer({
               updateField={async value => {
                 const parts = value.split("|")
                 const [homeCity, geocode, subdivision, continent] = parts
-                console.log(
+                logger.info(
                   `Updating home address to city: ${homeCity}, ISO: ${geocode}, subdivision: ${subdivision}...`,
                 )
                 await updateField("addresses.home", {
@@ -224,10 +225,10 @@ export function AvatarDrawer({
                   iso_3166_2_subdivision_code: subdivision,
                   continent_code: continent,
                 })
-                console.log("Successfully updated address.")
-                console.log(`Assigning proxy to profile ID: ${avatar.id}...`)
+                logger.info("Successfully updated address.")
+                logger.info(`Assigning proxy to profile ID: ${avatar.id}...`)
                 await new ServiceBrowserClient().assignProxy(avatar.id)
-                console.log(`Successfully assigned proxy.`)
+                logger.info(`Successfully assigned proxy.`)
                 await refreshAvatar()
               }}
               choiceRenderer={choice => {

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { MissionInput } from "@lib/api/models"
 import { CategoryRead, ChatRead, EchoMissionInput, ScenarioRead } from "@lib/api/orchestrator"
+import { logger } from "@lib/logger"
 import { cn } from "@lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
@@ -32,6 +33,13 @@ export function EchoMissionBuilder({
   const [sendAtTriggerTime, setSendAtTriggerTime] = useState(false)
   const [triggerTime, setTriggerTime] = useState<Date | undefined>(undefined)
   const { onChangeMissionPayload } = useContext(MissionBuilderContext)
+
+  // TODO: filter by chats with avatars
+  const activeChats = chats.filter(chat => chat.chat_type === "Group")
+  const activeChatCategories = categories.filter(category => category.chat_count && category.chat_count > 0)
+  const activeProfileCategories = categories.filter(
+    category => category.character_count && category.character_count > 0,
+  )
 
   useEffect(() => {
     const payload: Partial<EchoMissionInput> = {}
@@ -118,7 +126,7 @@ export function EchoMissionBuilder({
       <div className="flex flex-col gap-8 p-2">
         <FieldWithLabel required label="Select chat">
           <Combobox
-            options={chats.map(chat => ({
+            options={activeChats.map(chat => ({
               value: chat.id,
               label: chat.username ? `${chat.username} (${chat.id})` : chat.id,
             }))}
@@ -153,7 +161,7 @@ export function EchoMissionBuilder({
               <DateTimePicker
                 disabled={!sendAtTriggerTime}
                 onSelectDate={value => {
-                  console.log("Changing trigger time", value)
+                  logger.info("Changing trigger time", value)
                   value.setMilliseconds(0)
                   setTriggerTime(value)
                 }}
@@ -177,19 +185,19 @@ export function EchoMissionBuilder({
             <div className="text-sm pl-2">{triggerTimeFromNow}</div>
           </div>
         </FieldWithLabel>
-        {categories.length > 0 && (
-          <div className="flex flex-col gap-4">
-            <CategorySelector
-              categories={categories}
-              label="Chat categories"
-              onChangeValue={value => setChatCategories(value)}
-            />
-            <CategorySelector
-              categories={categories}
-              label="Profile categories"
-              onChangeValue={value => setProfileCategories(value)}
-            />
-          </div>
+        {activeChatCategories.length > 0 && (
+          <CategorySelector
+            categories={activeChatCategories}
+            label="Chat categories"
+            onChangeValue={value => setChatCategories(value)}
+          />
+        )}
+        {activeProfileCategories.length > 0 && (
+          <CategorySelector
+            categories={activeProfileCategories}
+            label="Profile categories"
+            onChangeValue={value => setProfileCategories(value)}
+          />
         )}
         <FieldWithLabel label="Maximum retries">
           <Slider

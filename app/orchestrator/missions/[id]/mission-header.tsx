@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { MissionRead, ScenarioRead } from "@lib/api/orchestrator/types.gen"
+import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
+import { PlayIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -37,7 +39,7 @@ export function MissionHeader({
             router.push("/orchestrator/missions")
           } catch (error) {
             toast.error(`Failed to delete mission: ${error}`)
-            console.error(error)
+            logger.error(error)
           }
         }}
       >
@@ -46,21 +48,22 @@ export function MissionHeader({
 
       <Separator orientation="vertical" className="max-h-6 border-1" />
 
-      {mission.status_code === "submitted" && (
+      {mission.status_code === "planned" && (
         <Button
           variant="default"
           className="cursor-pointer scale-100 hover:scale-105 active:scale-95 transition-all"
           onClick={async () => {
             try {
-              const scenarios = await new ServiceBrowserClient().planMission(mission.id)
-              onPlanMission(scenarios)
+              const plannedMissionScenarios = await new ServiceBrowserClient().runMission(mission.id)
+              onPlanMission(plannedMissionScenarios)
             } catch (error) {
               toast.error(`Failed to plan mission: ${error}`)
-              console.error(error)
+              logger.error(error)
             }
           }}
         >
-          Plan
+          <PlayIcon className="w-4 h-4" />
+          Run
         </Button>
       )}
     </div>

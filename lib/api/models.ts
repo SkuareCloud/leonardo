@@ -46,3 +46,27 @@ export type MissionInput<T> = MissionCreate & { payload: T }
 
 // wrappers to enforce type safety
 export type EffectiveEchoMissionInput = MissionInput<EchoMissionInput>
+
+export interface MediaItem {
+  name: string
+  key: string
+  lastUpdated: Date
+  size: number
+  previewS3Url: string
+}
+
+export interface MissionStatistics {
+  id: string
+  mission_type: MissionType
+  description: string
+  created_at: string
+  status_code: string
+  cnt: number
+  SCHEDULED: number
+  PENDING: number
+  IN_PROCESS: number
+  RUNNING: number
+  SUCCESS: number
+  FAILED: number
+  CANCELLED: number
+}

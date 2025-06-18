@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import { getAllCharactersCharactersGet } from "@lib/api/operator/sdk.gen"
+import { logger } from "@lib/logger"
 import { CircleStop, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -36,7 +37,7 @@ export function StopAllButton() {
           const response = await getAllCharactersCharactersGet({
             client: operatorClient,
           })
-          console.log("response", response)
+          logger.info("response", response)
           if (response.data && response.data.length === 0) {
             charactersEmpty = true
           } else {
@@ -60,7 +61,7 @@ export function StopAllButton() {
         description: error instanceof Error ? error.message : "An unexpected error occurred while stopping profiles",
         action: {
           label: "Undo",
-          onClick: () => console.log("Undo"),
+          onClick: () => logger.info("Undo"),
         },
       })
     } finally {

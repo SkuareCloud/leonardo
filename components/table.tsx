@@ -15,7 +15,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Loader2 } from "lucide-react"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,7 @@ import { Separator } from "@radix-ui/react-separator"
 export interface DataTableProps<T> {
   columns: ColumnDef<T>[]
   initialSortingState?: SortingState
+  isRefreshing?: boolean
   data: T[]
   pageSize?: number
   header?: ({ table }: { table: TTable<T> }) => React.ReactElement
@@ -42,6 +43,7 @@ export interface DataTableProps<T> {
 export function DataTable<T>({
   columns,
   data,
+  isRefreshing = false,
   pageSize = 10,
   initialSortingState = [],
   header,
@@ -117,7 +119,13 @@ export function DataTable<T>({
   })
 
   return (
-    <div className="w-full flex flex-col min-h-[600px]">
+    <div className="w-full lex flex-col min-h-[600px] relative">
+      {isRefreshing && (
+        <div className="absolute -top-4 left-0 flex items-center space-x-2 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Refreshing...</span>
+        </div>
+      )}
       <div className="flex items-center py-4">
         {header && header({ table })}
         <div className="flex-1" />
