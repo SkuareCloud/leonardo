@@ -56,7 +56,7 @@ export function Combobox({
             <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="max-w-[500px] min-w-[240px] p-0">
+        <PopoverContent className="max-w-[500px] min-w-[500px] p-0">
           <Command
             filter={(value, search) => {
               return value.toLocaleLowerCase().includes(search.toLocaleLowerCase()) ? 1 : 0

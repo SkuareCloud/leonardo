@@ -895,6 +895,30 @@ export const zChatRead = z.object({
     ]).optional()
 });
 
+export const zChatView = z.object({
+    id: z.string().uuid(),
+    platform_id: z.union([
+        z.number().int(),
+        z.null()
+    ]),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]),
+    chat_type: z.union([
+        zChatType,
+        z.null()
+    ]),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ])
+});
+
 export const zInputMessage = z.object({
     text: z.union([
         z.string(),
@@ -1533,6 +1557,8 @@ export const zUpdateChatChatsChatIdPutResponse = zChatRead;
 export const zGetChatByUsernameChatsUsernameUsernameGetResponse = z.array(zChatRead);
 
 export const zGetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = zChatRead;
+
+export const zGetChatsViewChatsViewChatsGetResponse = z.array(zChatView);
 
 export const zGetChatCharactersChatsChatIdCharactersGetResponse = z.array(zCharacterRead);
 

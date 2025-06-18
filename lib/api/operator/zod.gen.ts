@@ -144,7 +144,8 @@ export const zBehaviouralResponseContent = z.object({
         z.null()
     ]).optional(),
     personal_details_synced: z.boolean().optional().default(false),
-    auto_download_media_disabled: z.boolean().optional().default(false)
+    auto_download_media_disabled: z.boolean().optional().default(false),
+    all_active_sessions_deleted: z.boolean().optional().default(false)
 });
 
 export const zSendBulkMessagesResponseContent = z.object({
@@ -179,7 +180,11 @@ export const zActionResponse = z.object({
 export const zActivationRequest = z.object({
     profile_id: z.string(),
     verify_profile_exists: z.boolean().optional().default(false),
-    should_override: z.boolean().optional().default(false)
+    should_override: z.boolean().optional().default(false),
+    session_data: z.union([
+        z.object({}),
+        z.null()
+    ]).optional()
 });
 
 export const zActivationStatus = z.enum([
@@ -242,7 +247,8 @@ export const zBehaviouralArgs = z.object({
     sync_context: z.boolean().optional().default(false),
     get_chats: z.boolean().optional().default(false),
     sync_personal_details: z.boolean().optional().default(false),
-    disable_auto_download_media: z.boolean().optional().default(false)
+    disable_auto_download_media: z.boolean().optional().default(false),
+    delete_all_active_sessions: z.boolean().optional().default(false)
 });
 
 export const zBehaviouralAction = z.object({
@@ -561,5 +567,7 @@ export const zCredentialsAuthCredentialsGetResponse = zTgAuthCredentialsResponse
 export const zSubmitCredentialsAuthPostResponse = zSubmitCredentialsResponse;
 
 export const zActivateActivationActivatePostResponse = zActivationResponse;
+
+export const zActivateWithSessionDataActivationActivateWithSessionDataPostResponse = zActivationResponse;
 
 export const zGetStatusActivationStatusGetResponse = zActivationResponse;

@@ -32,6 +32,12 @@ export type ActivationRequest = {
      * Should override the datadar if exists
      */
     should_override?: boolean;
+    /**
+     * Session data to override the local storage
+     */
+    session_data?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type ActivationResponse = {
@@ -70,6 +76,7 @@ export type BehaviouralArgs = {
     get_chats?: boolean;
     sync_personal_details?: boolean;
     disable_auto_download_media?: boolean;
+    delete_all_active_sessions?: boolean;
 };
 
 export type BehaviouralResponseContent = {
@@ -77,6 +84,7 @@ export type BehaviouralResponseContent = {
     chats?: Array<GroupInfo | ChannelInfo> | null;
     personal_details_synced?: boolean;
     auto_download_media_disabled?: boolean;
+    all_active_sessions_deleted?: boolean;
 };
 
 export type ChannelInfo = {
@@ -577,6 +585,31 @@ export type ActivateActivationActivatePostResponses = {
 };
 
 export type ActivateActivationActivatePostResponse = ActivateActivationActivatePostResponses[keyof ActivateActivationActivatePostResponses];
+
+export type ActivateWithSessionDataActivationActivateWithSessionDataPostData = {
+    body: ActivationRequest;
+    path?: never;
+    query?: never;
+    url: '/activation/activate_with_session_data';
+};
+
+export type ActivateWithSessionDataActivationActivateWithSessionDataPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ActivateWithSessionDataActivationActivateWithSessionDataPostError = ActivateWithSessionDataActivationActivateWithSessionDataPostErrors[keyof ActivateWithSessionDataActivationActivateWithSessionDataPostErrors];
+
+export type ActivateWithSessionDataActivationActivateWithSessionDataPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: ActivationResponse;
+};
+
+export type ActivateWithSessionDataActivationActivateWithSessionDataPostResponse = ActivateWithSessionDataActivationActivateWithSessionDataPostResponses[keyof ActivateWithSessionDataActivationActivateWithSessionDataPostResponses];
 
 export type GetStatusActivationStatusGetData = {
     body?: never;

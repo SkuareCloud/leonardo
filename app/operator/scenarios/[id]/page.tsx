@@ -84,7 +84,7 @@ const formatDate = (date: Date) => {
 }
 
 export default async function ScenarioPage({ params }: { params: { id: string } }) {
-  const { id } = params
+  const { id } = await params
   if (!id) {
     throw new Error("Scenario ID is required")
   }

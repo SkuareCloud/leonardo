@@ -148,6 +148,7 @@ export function MissionBuilderView({
                       } else {
                         toast.error("Failed to plan mission")
                       }
+                      await new Promise(resolve => setTimeout(resolve, 1000))
                     } catch (error) {
                       toast.error("Failed to submit mission: " + error)
                       setError(error instanceof Error ? error.message : "Unknown error")
@@ -155,7 +156,7 @@ export function MissionBuilderView({
                   }}
                 >
                   <PlusIcon className="size-4 mr-2" />
-                  Create and Plan
+                  Submit and Plan
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="w-64 py-4 flex flex-row items-center">

@@ -23,7 +23,7 @@ export function EchoMissionBuilder({
   categories: CategoryRead[]
   chats: ChatRead[]
 }) {
-  const [maximumRetries, setMaximumRetries] = useState(3)
+  const [maximumRetries, setMaximumRetries] = useState(0)
   const [messagePlain, setMessagePlain] = useState("")
   const [mode, setMode] = useState<EchoMissionMode>("message-plain")
   const [scenarioId, setScenarioId] = useState("")
@@ -102,8 +102,8 @@ export function EchoMissionBuilder({
       : undefined
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-row gap-4">
+    <div className="flex flex-col">
+      <div className="flex flex-row w-fit">
         <ModeButtonSelector
           active={mode === "message-plain"}
           title="Plain Message"
@@ -112,12 +112,14 @@ export function EchoMissionBuilder({
         />
         <ModeButtonSelector
           active={mode === "message-reference"}
+          unsupported={true}
           title="Message Reference"
           subtitle="Select a message by reference"
           onClick={() => setMode("message-reference")}
         />
         <ModeButtonSelector
           active={mode === "scenario-id"}
+          unsupported={true}
           title="External Scenario"
           subtitle="Select a scenario from the list of scenarios"
           onClick={() => setMode("scenario-id")}
@@ -126,10 +128,19 @@ export function EchoMissionBuilder({
       <div className="flex flex-col gap-8 p-2">
         <FieldWithLabel required label="Select chat">
           <Combobox
-            options={activeChats.map(chat => ({
-              value: chat.id,
-              label: chat.username ? `${chat.username} (${chat.id})` : chat.id,
-            }))}
+            options={activeChats
+              .map(chat => {
+                const value = chat.id
+                let label = chat.username?.toString() || chat.platform_id?.toString()
+                if (chat.title) {
+                  label = `${label} (${chat.title})`
+                }
+                return {
+                  value,
+                  label: label || value,
+                }
+              })
+              .filter(c => c.label)}
             value={chatId}
             onValueChange={value => setChatId(value)}
           />

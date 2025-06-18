@@ -54,7 +54,8 @@ export function MessageBuilder({ onUpdateMessages }: { onUpdateMessages: (messag
               addMessage(text)
             }
           }}
-          className="w-[300px] bg-white"
+          className="w-[300px] bg-transparent placeholder:text-gray-700 border-0 outline-0 ring-0 shadow-none"
+          placeholder="Type a message..."
         />
       </ChatBubble>
 

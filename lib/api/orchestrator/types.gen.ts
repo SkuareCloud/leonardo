@@ -593,6 +593,15 @@ export type ChatRead = {
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
 
+export type ChatView = {
+    id: string;
+    platform_id: number | null;
+    username: string | null;
+    title: string | null;
+    chat_type: ChatType | null;
+    linked_chat_id: number | null;
+};
+
 export type EchoMissionInput = {
     target_group_id: string;
     message: MessageForwardRequest;
@@ -2182,6 +2191,38 @@ export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses = {
 
 export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses[keyof GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses];
 
+export type GetChatsViewChatsViewChatsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        skip?: number;
+        limit?: number;
+    };
+    url: '/chats/view_chats/';
+};
+
+export type GetChatsViewChatsViewChatsGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetChatsViewChatsViewChatsGetError = GetChatsViewChatsViewChatsGetErrors[keyof GetChatsViewChatsViewChatsGetErrors];
+
+export type GetChatsViewChatsViewChatsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ChatView>;
+};
+
+export type GetChatsViewChatsViewChatsGetResponse = GetChatsViewChatsViewChatsGetResponses[keyof GetChatsViewChatsViewChatsGetResponses];
+
 export type GetChatCharactersChatsChatIdCharactersGetData = {
     body?: never;
     path: {
@@ -2526,6 +2567,7 @@ export type GetMissionsMissionsGetData = {
     query?: {
         skip?: number;
         limit?: number;
+        include_scenarios?: boolean;
     };
     url: '/missions/';
 };

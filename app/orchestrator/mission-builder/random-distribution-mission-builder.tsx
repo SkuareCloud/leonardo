@@ -2,34 +2,24 @@ import { DateTimePicker } from "@/components/date-time-picker"
 import { MessageBuilder } from "@/components/message-builder"
 import { Slider } from "@/components/ui/slider"
 import { MissionInput } from "@lib/api/models"
-import {
-  CategoryRead,
-  ChatRead,
-  InputMessage,
-  RandomDistributionMissionInput,
-  ScenarioRead,
-} from "@lib/api/orchestrator"
+import { CategoryRead, ChatRead, InputMessage, RandomDistributionMissionInput } from "@lib/api/orchestrator"
 import { logger } from "@lib/logger"
 import { cn } from "@lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
-import { FieldWithLabel } from "./mission-builder-utils"
+import { FieldWithLabel, InputWithLabel } from "./mission-builder-utils"
 
 export function RandomDistributionMissionBuilder({
-  scenarios,
   categories,
   chats,
 }: {
-  scenarios: ScenarioRead[]
   categories: CategoryRead[]
   chats: ChatRead[]
 }) {
-  const [maximumRetries, setMaximumRetries] = useState(3)
+  const [maximumRetries, setMaximumRetries] = useState(0)
   const [messagesAmount, setMessagesAmount] = useState(1)
   const [messagesAmountPerCharacter, setMessagesAmountPerCharacter] = useState(1)
-  const [scenarioId, setScenarioId] = useState("")
-  const [chatId, setChatId] = useState("")
   const [chatCategories, setChatCategories] = useState<{ id: string; label: string }[]>([])
   const [profileCategories, setProfileCategories] = useState<{ id: string; label: string }[]>([])
   const [startTime, setStartTime] = useState<Date | undefined>(undefined)
@@ -85,26 +75,30 @@ export function RandomDistributionMissionBuilder({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-8 p-2">
         <MessageBuilder onUpdateMessages={messages => setMessages(messages)} />
-        <FieldWithLabel label="Messages amount">
-          <Slider
-            min={1}
-            max={10}
-            step={1}
-            value={[messagesAmount]}
-            onValueChange={value => setMessagesAmount(value[0])}
-            className="w-96"
-          />
-        </FieldWithLabel>
-        <FieldWithLabel label="Messages amount per character">
-          <Slider
-            min={1}
-            max={10}
-            step={1}
-            value={[messagesAmountPerCharacter]}
-            onValueChange={value => setMessagesAmountPerCharacter(value[0])}
-            className="w-96"
-          />
-        </FieldWithLabel>
+        <InputWithLabel
+          label="Global messages amount"
+          type="number"
+          value={messagesAmount}
+          onBlur={e => {
+            if (Number(e.target.value) <= 0) {
+              e.target.value = "1"
+            }
+          }}
+          onChange={e => setMessagesAmountPerCharacter(Number(e.target.value))}
+          className="w-28 max-w-28"
+        />
+        <InputWithLabel
+          label="Messages amount per character"
+          type="number"
+          value={messagesAmountPerCharacter}
+          onBlur={e => {
+            if (Number(e.target.value) <= 0) {
+              e.target.value = "1"
+            }
+          }}
+          onChange={e => setMessagesAmountPerCharacter(Number(e.target.value))}
+          className="w-28 max-w-28"
+        />
         <FieldWithLabel required label="Start time">
           <div className="flex flex-col gap-3 w-full">
             <div className="flex flex-row gap-2">

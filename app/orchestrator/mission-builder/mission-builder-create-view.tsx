@@ -81,11 +81,7 @@ export function MissionBuilderCreateView({
                 <EchoMissionBuilder chats={chats} scenarios={scenarios || []} categories={categories || []} />
               )}
               {mission === "RandomDistributionMission" && (
-                <RandomDistributionMissionBuilder
-                  chats={chats}
-                  scenarios={scenarios || []}
-                  categories={categories || []}
-                />
+                <RandomDistributionMissionBuilder chats={chats} categories={categories || []} />
               )}
             </div>
           </ResizablePanel>

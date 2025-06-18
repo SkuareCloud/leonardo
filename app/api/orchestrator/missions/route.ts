@@ -4,8 +4,9 @@ import { ApiService } from "../../lib/api_service"
 
 export async function GET(request: NextRequest) {
   logger.info("GET /api/missions/list called")
+  const includeScenarios = request.nextUrl.searchParams.get("include_scenarios") !== "false"
   const apiService = new ApiService()
-  const missions = await apiService.getOrchestratorMissions()
+  const missions = await apiService.getOrchestratorMissions(includeScenarios)
   logger.info("GET /api/missions/list success")
   return NextResponse.json(missions)
 }

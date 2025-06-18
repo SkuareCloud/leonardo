@@ -1308,6 +1308,54 @@ export function ScenarioForm({ avatars }: ScenarioFormProps) {
                     />
                     <Label htmlFor={`get-chats-${index}`}>Get Chats</Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`sync-personal-details-${index}`}
+                      checked={action.args.sync_personal_details || false}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            sync_personal_details: e.target.checked,
+                          },
+                        })
+                      }
+                    />
+                    <Label htmlFor={`sync-personal-details-${index}`}>Sync Personal Details</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`disable-auto-download-media-${index}`}
+                      checked={action.args.disable_auto_download_media || false}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            disable_auto_download_media: e.target.checked,
+                          },
+                        })
+                      }
+                    />
+                    <Label htmlFor={`disable-auto-download-media-${index}`}>Disable Auto Download Media</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`delete-all-active-sessions-${index}`}
+                      checked={action.args.delete_all_active_sessions || false}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            delete_all_active_sessions: e.target.checked,
+                          },
+                        })
+                      }
+                    />
+                    <Label htmlFor={`delete-all-active-sessions-${index}`}>Delete All Active Sessions</Label>
+                  </div>
                 </div>
               )}
             </div>

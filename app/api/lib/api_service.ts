@@ -29,10 +29,10 @@ import {
   deleteMissionMissionsMissionIdDelete,
   getAllCategoriesCategoriesGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
-  getAllChatsChatsGet,
   getScenariosScenariosGet as getAllOrchestratorScenariosGet,
   getCategoryChatsCategoriesCategoryIdChatsGet,
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
+  getChatsViewChatsViewChatsGet,
   getMissionMissionsMissionIdGet,
   getMissionsMissionsGet,
   getMissionsStatisticsMissionsStatisticsGet,
@@ -241,7 +241,7 @@ export class ApiService {
   }
 
   async getOrchestratorScenarios(): Promise<ScenarioRead[]> {
-    const limit = process.env.ORCHESTRATOR_SCENARIOS_LIMIT ? parseInt(process.env.ORCHESTRATOR_SCENARIOS_LIMIT) : 5000
+    const limit = process.env.ORCHESTRATOR_SCENARIOS_LIMIT ? parseInt(process.env.ORCHESTRATOR_SCENARIOS_LIMIT) : 0
     logger.info(`Getting orchestrator scenarios (limit: ${limit})`)
     const response = await getAllOrchestratorScenariosGet({
       client: orchestratorClient,
@@ -257,9 +257,9 @@ export class ApiService {
   }
 
   async getOrchestratorChats(): Promise<ChatRead[]> {
-    const limit = process.env.ORCHESTRATOR_CHATS_LIMIT ? parseInt(process.env.ORCHESTRATOR_CHATS_LIMIT) : 5000
+    const limit = process.env.ORCHESTRATOR_CHATS_LIMIT ? parseInt(process.env.ORCHESTRATOR_CHATS_LIMIT) : 0
     logger.info(`Getting orchestrator chats (limit: ${limit})`)
-    const response = await getAllChatsChatsGet({
+    const response = await getChatsViewChatsViewChatsGet({
       client: orchestratorClient,
       query: {
         limit,
@@ -359,10 +359,11 @@ export class ApiService {
     return response.data
   }
 
-  async getOrchestratorMissions(): Promise<MissionRead[]> {
+  async getOrchestratorMissions(includeScenarios: boolean = true): Promise<MissionRead[]> {
     logger.info("Getting orchestrator missions")
     const response = await getMissionsMissionsGet({
       client: orchestratorClient,
+      query: { include_scenarios: includeScenarios },
     })
     if (response.error) {
       throw new Error(`Failed to get orchestrator missions: ${JSON.stringify(response.error)}`)
