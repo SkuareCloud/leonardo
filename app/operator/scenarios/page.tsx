@@ -4,6 +4,7 @@ import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ServiceClient } from "@lib/service-client"
 import Link from "next/link"
 import ScenariosList from "./scenarios"
+import { ScenarioWithResult } from "@lib/api/operator/types.gen"
 
 export default async function Page() {
   const serviceClient = new ServiceClient()

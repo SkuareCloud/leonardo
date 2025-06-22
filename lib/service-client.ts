@@ -46,7 +46,7 @@ export class ServiceClient {
     return selectedAccount
   }
 
-  async getOperatorScenarios(): Promise<ScenarioRead[]> {
+  async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
     const response = await fetch(`${this.env.serverUrl}/api/operator/scenario`)
     return response.json()
   }

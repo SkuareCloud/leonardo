@@ -3,17 +3,13 @@
 import { CopyableTrimmedId } from "@/components/copyable-trimmed-id"
 import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { DataTable } from "@/components/table"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ScenarioWithResult } from "@lib/api/operator"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table"
-import { CopyIcon } from "lucide-react"
-import { toast } from "sonner"
 
 interface ScenarioDataRow {
   scenarioId: string
@@ -121,18 +117,20 @@ const ScenariosListInner = ({
 
   const data: ScenarioDataRow[] = Object.entries(scenarios || initialScenarios || {}).flatMap(
     ([scenarioId, scenarioWithResult]) => {
-      const profileName =
-        avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)?.data.eliza_character?.name ||
-        "Unknown Profile"
+      const avatar = avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)
+      const profileName = 
+        avatar?.data.eliza_character && typeof avatar.data.eliza_character === 'object' && avatar.data.eliza_character !== null
+          ? (avatar.data.eliza_character as any).name || "Unknown Profile"
+          : "Unknown Profile"
 
       return {
         scenarioId,
         profileId: scenarioWithResult.scenario.profile.id || scenarioId,
         profileName,
-        status: scenarioWithResult.result?.status.status_code || "pending",
-        startTime: scenarioWithResult.result?.scenario_info.start_time || "",
-        endTime: scenarioWithResult.result?.scenario_info.end_time || null,
-        error: scenarioWithResult.result?.status.error || null,
+        status: scenarioWithResult.result?.status?.status_code || "pending",
+        startTime: scenarioWithResult.result?.scenario_info?.start_time?.toString() || "",
+        endTime: scenarioWithResult.result?.scenario_info?.end_time?.toString() || null,
+        error: scenarioWithResult.result?.status?.error || null,
       }
     },
   )
