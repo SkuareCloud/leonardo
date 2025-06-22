@@ -1,30 +1,53 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MediaItem } from "@lib/api/models"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
-import { SquareArrowUpRightIcon } from "lucide-react"
+import { SquareArrowUpRightIcon, TrashIcon } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
-export function MediaCard({ mediaItem, className }: { mediaItem: MediaItem; className?: string }) {
+export function MediaCard({
+  mediaItem,
+  onDelete,
+  className,
+}: {
+  mediaItem: MediaItem
+  onDelete: () => void
+  className?: string
+}) {
   return (
     <Card className={cn("w-full bg-gradient-to-b from-white to-gray-100", className)}>
       <CardHeader>
         <CardDescription>{mediaItem.key}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl flex flex-col gap-2">
-          {mediaItem.name}
-          <Link
-            href={mediaItem.previewS3Url}
-            target="_blank"
-            className="flex flex-row items-center gap-2 text-xs uppercase"
-          >
-            <SquareArrowUpRightIcon className="size-4 -mr-1" /> <span>Open</span>
-          </Link>
+        <CardTitle className="text-2xl font-semibold flex flex-row justify-between gap-2">
+          <div className="flex flex-col">
+            {mediaItem.name}
+            <Link href={mediaItem.uri} target="_blank" className="flex flex-row items-center gap-2 text-xs uppercase">
+              <SquareArrowUpRightIcon className="size-4 -mr-1" /> <span>Open</span>
+            </Link>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            <Button
+              className="cursor-pointer hover:scale-[102%] active:scale-[98%] transition-all duration-300"
+              variant="destructive"
+              onClick={async () => {
+                await new ServiceBrowserClient().deleteMedia(mediaItem.key)
+                onDelete()
+                toast.success("Media deleted")
+              }}
+            >
+              <TrashIcon className="size-4" />
+              Delete
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <img
-          src={mediaItem.previewS3Url}
+          src={mediaItem.uri}
           alt={mediaItem.name}
           width={100}
           height={100}

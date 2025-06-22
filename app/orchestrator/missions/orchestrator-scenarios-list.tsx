@@ -114,7 +114,7 @@ export function OrchestratorScenariosList({
     <DataTable
       columns={columns}
       isRefreshing={isRefetching}
-      initialSortingState={[{ id: "startTime", desc: true }]}
+      initialSortingState={[{ id: "triggerTime", desc: true }]}
       data={data}
       onClickRow={row => {
         window.location.href = `/operator/scenarios/${row.scenarioId}`

@@ -1,4 +1,10 @@
-import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3"
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
 import { client as avatarsClient } from "@lib/api/avatars/client.gen"
@@ -11,14 +17,22 @@ import {
   patchAvatarAvatarsAvatarIdPatch,
   pingProxyProxiesProxyIdPingPut,
 } from "@lib/api/avatars/sdk.gen"
-import { CategoryWithChatCount, ChatWithCategory, CombinedAvatar, MediaItem, MissionStatistics } from "@lib/api/models"
-import { Scenario, ScenarioWithResult } from "@lib/api/operator"
+import {
+  CategoryWithChatCount,
+  ChatWithCategory,
+  CombinedAvatar,
+  MediaItem,
+  MediaUploadPayload,
+  MissionStatistics,
+} from "@lib/api/models"
+import { ActivationStatus, Scenario, ScenarioWithResult } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
   getAllCharactersCharactersGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOperator,
   getScenarioByIdScenarioScenarioScenarioIdGet,
   getScenariosScenarioScenarioGet,
+  getStatusActivationStatusGet,
   stopProfileCharactersCharacterIdStopPost,
   submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
@@ -32,6 +46,8 @@ import {
   getScenariosScenariosGet as getAllOrchestratorScenariosGet,
   getCategoryChatsCategoriesCategoryIdChatsGet,
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
+  getChatCharactersChatsChatIdCharactersGet,
+  getChatChatsChatIdGet,
   getChatsViewChatsViewChatsGet,
   getMissionMissionsMissionIdGet,
   getMissionsMissionsGet,
@@ -272,6 +288,37 @@ export class ApiService {
     return response.data ?? []
   }
 
+  async getOrchestratorChat(chatId: string): Promise<ChatRead> {
+    logger.info(`Getting orchestrator chat: ${chatId}`)
+    const response = await getChatChatsChatIdGet({
+      client: orchestratorClient,
+      path: {
+        chat_id: chatId,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got orchestrator chat: ${chatId}`)
+    if (!response.data) {
+      throw new Error(`Failed to get orchestrator chat: ${chatId}`)
+    }
+    return response.data
+  }
+
+  async getOrchestratorChatCharacters(chatId: string): Promise<CharacterRead[]> {
+    logger.info(`Getting orchestrator chat characters: ${chatId}`)
+    const response = await getChatCharactersChatsChatIdCharactersGet({
+      client: orchestratorClient,
+      path: { chat_id: chatId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chat characters: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got orchestrator chat characters: ${chatId}`)
+    return response.data ?? []
+  }
+
   async getOrchestratorCategories(): Promise<CategoryRead[]> {
     logger.info("Getting orchestrator categories")
     const response = await getAllCategoriesCategoriesGet({
@@ -507,6 +554,18 @@ export class ApiService {
     return response.data ?? []
   }
 
+  async getActivationStatus(profileId: string): Promise<ActivationStatus> {
+    const response = await getStatusActivationStatusGet({
+      client: operatorClient,
+      query: { profile_id: profileId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get activation status: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got activation status: ${profileId}`)
+    return response.data?.status ?? null
+  }
+
   async getProxies() {
     logger.info("Getting proxies")
     const response = await getProxiesProxiesGet({
@@ -585,25 +644,108 @@ export class ApiService {
           return null
         }
         const attachmentName = item.Key?.split("/").pop()
-        const previewPath = `previews/${attachmentName}`
-        logger.info(`Creating presigned url for ${previewPath}`)
-        const previewUrl = await this.createPresignedUrlWithClient(previewPath)
+        logger.info(`Creating presigned url for ${item.Key}`)
+        const uri = await this.createPresignedUrlWithClient(item.Key || "")
+
+        const s3Uri = `s3://${this.env.mediaBucketName}/${item.Key}`
+
+        // Get the file extension to determine MIME type
+        const fileExtension = attachmentName?.split(".").pop()?.toLowerCase()
+        const mimeType = this.getMimeTypeFromExtension(fileExtension)
+
         return {
           name: attachmentName || "",
           key: item.Key || "",
           lastUpdated: item.LastModified || new Date(),
           size: item.Size || 0,
-          previewS3Url: previewUrl,
-        }
+          uri,
+          s3Uri,
+          mimeType,
+        } satisfies MediaItem
       }) || [],
     )
     const filteredMediaItems = mediaItems.filter(item => item !== null)
     return filteredMediaItems
   }
 
+  private getMimeTypeFromExtension(fileExtension: string | undefined): string {
+    if (!fileExtension) {
+      return "application/octet-stream"
+    }
+
+    const mimeTypes: Record<string, string> = {
+      // Images
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      svg: "image/svg+xml",
+      bmp: "image/bmp",
+      ico: "image/x-icon",
+
+      // Documents
+      pdf: "application/pdf",
+      doc: "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      txt: "text/plain",
+      rtf: "application/rtf",
+
+      // Audio
+      mp3: "audio/mpeg",
+      wav: "audio/wav",
+      ogg: "audio/ogg",
+      m4a: "audio/mp4",
+
+      // Video
+      mp4: "video/mp4",
+      avi: "video/x-msvideo",
+      mov: "video/quicktime",
+      wmv: "video/x-ms-wmv",
+      flv: "video/x-flv",
+      webm: "video/webm",
+
+      // Archives
+      zip: "application/zip",
+      rar: "application/vnd.rar",
+      "7z": "application/x-7z-compressed",
+      tar: "application/x-tar",
+      gz: "application/gzip",
+    }
+
+    return mimeTypes[fileExtension.toLowerCase()] || "application/octet-stream"
+  }
+
+  async uploadMedia(files: MediaUploadPayload[]) {
+    const client = this.getS3Client()
+    for (const file of files) {
+      // decode base64
+      const fileData = Buffer.from(file.base64, "base64")
+      const command = new PutObjectCommand({
+        Bucket: this.env.mediaBucketName,
+        Key: `attachments/${file.name}`,
+        Body: fileData,
+        ContentType: file.mimeType,
+      })
+      await client.send(command)
+    }
+  }
+
+  async deleteMedia(key: string) {
+    logger.info(`Deleting media with key: ${key}`)
+    const client = this.getS3Client()
+    const command = new DeleteObjectCommand({ Bucket: this.env.mediaBucketName, Key: key })
+    await client.send(command)
+    logger.info(`Successfully deleted media with key: ${key}`)
+  }
+
   private async createPresignedUrlWithClient(key: string) {
-    const client = new S3Client({ region: this.env.mediaBucketRegion })
+    const client = this.getS3Client()
     const command = new GetObjectCommand({ Bucket: this.env.mediaBucketName, Key: key })
     return getSignedUrl(client, command, { expiresIn: 3600 })
+  }
+
+  private getS3Client(): S3Client {
+    return new S3Client({ region: this.env.mediaBucketRegion })
   }
 }

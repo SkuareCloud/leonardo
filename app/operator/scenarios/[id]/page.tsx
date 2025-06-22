@@ -1,8 +1,11 @@
+import { CopyableTrimmedId } from "@/components/copyable-trimmed-id"
 import { PageHeader } from "@/components/page-header"
+import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
+  ActionResponse,
   BehaviouralArgs,
   BehaviouralResponseContent,
   ForwardMessageArgs,
@@ -18,6 +21,7 @@ import {
   SendMessageResponseContent,
 } from "@lib/api/operator/types.gen"
 import { ServiceClient } from "@lib/service-client"
+import { ColumnDef } from "@tanstack/react-table"
 import { ClockIcon, FlagIcon, SquareArrowUpRightIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -68,19 +72,29 @@ const ChatInfoDisplay = ({ chat, avatarUrl, subtitle, subtitleImageUrl }: ChatIn
   )
 }
 
-const timestampToDate = (timestamp: string) => {
-  return formatDate(new Date(parseInt(timestamp) * 1000))
-}
-
-const formatDate = (date: Date) => {
+const formatDate = (date: Date, withoutDate: boolean = false) => {
   return date.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
+    day: withoutDate ? undefined : "2-digit",
+    month: withoutDate ? undefined : "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
   })
+}
+
+interface ActionDataRow {
+  index: number
+  actionId: string
+  actionType: string
+  actionArgs: any
+  status: string
+  error?: string | null
+  startTime?: Date | null
+  endTime?: Date | null
+  duration?: number | null
+  responseContent: any
+  actionResponse?: ActionResponse
 }
 
 export default async function ScenarioPage({ params }: { params: { id: string } }) {
@@ -296,7 +310,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
           <div className="space-y-2">
             {sendContent.message_info.timestamp && (
               <div className="text-sm text-gray-600 font-bold">
-                Sent at: {timestampToDate(sendContent.message_info.timestamp)}
+                Sent at: {formatDate(new Date(sendContent.message_info.timestamp))}
               </div>
             )}
             {sendContent.message_info.message_id && (
@@ -320,7 +334,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
             )}
             {replyContent.message_info.timestamp && (
               <div className="text-sm text-gray-600">
-                Replied at: {new Date(replyContent.message_info.timestamp).toLocaleString()}
+                Replied at: {formatDate(new Date(replyContent.message_info.timestamp))}
               </div>
             )}
           </div>
@@ -363,7 +377,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
             )}
             {forwardContent.message_info.timestamp && (
               <div className="text-sm text-gray-600">
-                Forwarded at: {new Date(forwardContent.message_info.timestamp).toLocaleString()}
+                Forwarded at: {formatDate(new Date(forwardContent.message_info.timestamp))}
               </div>
             )}
           </div>
@@ -375,57 +389,61 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
           <div className="space-y-2">
             {behaviouralContent.chats && behaviouralContent.chats.length > 0 && (
               <div>
-                <div className="text-sm font-medium mb-2">Available Chats:</div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name/Title</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Members/Subscribers</TableHead>
-                        <TableHead>Description</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {behaviouralContent.chats.map((chat, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell>
-                            <div className="font-medium">{chat.title || chat.name || "Unnamed"}</div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              {chat.type || "Unknown"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-gray-600">{chat.id || "N/A"}</TableCell>
-                          <TableCell className="text-sm text-gray-600">
-                            {(() => {
-                              if (
-                                chat.type === "Channel" &&
-                                "subscribers" in chat &&
-                                chat.subscribers !== undefined &&
-                                chat.subscribers !== null
-                              ) {
-                                return `${chat.subscribers} subscribers`
-                              } else if (
-                                chat.type === "Group" &&
-                                "members" in chat &&
-                                chat.members !== undefined &&
-                                chat.members !== null
-                              ) {
-                                return `${chat.members} members`
-                              }
-                              return "N/A"
-                            })()}
-                          </TableCell>
-                          <TableCell className="text-sm text-gray-600 max-w-xs truncate">
-                            {chat.description || "No description"}
-                          </TableCell>
+                <div className="text-sm font-medium mb-2">Available Chats ({behaviouralContent.chats.length}):</div>
+                <div className="border rounded-md">
+                  <div className="max-h-48 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-white z-10">
+                        <TableRow>
+                          <TableHead className="text-xs font-medium">Name/Title</TableHead>
+                          <TableHead className="text-xs font-medium">Type</TableHead>
+                          <TableHead className="text-xs font-medium">ID</TableHead>
+                          <TableHead className="text-xs font-medium">Members/Subscribers</TableHead>
+                          <TableHead className="text-xs font-medium">Description</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {behaviouralContent.chats.map((chat, idx) => (
+                          <TableRow key={idx} className="hover:bg-gray-50">
+                            <TableCell className="py-2">
+                              <div className="font-medium text-sm">{chat.title || chat.name || "Unnamed"}</div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <Badge variant="outline" className="text-xs">
+                                {chat.type || "Unknown"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600">{chat.id || "N/A"}</TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600">
+                              {(() => {
+                                if (
+                                  chat.type === "Channel" &&
+                                  "subscribers" in chat &&
+                                  chat.subscribers !== undefined &&
+                                  chat.subscribers !== null
+                                ) {
+                                  return `${chat.subscribers} subscribers`
+                                } else if (
+                                  chat.type === "Group" &&
+                                  "members" in chat &&
+                                  chat.members !== undefined &&
+                                  chat.members !== null
+                                ) {
+                                  return `${chat.members} members`
+                                }
+                                return "N/A"
+                              })()}
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600 max-w-xs">
+                              <div className="truncate" title={chat.description || "No description"}>
+                                {chat.description || "No description"}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </div>
             )}
@@ -436,6 +454,139 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
         return <div className="text-sm text-gray-600">{JSON.stringify(content)}</div>
     }
   }
+
+  // Create data for the DataTable
+  const actionsData: ActionDataRow[] = scenario.scenario.actions.map((action, index) => {
+    const actionResponse = scenario.result?.actions_responses?.[index]
+    const startTime = actionResponse?.start_time ? new Date(actionResponse.start_time) : null
+    const endTime = actionResponse?.end_time ? new Date(actionResponse.end_time) : null
+
+    // Calculate duration with Date objects
+    const calculateDuration = (start: Date, end: Date) => {
+      try {
+        const durationMs = end.getTime() - start.getTime()
+        if (durationMs < 0) {
+          return null // Invalid duration
+        }
+        return Math.round(durationMs / 1000)
+      } catch (error) {
+        return null
+      }
+    }
+
+    const duration = startTime && endTime ? calculateDuration(startTime, endTime) : null
+
+    return {
+      index,
+      actionId: actionResponse?.id || action.id || `Action ${index + 1}`,
+      actionType: action.type || "",
+      actionArgs: action.args,
+      status: actionResponse?.status?.status_code || "pending",
+      error: actionResponse?.status?.error || null,
+      startTime,
+      endTime,
+      duration,
+      responseContent: actionResponse?.content || null,
+      actionResponse,
+    }
+  })
+
+  // Define columns for the DataTable
+  const actionColumns: ColumnDef<ActionDataRow>[] = [
+    {
+      accessorKey: "actionId",
+      header: "Action ID",
+      size: 150,
+      cell: ({ row }) => {
+        const action = row.original
+        return (
+          <div className="text-sm text-gray-600">
+            <CopyableTrimmedId id={action.actionId} />
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "actionType",
+      header: "Type",
+      size: 120,
+      cell: ({ row }) => {
+        const action = row.original
+        const actionType = formatActionType(action.actionType)
+        return <Badge className={actionType.className}>{actionType.label}</Badge>
+      },
+    },
+    {
+      accessorKey: "actionArgs",
+      header: "Arguments",
+      size: 300,
+      cell: ({ row }) => {
+        const action = row.original
+        return <div className="max-w-xs">{formatActionArgs(action.actionType, action.actionArgs)}</div>
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      size: 120,
+      cell: ({ row }) => {
+        const action = row.original
+        return (
+          <div>
+            <Badge className={getStatusColor(action.status)}>{action.status}</Badge>
+            {action.error && <div className="mt-1 text-xs text-red-600">{action.error}</div>}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "timing",
+      header: "Timing",
+      size: 200,
+      cell: ({ row }) => {
+        const action = row.original
+        return (
+          <div className="space-y-2 text-xs">
+            {action.startTime && (
+              <div className="flex items-center gap-1 text-gray-700">
+                <ClockIcon className="h-3 w-3 text-gray-500" />
+                <span className="font-medium">Start:</span>
+                <span className="text-gray-600">{formatDate(action.startTime, true)}</span>
+              </div>
+            )}
+            {action.endTime && (
+              <div className="flex items-center gap-1 text-gray-700">
+                <FlagIcon className="h-3 w-3 text-gray-500" />
+                <span className="font-medium">End:</span>
+                <span className="text-gray-600">{formatDate(action.endTime, true)}</span>
+              </div>
+            )}
+            {action.duration !== null && (
+              <div className="flex items-center gap-1 text-gray-700">
+                <div className="h-3 w-3 rounded-full bg-blue-500 flex-shrink-0"></div>
+                <span className="font-medium">Duration:</span>
+                <span className="text-blue-600 font-semibold">{action.duration}s</span>
+              </div>
+            )}
+            {!action.startTime && !action.endTime && <div className="text-gray-400 italic">No timing data</div>}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "responseContent",
+      header: "Response",
+      size: 300,
+      cell: ({ row }) => {
+        const action = row.original
+        return (
+          <div className="max-w-xs">
+            {action.responseContent && formatResponseContent(action.actionType, action.responseContent)}
+          </div>
+        )
+      },
+    },
+  ]
 
   return (
     <div className="container mx-auto py-6">
@@ -467,13 +618,13 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
               <div className="flex items-center gap-4">
                 <Badge
                   variant="outline"
-                  className={`text-lg ${getStatusColor(scenario.result?.status.status_code || "pending")}`}
+                  className={`text-lg ${getStatusColor(scenario.result?.status?.status_code || "pending")}`}
                 >
-                  {(scenario.result?.status.status_code || "pending").charAt(0).toUpperCase() +
-                    (scenario.result?.status.status_code || "pending").slice(1)}
+                  {(scenario.result?.status?.status_code || "pending").charAt(0).toUpperCase() +
+                    (scenario.result?.status?.status_code || "pending").slice(1)}
                 </Badge>
                 <div className="flex flex-col gap-2">
-                  {scenario.result?.scenario_info.start_time && (
+                  {scenario.result?.scenario_info?.start_time && (
                     <div className="flex items-center gap-2 text-sm">
                       <div className="flex items-center gap-1.5">
                         <ClockIcon className="h-4 w-4 text-gray-400" />
@@ -484,7 +635,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
                       </span>
                     </div>
                   )}
-                  {scenario.result?.scenario_info.end_time && (
+                  {scenario.result?.scenario_info?.end_time && (
                     <div className="flex items-center gap-2 text-sm">
                       <div className="flex items-center gap-1.5">
                         <FlagIcon className="h-4 w-4 text-gray-400" />
@@ -497,7 +648,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
                   )}
                 </div>
               </div>
-              {scenario.result?.status.error && (
+              {scenario.result?.status?.error && (
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
                   <div className="text-sm font-medium text-red-800">Error:</div>
                   <div className="text-sm text-red-600 mt-1">{scenario.result.status.error}</div>
@@ -532,57 +683,11 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
             <CardDescription>List of actions in this scenario</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Arguments</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {scenario.scenario.actions.map((action, index) => {
-                  const actionType = formatActionType(action.type)
-                  return (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Badge className={actionType.className}>{actionType.label}</Badge>
-                      </TableCell>
-                      <TableCell>{formatActionArgs(action.type || "", action.args)}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={getStatusColor(
-                            scenario.result?.actions_responses[index]?.status.status_code || "pending",
-                          )}
-                        >
-                          {scenario.result?.actions_responses[index]?.status.status_code || "pending"}
-                        </Badge>
-                        {scenario.result?.actions_responses[index]?.content && (
-                          <div className="mt-2">
-                            {formatResponseContent(
-                              scenario.result.actions_responses[index].type,
-                              scenario.result.actions_responses[index].content,
-                            )}
-                          </div>
-                        )}
-                        {scenario.result?.actions_responses[index]?.status.error && (
-                          <div className="mt-2 text-sm text-red-600">
-                            {scenario.result.actions_responses[index].status.error}
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-                {scenario.scenario.actions.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8 text-gray-500">
-                      No actions in this scenario yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={actionColumns}
+              data={actionsData}
+              pageSize={10}
+            />
           </CardContent>
         </Card>
       </div>

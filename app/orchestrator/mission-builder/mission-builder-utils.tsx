@@ -35,7 +35,7 @@ export function FieldWithLabel({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label className="text-sm font-bold mb-2">
+      <Label className="text-sm font-semibold mb-1">
         <div>{label}</div>
         {required && (
           <Tooltip>
@@ -83,7 +83,7 @@ export function ModeButtonSelector({
   return (
     <Button
       variant="link"
-      className="w-[320px] py-4 text-wrap cursor-pointer hover:no-underline focus:no-underline h-40 text-left scale-100 hover:scale-105 active:scale-95"
+      className="px-0 py-4 text-wrap cursor-pointer hover:no-underline focus:no-underline h-40 text-left scale-100 hover:scale-[102%] active:scale-[98%]"
       disabled={unsupported}
       {...rest}
     >

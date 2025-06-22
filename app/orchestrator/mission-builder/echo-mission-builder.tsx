@@ -1,16 +1,18 @@
+"use client"
+
 import { Combobox } from "@/components/combobox"
 import { DateTimePicker } from "@/components/date-time-picker"
+import { MessageBuilder } from "@/components/message-builder"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { MissionInput } from "@lib/api/models"
+import { MessageWithMedia, MissionInput } from "@lib/api/models"
 import { CategoryRead, ChatRead, EchoMissionInput, ScenarioRead } from "@lib/api/orchestrator"
 import { logger } from "@lib/logger"
-import { cn } from "@lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
-import { FieldWithLabel, InputWithLabel, ModeButtonSelector } from "./mission-builder-utils"
+import { FieldWithLabel, ModeButtonSelector } from "./mission-builder-utils"
 
 export type EchoMissionMode = "message-plain" | "message-reference" | "scenario-id"
 
@@ -24,7 +26,7 @@ export function EchoMissionBuilder({
   chats: ChatRead[]
 }) {
   const [maximumRetries, setMaximumRetries] = useState(0)
-  const [messagePlain, setMessagePlain] = useState("")
+  const [messagePlain, setMessagePlain] = useState<MessageWithMedia | null>(null)
   const [mode, setMode] = useState<EchoMissionMode>("message-plain")
   const [scenarioId, setScenarioId] = useState("")
   const [chatId, setChatId] = useState("")
@@ -63,8 +65,16 @@ export function EchoMissionBuilder({
       if (messagePlain) {
         payload.message = {
           message_content: {
-            text: messagePlain,
-            attachments: [],
+            text: messagePlain?.text,
+            attachments: messagePlain?.media
+              ? [
+                  {
+                    url: messagePlain.media.s3Uri,
+                    mime_type: messagePlain.media.mimeType,
+                    name: messagePlain.media.name,
+                  },
+                ]
+              : [],
           },
         }
       }
@@ -103,7 +113,7 @@ export function EchoMissionBuilder({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-row w-fit">
+      <div className="flex flex-row flex-wrap w-fit gap-8">
         <ModeButtonSelector
           active={mode === "message-plain"}
           title="Plain Message"
@@ -112,7 +122,6 @@ export function EchoMissionBuilder({
         />
         <ModeButtonSelector
           active={mode === "message-reference"}
-          unsupported={true}
           title="Message Reference"
           subtitle="Select a message by reference"
           onClick={() => setMode("message-reference")}
@@ -126,7 +135,7 @@ export function EchoMissionBuilder({
         />
       </div>
       <div className="flex flex-col gap-8 p-2">
-        <FieldWithLabel required label="Select chat">
+        <FieldWithLabel required label="Select source chat">
           <Combobox
             options={activeChats
               .map(chat => {
@@ -146,12 +155,7 @@ export function EchoMissionBuilder({
           />
         </FieldWithLabel>
         {mode === "message-plain" && (
-          <InputWithLabel
-            required
-            label="Message"
-            value={messagePlain}
-            onChange={e => setMessagePlain(e.target.value)}
-          />
+          <MessageBuilder singleMessage onUpdateMessages={messages => setMessagePlain(messages[0] ?? null)} />
         )}
         {mode === "scenario-id" && (
           <Combobox
@@ -177,14 +181,6 @@ export function EchoMissionBuilder({
                   setTriggerTime(value)
                 }}
               />
-              <div
-                className={cn(
-                  "flex flex-row self-start relative top-9 ml-2 text-sm",
-                  !sendAtTriggerTime && "text-gray-500",
-                )}
-              >
-                <div>UTC</div>
-              </div>
               <div className="relative ml-4 -top-1.5 self-end flex flex-row items-center gap-2">
                 <Checkbox
                   checked={sendAtTriggerTime}

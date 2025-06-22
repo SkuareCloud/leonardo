@@ -12,7 +12,9 @@ export const zActionPrefrences = z.object({
 export const zActionStatusCode = z.enum([
     'success',
     'failed',
-    'cancelled'
+    'cancelled',
+    'running',
+    'pending'
 ]);
 
 export const zActionStatus = z.object({
@@ -174,7 +176,11 @@ export const zActionResponse = z.object({
         zSendBulkMessagesResponseContent,
         z.null()
     ]),
-    start_time: z.string().datetime()
+    start_time: z.string().datetime(),
+    end_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional()
 });
 
 export const zActivationRequest = z.object({
@@ -482,11 +488,16 @@ export const zScenarioResultStatus = z.enum([
     'success',
     'failed',
     'pending',
-    'finished'
+    'finished',
+    'proxy_error',
+    'browser_error',
+    'telegram_error',
+    'profile_not_logged_in',
+    'profile_already_running'
 ]);
 
 export const zScenarioStatus = z.object({
-    status_code: zScenarioResultStatus,
+    status_code: zScenarioResultStatus.optional(),
     error: z.union([
         z.string(),
         z.null()
@@ -494,7 +505,7 @@ export const zScenarioStatus = z.object({
 });
 
 export const zScenarioInfo = z.object({
-    start_time: z.string().datetime(),
+    start_time: z.string().datetime().optional(),
     end_time: z.union([
         z.string().datetime(),
         z.null()
@@ -503,9 +514,9 @@ export const zScenarioInfo = z.object({
 
 export const zScenarioResult = z.object({
     id: z.string().optional(),
-    status: zScenarioStatus,
-    scenario_info: zScenarioInfo,
-    actions_responses: z.array(zActionResponse)
+    status: zScenarioStatus.optional(),
+    scenario_info: zScenarioInfo.optional(),
+    actions_responses: z.array(zActionResponse).optional()
 });
 
 export const zProfileWorkerView = z.object({

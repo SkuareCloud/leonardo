@@ -6,11 +6,13 @@ import { FieldWithLabel } from "./mission-builder-utils"
 
 export function CategorySelector({
   categories,
+  header,
   label,
   required,
   onChangeValue,
 }: {
   categories: CategoryRead[]
+  header?: React.ReactNode
   label: string
   required?: boolean
   onChangeValue?: (selected: { id: string; label: string }[]) => void
@@ -21,6 +23,7 @@ export function CategorySelector({
   }))
   return (
     <FieldWithLabel label={label} required={required}>
+      {header}
       <LabelSelector choices={choices} onChangeValue={onChangeValue} />
     </FieldWithLabel>
   )

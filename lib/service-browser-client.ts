@@ -1,6 +1,6 @@
 import { AvatarModelWithProxy } from "./api/avatars"
-import { CombinedAvatar, MissionStatistics } from "./api/models"
-import { ScenarioWithResult } from "./api/operator"
+import { CombinedAvatar, MediaItem, MediaUploadPayload, MissionStatistics } from "./api/models"
+import { ActivationStatus, ScenarioWithResult } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
 import { ClientEnv, read_client_env } from "./client-env"
 import { logger } from "./logger"
@@ -138,16 +138,78 @@ export class ServiceBrowserClient {
     return json
   }
 
-  async activate(profileId: string) {
+  async getMedia() {
+    const resp = await fetch("/api/media")
+    const json = (await resp.json()) as MediaItem[]
+    const result = json.map(item => ({ ...item, lastUpdated: new Date(item.lastUpdated) }))
+    return result
+  }
+
+  async uploadMedia(files: File[]) {
+    console.log(`Uploading ${files.length} files...`)
+    const filePayloads: MediaUploadPayload[] = await Promise.all(
+      files.map(async file => {
+        const base64 = await this.fileToBase64(file)
+        const fileData = {
+          name: file.name,
+          mimeType: file.type,
+          base64: base64,
+        }
+        return fileData
+      }),
+    )
+    const resp = await fetch("/api/media", {
+      method: "POST",
+      body: JSON.stringify(filePayloads),
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to upload media: ${resp.statusText}`)
+    }
+    console.log(`Uploaded ${files.length} files.`)
+    const json = await resp.json()
+    return json
+  }
+
+  async deleteMedia(key: string) {
+    const resp = await fetch(`/api/media?key=${key}`, {
+      method: "DELETE",
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to delete media: ${resp.statusText}`)
+    }
+  }
+
+  private async fileToBase64(file: File) {
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,") to get pure base64
+        const base64Data = result.split(",")[1]
+        resolve(base64Data)
+      }
+      reader.onerror = () => reject(new Error("Failed to read file"))
+      reader.readAsDataURL(file)
+    })
+    return base64
+  }
+
+  async activate(profileId: string, activationType: string, shouldOverride: boolean, sessionData: string) {
     const resp = await fetch("/api/avatars/activate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ profile_id: profileId }),
+      body: JSON.stringify({ profile_id: profileId, activation_type: activationType, should_override: shouldOverride, session_data: sessionData }),
     })
     const json = await resp.json()
+    return json
+  }
+
+  async getActivationStatus(profileId: string) {
+    const resp = await fetch(`/api/avatars/activation_status?profileId=${profileId}`)
+    const json = (await resp.json()) as ActivationStatus
     return json
   }
 

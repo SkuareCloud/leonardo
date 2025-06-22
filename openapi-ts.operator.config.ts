@@ -1,9 +1,9 @@
-import { defineConfig, defaultPlugins } from "@hey-api/openapi-ts";
+import { defineConfig, defaultPlugins } from "@hey-api/openapi-ts"
 
-const SERVICE = "operator";
+const SERVICE = "operator"
 
 if (!process.env.OPERATOR_API_ENDPOINT) {
-  throw new Error("OPERATOR_API_ENDPOINT environment variable is required");
+  throw new Error("OPERATOR_API_ENDPOINT environment variable is required")
 }
 
 export default defineConfig({
@@ -21,5 +21,9 @@ export default defineConfig({
       name: "@hey-api/sdk",
       validator: true,
     },
+    {
+      dates: true,
+      name: "@hey-api/transformers",
+    },
   ],
-});
+})

@@ -1,8 +1,12 @@
+"use client"
+
 import { DateTimePicker } from "@/components/date-time-picker"
 import { MessageBuilder } from "@/components/message-builder"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { MissionInput } from "@lib/api/models"
-import { CategoryRead, ChatRead, InputMessage, RandomDistributionMissionInput } from "@lib/api/orchestrator"
+import { MessageWithMedia, MissionInput } from "@lib/api/models"
+import { CategoryRead, ChatRead, RandomDistributionMissionInput } from "@lib/api/orchestrator"
 import { logger } from "@lib/logger"
 import { cn } from "@lib/utils"
 import { useContext, useEffect, useState } from "react"
@@ -21,9 +25,11 @@ export function RandomDistributionMissionBuilder({
   const [messagesAmount, setMessagesAmount] = useState(1)
   const [messagesAmountPerCharacter, setMessagesAmountPerCharacter] = useState(1)
   const [chatCategories, setChatCategories] = useState<{ id: string; label: string }[]>([])
+  const [shouldFilterChatCategoriesWithCount, setShouldFilterChatCategoriesWithCount] = useState(true)
+  const [shouldFilterProfileCategoriesWithCount, setShouldFilterProfileCategoriesWithCount] = useState(true)
   const [profileCategories, setProfileCategories] = useState<{ id: string; label: string }[]>([])
   const [startTime, setStartTime] = useState<Date | undefined>(undefined)
-  const [messages, setMessages] = useState<InputMessage[]>([])
+  const [messages, setMessages] = useState<MessageWithMedia[]>([])
   const { onChangeMissionPayload } = useContext(MissionBuilderContext)
 
   useEffect(() => {
@@ -37,7 +43,15 @@ export function RandomDistributionMissionBuilder({
 
     payload.messages = messages.map(message => ({
       text: message.text,
-      attachments: [],
+      attachments: message.media
+        ? [
+            {
+              name: message.media.name,
+              url: message.media.s3Uri,
+              mime_type: message.media.mimeType,
+            },
+          ]
+        : [],
     }))
 
     payload.messages_amount = messagesAmount
@@ -65,10 +79,11 @@ export function RandomDistributionMissionBuilder({
         )
       : undefined
 
-  const activeChats = chats.filter(chat => chat.chat_type === "Group")
-  const activeChatCategories = categories.filter(category => category.chat_count && category.chat_count > 0)
-  const activeProfileCategories = categories.filter(
-    category => category.character_count && category.character_count > 0,
+  const activeChatCategories = categories.filter(category =>
+    shouldFilterChatCategoriesWithCount ? category.chat_count && category.chat_count > 0 : true,
+  )
+  const activeProfileCategories = categories.filter(category =>
+    shouldFilterProfileCategoriesWithCount ? category.character_count && category.character_count > 0 : true,
   )
 
   return (
@@ -84,7 +99,7 @@ export function RandomDistributionMissionBuilder({
               e.target.value = "1"
             }
           }}
-          onChange={e => setMessagesAmountPerCharacter(Number(e.target.value))}
+          onChange={e => setMessagesAmount(Number(e.target.value))}
           className="w-28 max-w-28"
         />
         <InputWithLabel
@@ -116,24 +131,44 @@ export function RandomDistributionMissionBuilder({
             <div className="text-sm pl-2">{triggerTimeFromNow}</div>
           </div>
         </FieldWithLabel>
-        {activeChatCategories.length > 0 && (
+        <div className="flex flex-row items-center gap-4">
           <div className="flex flex-col gap-4">
             <CategorySelector
-              categories={activeChats}
+              categories={activeChatCategories}
               label="Chat categories"
               onChangeValue={value => setChatCategories(value)}
+              header={
+                <div className="relative flex flex-row items-center gap-2">
+                  <Checkbox
+                    checked={shouldFilterChatCategoriesWithCount}
+                    onCheckedChange={checked => {
+                      return setShouldFilterChatCategoriesWithCount(checked === "indeterminate" ? false : checked)
+                    }}
+                  />
+                  <Label className="text-sm">Filter chat categories with count</Label>
+                </div>
+              }
             />
           </div>
-        )}
-        {activeProfileCategories.length > 0 && (
-          <div className="flex flex-col gap-4">
-            <CategorySelector
-              categories={activeProfileCategories}
-              label="Profile categores"
-              onChangeValue={value => setProfileCategories(value)}
-            />
-          </div>
-        )}
+        </div>
+        <div className="flex flex-col gap-4">
+          <CategorySelector
+            categories={activeProfileCategories}
+            label="Profile categores"
+            onChangeValue={value => setProfileCategories(value)}
+            header={
+              <div className="relative flex flex-row items-center gap-2">
+                <Checkbox
+                  checked={shouldFilterProfileCategoriesWithCount}
+                  onCheckedChange={checked => {
+                    return setShouldFilterProfileCategoriesWithCount(checked === "indeterminate" ? false : checked)
+                  }}
+                />
+                <Label className="text-sm">Filter chat categories with count</Label>
+              </div>
+            }
+          />
+        </div>
         <FieldWithLabel label="Maximum retries">
           <Slider
             min={1}

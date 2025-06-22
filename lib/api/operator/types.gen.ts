@@ -9,7 +9,8 @@ export type ActionResponse = {
     status: ActionStatus;
     type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
     content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | null;
-    start_time: string;
+    start_time: Date;
+    end_time?: Date | null;
 };
 
 export type ActionStatus = {
@@ -17,7 +18,7 @@ export type ActionStatus = {
     error?: string | null;
 };
 
-export type ActionStatusCode = 'success' | 'failed' | 'cancelled';
+export type ActionStatusCode = 'success' | 'failed' | 'cancelled' | 'running' | 'pending';
 
 export type ActivationRequest = {
     /**
@@ -232,21 +233,21 @@ export type Scenario = {
 };
 
 export type ScenarioInfo = {
-    start_time: string;
-    end_time?: string | null;
+    start_time?: Date;
+    end_time?: Date | null;
 };
 
 export type ScenarioResult = {
     id?: string;
-    status: ScenarioStatus;
-    scenario_info: ScenarioInfo;
-    actions_responses: Array<ActionResponse>;
+    status?: ScenarioStatus;
+    scenario_info?: ScenarioInfo;
+    actions_responses?: Array<ActionResponse>;
 };
 
-export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished';
+export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished' | 'proxy_error' | 'browser_error' | 'telegram_error' | 'profile_not_logged_in' | 'profile_already_running';
 
 export type ScenarioStatus = {
-    status_code: ScenarioResultStatus;
+    status_code?: ScenarioResultStatus;
     error?: string | null;
 };
 
@@ -642,5 +643,5 @@ export type GetStatusActivationStatusGetResponses = {
 export type GetStatusActivationStatusGetResponse = GetStatusActivationStatusGetResponses[keyof GetStatusActivationStatusGetResponses];
 
 export type ClientOptions = {
-    baseUrl: (string & {});
+    baseUrl: 'http://localhost:8080' | (string & {});
 };

@@ -71,12 +71,8 @@ export function MissionBuilderCreateView({
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel className="pr-8">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-4">
-                <h3 className="text-lg font-bold">Common Properties</h3>
-                <InputWithLabel label="Description" onChange={e => setDescription(e.target.value)}></InputWithLabel>
-              </div>
+              <InputWithLabel label="Description" onChange={e => setDescription(e.target.value)}></InputWithLabel>
               <Separator orientation="horizontal" className="my-4" />
-              <h3 className="text-lg font-bold">{missionName} Properties</h3>
               {mission === "EchoMission" && (
                 <EchoMissionBuilder chats={chats} scenarios={scenarios || []} categories={categories || []} />
               )}

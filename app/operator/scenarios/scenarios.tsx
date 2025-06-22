@@ -1,5 +1,6 @@
 "use client"
 
+import { CopyableTrimmedId } from "@/components/copyable-trimmed-id"
 import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { DataTable } from "@/components/table"
 import { Button } from "@/components/ui/button"
@@ -30,41 +31,7 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
     header: "Scenario ID",
     size: 150,
     cell: ({ row }) => {
-      return (
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500">{row.original.scenarioId.split("-")[0]}...</span>
-                  <span className="text-gray-500">{row.original.scenarioId.split("-")[1]}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="flex items-center gap-2">
-                  <span>{row.original.scenarioId}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={e => {
-                      e.stopPropagation()
-                      navigator.clipboard.writeText(row.original.scenarioId)
-                      toast.success("ID copied to clipboard")
-                      const tooltip = e.currentTarget.closest('[role="tooltip"]')
-                      if (tooltip) {
-                        tooltip.remove()
-                      }
-                    }}
-                  >
-                    <CopyIcon className="h-3 w-3" />
-                  </Button>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      )
+      return <CopyableTrimmedId id={row.original.scenarioId} />
     },
   },
   {

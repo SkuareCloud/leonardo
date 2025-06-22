@@ -1,65 +1,194 @@
 "use client"
 
-import { InputMessage } from "@lib/api/orchestrator"
+import { MediaItem, MessageWithMedia } from "@lib/api/models"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import { XIcon } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "./ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Textarea } from "./ui/textarea"
 
 function ChatBubble({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <div className={cn("relative w-fit max-w-[80%] mb-4 flex items-start gap-2", className)}>
-      <div className="bg-gray-100 text-gray-900 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm flex-1">{children}</div>
+      <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/50 text-gray-900 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex-1">
+        {children}
+      </div>
     </div>
   )
 }
 
-export function MessageBuilder({ onUpdateMessages }: { onUpdateMessages: (messages: InputMessage[]) => void }) {
-  const [messages, setMessages] = useState<InputMessage[]>([])
-  const [activeMessage, setActiveMessage] = useState<InputMessage | null>(null)
+function MessagePreview({
+  message,
+  onRemove,
+  className,
+}: {
+  message: MessageWithMedia
+  onRemove: () => any
+  className?: string
+}) {
+  return (
+    <div className={cn("flex flex-row items-center gap-20", className)}>
+      <ChatBubble>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-row items-start justify-between gap-3 min-w-0">
+            <div className="text-sm leading-relaxed break-words">{message.text}</div>
+            <button
+              onClick={() => onRemove()}
+              className="flex-shrink-0 p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
+            >
+              <XIcon className="w-3.5 h-3.5 text-gray-500 hover:text-gray-700" />
+            </button>
+          </div>
+          {message.media && (
+            <div className="rounded-lg overflow-hidden border border-gray-200">
+              <img
+                src={message.media.uri}
+                alt="media"
+                className="w-32 h-auto object-cover hover:scale-105 transition-transform duration-200"
+              />
+            </div>
+          )}
+        </div>
+      </ChatBubble>
+    </div>
+  )
+}
 
-  function addMessage(text: string) {
-    const newMessages = [...messages, { text }]
+export function MessageBuilder({
+  singleMessage,
+  onUpdateMessages,
+}: {
+  singleMessage?: boolean
+  onUpdateMessages: (messages: MessageWithMedia[]) => void
+}) {
+  const [messages, setMessages] = useState<MessageWithMedia[]>([])
+  const [activeMessageText, setActiveMessageText] = useState<string | null>(null)
+  const [activeMessageMedia, setActiveMessageMedia] = useState<MediaItem | null>(null)
+  const [media, setMedia] = useState<MediaItem[]>([])
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false)
+
+  const activeMessageMediaKey = activeMessageMedia?.name ? activeMessageMedia.name.split("/").pop() : null
+
+  useEffect(() => {
+    setIsLoadingMedia(true)
+    new ServiceBrowserClient()
+      .getMedia()
+      .then(media => {
+        setMedia(media)
+      })
+      .finally(() => setIsLoadingMedia(false))
+  }, [])
+
+  function addMessage() {
+    const newMessages: MessageWithMedia[] = [
+      ...messages,
+      { text: activeMessageText || undefined, media: activeMessageMedia || undefined },
+    ]
     onUpdateMessages(newMessages)
-    setActiveMessage(null)
+    setActiveMessageText(null)
     setMessages(newMessages)
   }
 
-  function removeMessage(text: string) {
-    const newMessages = messages.filter(message => message.text !== text)
+  function removeMessage(index: number) {
+    const newMessages = messages.slice(0, index).concat(messages.slice(index + 1))
     onUpdateMessages(newMessages)
     setMessages(newMessages)
   }
+
+  const showNewMessage = singleMessage ? messages.length === 0 : true
 
   return (
     <div>
-      {messages.map(message => (
-        <ChatBubble key={message.text}>
-          <div className="flex flex-row items-center gap-2 w-fit">
-            <div>{message.text}</div>
-            <XIcon className="w-4 h-4 cursor-pointer" onClick={() => removeMessage(message.text ?? "")} />
-          </div>
-        </ChatBubble>
+      {/* preview */}
+      {messages.map((message, index) => (
+        <div key={index} className="flex flex-row items-center gap-2 w-fit">
+          <MessagePreview message={message} onRemove={() => removeMessage(i)} />
+        </div>
       ))}
 
       {/* new message */}
-      <ChatBubble className="flex flex-col gap-2 bg-transparent border-1 w-[300px]">
-        <Textarea
-          value={activeMessage?.text ?? ""}
-          onChange={e => setActiveMessage({ ...activeMessage, text: e.currentTarget.value })}
-          onKeyDown={e => {
-            if (e.key === "Enter") {
-              const text = e.currentTarget.value
-              addMessage(text)
-            }
-          }}
-          className="w-[300px] bg-transparent placeholder:text-gray-700 border-0 outline-0 ring-0 shadow-none"
-          placeholder="Type a message..."
-        />
-      </ChatBubble>
+      {showNewMessage && (
+        <div className="flex flex-row items-center gap-20">
+          <ChatBubble className="flex flex-col gap-2 bg-transparent border-1 w-[300px]">
+            <Textarea
+              id="message"
+              value={activeMessageText ?? ""}
+              onChange={e => {
+                if (!e.currentTarget.value) {
+                  return
+                }
+                return setActiveMessageText(e.currentTarget.value)
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  if (!activeMessageText || !activeMessageMedia) {
+                    return
+                  }
+                  addMessage()
+                }
+              }}
+              className="w-[300px] bg-transparent placeholder:text-gray-700 border-0 outline-0 focus-0 ring-0 shadow-none"
+              placeholder="Type a message..."
+            />
+            <Select
+              value={activeMessageMediaKey ?? undefined}
+              onOpenChange={async () => {
+                if (!media) {
+                  const fetchedMedia = await new ServiceBrowserClient().getMedia()
+                  setMedia(fetchedMedia)
+                }
+              }}
+              onValueChange={item => {
+                const mediaItems = media.filter(currItem => currItem.key.endsWith(item))
+                if (!mediaItems || mediaItems.length <= 0) {
+                  return
+                }
+                const mediaItem = mediaItems[0]
+                setActiveMessageMedia(mediaItem)
+              }}
+            >
+              <SelectTrigger className="min-h-12 w-[80%]">
+                <SelectValue placeholder="Select media">
+                  {activeMessageMediaKey}
+                  {activeMessageMedia?.uri && (
+                    <img src={activeMessageMedia?.uri} alt="media" className="w-8 h-8 rounded-lg object-cover" />
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingMedia && <SelectItem value="loading">Loading...</SelectItem>}
+                {!isLoadingMedia &&
+                  media.map(item => (
+                    <SelectItem key={item.name} value={item.name}>
+                      {item.name}
+                      <img src={item.uri} alt="media" className="w-8 h-8 rounded-lg object-cover" />
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </ChatBubble>
+        </div>
+      )}
 
-      <Button onClick={() => addMessage(activeMessage?.text ?? "")}>Add</Button>
+      <Button
+        onClick={() => {
+          if (!activeMessageText && !activeMessageMedia) {
+            return
+          }
+          const newMessages = [
+            ...messages,
+            { text: activeMessageText ?? undefined, media: activeMessageMedia ?? undefined },
+          ]
+          onUpdateMessages(newMessages)
+          setMessages(newMessages)
+          setActiveMessageText(null)
+          setActiveMessageMedia(null)
+        }}
+      >
+        Add
+      </Button>
     </div>
   )
 }

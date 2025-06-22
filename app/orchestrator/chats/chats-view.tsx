@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CategoryWithChatCount, ChatWithCategory } from "@lib/api/models"
 import { CategoryRead } from "@lib/api/orchestrator"
-import { logger } from "@lib/logger"
 import { Handle, Position } from "@xyflow/react"
 import { ListIcon, NetworkIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -67,8 +66,7 @@ export function ChatsView({
   const tree = generateTree(categoriesWithChatCount)
 
   useEffect(() => {
-    logger.info("tab", tab)
-    setActiveTab(tab || "tree")
+    setActiveTab(tab || "list")
   }, [tab])
 
   useEffect(() => {
@@ -89,13 +87,13 @@ export function ChatsView({
     <div className="flex flex-col gap-6 w-full">
       <Tabs value={activeTab} className="" onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="tree" className="px-4 min-w-24 flex flex-row items-center">
-            <NetworkIcon className="size-4 mr-2" />
-            Tree
-          </TabsTrigger>
           <TabsTrigger value="list" className="px-4 min-w-24 flex flex-row items-center">
             <ListIcon className="size-4 mr-2" />
             List
+          </TabsTrigger>
+          <TabsTrigger value="tree" className="px-4 min-w-24 flex flex-row items-center">
+            <NetworkIcon className="size-4 mr-2" />
+            Tree
           </TabsTrigger>
         </TabsList>
         <TabsContent value="list" className="pt-6">

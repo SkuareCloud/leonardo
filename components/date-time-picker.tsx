@@ -6,8 +6,8 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@lib/utils"
 
 export function DateTimePicker({
   disabled,
@@ -18,11 +18,11 @@ export function DateTimePicker({
   const [dateTime, setDateTime] = React.useState<Date | undefined>(undefined)
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-row items-center gap-4">
       <div className="flex flex-col gap-3">
-        <Label htmlFor="date-picker" className="px-1">
+        {/* <Label htmlFor="date-picker" className="px-1">
           Date
-        </Label>
+        </Label> */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" id="date-picker" className="w-32 justify-between font-normal" disabled={disabled}>
@@ -50,9 +50,9 @@ export function DateTimePicker({
         </Popover>
       </div>
       <div className="flex flex-col gap-3">
-        <Label htmlFor="time-picker" className="px-1">
+        {/* <Label htmlFor="time-picker" className="px-1">
           Time
-        </Label>
+        </Label> */}
         <Input
           type="time"
           id="time-picker"
@@ -80,6 +80,9 @@ export function DateTimePicker({
           }}
           {...rest}
         />
+      </div>
+      <div className={cn("flex flex-row relative ml-2 text-sm", !disabled && "text-gray-500")}>
+        <div>UTC</div>
       </div>
     </div>
   )

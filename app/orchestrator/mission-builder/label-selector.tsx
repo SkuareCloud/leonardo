@@ -23,7 +23,7 @@ export function LabelSelector({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-4 select-none items-center min-h-12">
+      <div className="flex flex-wrap gap-4 select-none items-center">
         {selected.map(choice => (
           <TooltipProvider key={choice.id}>
             <Tooltip delayDuration={200}>

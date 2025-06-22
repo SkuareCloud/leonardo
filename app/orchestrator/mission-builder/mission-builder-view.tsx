@@ -3,7 +3,7 @@
 import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MissionType } from "@lib/api/models"
@@ -202,13 +202,17 @@ export function MissionBuilderView({
         })}
       </ul>
       {selectedMissionType && (
-        <MissionBuilderCreateView
-          mission={selectedMissionType}
-          scenarios={scenarios}
-          chats={chats}
-          categories={categories}
-          onChangeRequest={setMissionCreateRequest}
-        />
+        <Card>
+          <CardContent>
+            <MissionBuilderCreateView
+              mission={selectedMissionType}
+              scenarios={scenarios}
+              chats={chats}
+              categories={categories}
+              onChangeRequest={setMissionCreateRequest}
+            />
+          </CardContent>
+        </Card>
       )}
     </div>
   )

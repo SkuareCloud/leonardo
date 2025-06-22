@@ -50,9 +50,22 @@ export type EffectiveEchoMissionInput = MissionInput<EchoMissionInput>
 export interface MediaItem {
   name: string
   key: string
+  mimeType: string
   lastUpdated: Date
   size: number
-  previewS3Url: string
+  uri: string
+  s3Uri: string
+}
+
+export interface MessageWithMedia {
+  text?: string
+  media?: MediaItem
+}
+
+export interface MediaUploadPayload {
+  name: string
+  mimeType: string
+  base64: string
 }
 
 export interface MissionStatistics {

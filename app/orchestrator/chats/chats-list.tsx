@@ -9,9 +9,21 @@ import { cn } from "@/lib/utils"
 import { CategoryWithChatCount, ChatWithCategory } from "@lib/api/models"
 import { ChatRead, ChatType } from "@lib/api/orchestrator/types.gen"
 import { ColumnDef } from "@tanstack/react-table"
+import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
-const chatColumns: ColumnDef<ChatRead>[] = [
+interface ChatRow {
+  title: string
+  username: string
+  type: ChatType
+  platform: string
+  participants: number
+  categories: string[]
+  id: string
+  original: ChatRead
+}
+
+const chatColumns: ColumnDef<ChatRow>[] = [
   {
     accessorKey: "title",
     header: "Title",
@@ -57,57 +69,21 @@ const chatColumns: ColumnDef<ChatRead>[] = [
     },
   },
   {
-    accessorKey: "platform_participants_count",
-    header: "Participants",
-    size: 100,
-    cell: ({ row }) => {
-      const chat = row.original
-      return (
-        <div className="flex flex-col">
-          <span>{chat.platform_participants_count?.toLocaleString() || "0"}</span>
-          {chat.active_participants_count && (
-            <span className="text-sm text-gray-500">{chat.active_participants_count.toLocaleString()} active</span>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "messages_count_last_month",
-    header: "Activity",
-    size: 150,
-    cell: ({ row }) => {
-      const chat = row.original
-      return (
-        <div className="flex flex-col">
-          <span>{chat.messages_count_last_month?.toLocaleString() || "0"} messages</span>
-          <span>{chat.replies_count_last_month?.toLocaleString() || "0"} replies</span>
-          <span>{chat.forwards_count_last_month?.toLocaleString() || "0"} forwards</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "median_views",
-    header: "Engagement",
-    size: 150,
-    cell: ({ row }) => {
-      const chat = row.original
-      return (
-        <div className="flex flex-col">
-          <span>{chat.median_views?.toLocaleString() || "0"} views/msg</span>
-          <span>{chat.average_reactions?.toLocaleString() || "0"} reactions/msg</span>
-        </div>
-      )
-    },
-  },
-  {
     accessorKey: "category",
     header: "Category",
     size: 100,
     cell: ({ row }) => {
       const chat = row.original
-      return <Badge variant="outline">{chat.category_id || "Uncategorized"}</Badge>
+      return (
+        <ul>
+          {chat.categories &&
+            chat.categories.map(category => (
+              <li key={category}>
+                <Badge variant="outline">{category}</Badge>
+              </li>
+            ))}
+        </ul>
+      )
     },
   },
   {
@@ -131,11 +107,24 @@ export function ChatsList({
   category: string | null
   onChangeTab: (tab: string) => void
 }) {
+  const router = useRouter()
   const [activeCategoryId, setActiveCategoryId] = useState(category || null)
   const data = useMemo(() => {
     if (!activeCategoryId || activeCategoryId === "all") {
-      return chatsWithCategory
+      return chatsWithCategory.map(cat => {
+        const categories = categoriesWithChatCount
+          .filter(c => c.category.id === cat.category.id)
+          .map(cat => cat.category.name)
+        return {
+          ...cat.chat,
+          // patch the category name to appear as the name
+          categories: categories,
+        } as ChatRead
+      })
     }
+    const categories = categoriesWithChatCount
+      .filter(c => c.category.id === activeCategoryId)
+      .map(cat => cat.category.name)
     return chatsWithCategory
       .filter(chatWithCategory => chatWithCategory.category.id === activeCategoryId)
       .map(
@@ -143,7 +132,7 @@ export function ChatsList({
           ({
             ...cat.chat,
             // patch the category name to appear as the name
-            categoryName: cat.category.name,
+            categories: categories,
           } as ChatRead),
       )
   }, [chatsWithCategory, activeCategoryId])
@@ -192,6 +181,9 @@ export function ChatsList({
                 />
               </div>
             )
+          }}
+          onClickRow={row => {
+            router.push(`/orchestrator/chats/${row.id}`)
           }}
         />
       </div>
