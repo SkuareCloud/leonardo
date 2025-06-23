@@ -87,7 +87,11 @@ export class ApiService {
       throw new Error("Avatars API key not defined")
     }
     const effectiveOperatorApiEndpoint =
-      operatorApiEndpoint || env.operatorApiEndpoint + (operatorSlot != 1 ? `${operatorSlot}/` : "")
+      operatorApiEndpoint ||
+      (env.operatorApiEndpoint.replace(/\/$/, "") + "/" + (operatorSlot !== 1 ? `${operatorSlot}/` : "")).replace(
+        /\/+$/,
+        "/",
+      )
     if (!effectiveOperatorApiEndpoint) {
       throw new Error("Operator API endpoint not defined")
     }
