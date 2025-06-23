@@ -2,8 +2,8 @@ import { read_server_env, ServerEnv } from "@lib/server-env"
 import { AvatarModelWithProxy } from "./api/avatars/types.gen"
 import { CombinedAvatar, zCombinedAvatar } from "./api/models"
 import { Scenario, ScenarioWithResult } from "./api/operator/types.gen"
-import { ScenarioRead } from "./api/orchestrator"
 import { logger } from "./logger"
+import { OperatorSettings, ServerSettings } from "./server-settings"
 import { Web1Client } from "./web1/web1-client"
 import { Web1Account } from "./web1/web1-models"
 
@@ -15,6 +15,10 @@ export class ServiceClient {
   private env: ServerEnv
   constructor() {
     this.env = read_server_env()
+  }
+
+  private getOperatorSettings(): OperatorSettings {
+    return ServerSettings.getInstance().getOperatorSettings()
   }
 
   async listAvatars(filters: AvatarsListFilters = { running: true }): Promise<CombinedAvatar[]> {
@@ -47,12 +51,17 @@ export class ServiceClient {
   }
 
   async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
-    const response = await fetch(`${this.env.serverUrl}/api/operator/scenario`)
+    const operatorSettings = this.getOperatorSettings()
+    console.log("Getting operator scenarios for slot", operatorSettings.operatorSlot)
+    const response = await fetch(`${this.env.serverUrl}/api/operator/${operatorSettings.operatorSlot}/scenario`)
     return response.json()
   }
 
   async getOperatorScenarioById(scenarioId: string): Promise<ScenarioWithResult | null> {
-    const response = await fetch(`${this.env.serverUrl}/api/operator/scenario/${scenarioId}`)
+    const operatorSettings = this.getOperatorSettings()
+    const response = await fetch(
+      `${this.env.serverUrl}/api/operator/${operatorSettings.operatorSlot}/scenario/${scenarioId}`,
+    )
     return response.json()
   }
 
@@ -62,7 +71,8 @@ export class ServiceClient {
   }
 
   async submitOperatorScenario(scenario: Scenario): Promise<void> {
-    const response = await fetch(`${this.env.serverUrl}/api/operator/scenario`, {
+    const operatorSettings = this.getOperatorSettings()
+    const response = await fetch(`${this.env.serverUrl}/api/operator/${operatorSettings.operatorSlot}/scenario`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

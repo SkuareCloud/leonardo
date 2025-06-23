@@ -60,6 +60,7 @@ import { logger } from "@lib/logger"
 import { Web1Client } from "@lib/web1/web1-client"
 import { Web1Account } from "@lib/web1/web1-models"
 import { read_server_env, ServerEnv } from "../../../lib/server-env"
+import { ServerSettings } from "@lib/server-settings"
 
 export class ApiService {
   private mediaS3Client: S3Client
@@ -71,8 +72,10 @@ export class ApiService {
     operatorApiEndpoint: string | null = null,
     orchestratorApiEndpoint: string | null = null,
     orchestratorApiKey: string | null = null,
+    // operatorSlot: number = 1,
   ) {
     const env = read_server_env()
+    const operatorSlot = ServerSettings.getInstance().getOperatorSettings().operatorSlot
     this.env = env
 
     const effectiveAvatarsApiEndpoint = avatarsApiEndpoint || env.avatarsApiEndpoint
@@ -83,10 +86,12 @@ export class ApiService {
     if (!effectiveAvatarsApiKey) {
       throw new Error("Avatars API key not defined")
     }
-    const effectiveOperatorApiEndpoint = operatorApiEndpoint || env.operatorApiEndpoint
+    const effectiveOperatorApiEndpoint =
+      operatorApiEndpoint || env.operatorApiEndpoint + (operatorSlot != 1 ? `${operatorSlot}/` : "")
     if (!effectiveOperatorApiEndpoint) {
       throw new Error("Operator API endpoint not defined")
     }
+    console.log("effectiveOperatorApiEndpoint", effectiveOperatorApiEndpoint)
     const effectiveOrchestratorApiEndpoint = orchestratorApiEndpoint || env.orchestratorApiEndpoint
     if (!effectiveOrchestratorApiEndpoint) {
       throw new Error("Orchestrator API endpoint not defined")

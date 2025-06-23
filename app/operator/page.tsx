@@ -1,12 +1,13 @@
-import { Metadata } from "next";
+"use client"
 
-export const metadata: Metadata = {
-  title: "Shepherd | Operator",
-  other: {
-    items: "Dashboard|/>Operator|/",
-  },
-};
+import { OperatorSettings } from "./operator-settings"
 
-export default async function Page() {
-  return <div className="p-8">Operator</div>;
+export default function Page() {
+  return (
+    <div className="p-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-4">Operator Settings</h1>
+      </div>
+    </div>
+  )
 }

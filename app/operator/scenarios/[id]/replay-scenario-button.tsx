@@ -3,19 +3,21 @@
 import { Button } from "@/components/ui/button"
 import { Scenario } from "@lib/api/operator"
 import { logger } from "@lib/logger"
+import { useOperatorStore } from "@lib/store-provider"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
 export const ReplayScenarioButton = ({ scenario }: { scenario: Scenario }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const operatorSlot = useOperatorStore(state => state.operatorSlot)
   const router = useRouter()
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/operator/scenario", {
+      const response = await fetch(`/api/operator/${operatorSlot}/scenario`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

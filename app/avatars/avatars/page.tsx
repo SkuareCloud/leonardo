@@ -9,7 +9,7 @@ export default async function Page() {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <PageHeader title="Profiles" subtitle="Inventory of all profiles in the system." />
+        <PageHeader title="Avatars" subtitle="Inventory of all avatars in the system." />
       </div>
       <AvatarsView avatars={avatars} />
     </div>

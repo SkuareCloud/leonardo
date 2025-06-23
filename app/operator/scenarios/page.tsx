@@ -1,14 +1,12 @@
 import { PageHeader } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ServiceClient } from "@lib/service-client"
-import Link from "next/link"
+import { OperatorSlotDisplay } from "../components/operator-slot-display"
+import { ScenarioFormModal } from "./scenario-form-modal"
 import ScenariosList from "./scenarios"
-import { ScenarioWithResult } from "@lib/api/operator/types.gen"
 
 export default async function Page() {
   const serviceClient = new ServiceClient()
-  const scenarios = await serviceClient.getOperatorScenarios()
   const avatars: AvatarModelWithProxy[] = await serviceClient.getAvatars()
 
   return (
@@ -16,14 +14,15 @@ export default async function Page() {
       <div className="flex justify-between items-center mb-6">
         <PageHeader title="Scenarios" subtitle="View and manage all scenarios">
           <div className="flex gap-2">
-            <Link href="/operator/scenarios/new">
-              <Button>Create New Scenario</Button>
-            </Link>
+            <ScenarioFormModal avatars={avatars} />
           </div>
         </PageHeader>
       </div>
+      <div className="mb-6 flex flex-row-reverse">
+        <OperatorSlotDisplay />
+      </div>
       <div className="flex flex-col gap-4 max-w-[1280px]">
-        <ScenariosList scenarios={scenarios} avatarsData={avatars} />
+        <ScenariosList avatarsData={avatars} />
       </div>
     </div>
   )

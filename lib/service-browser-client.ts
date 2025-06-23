@@ -1,6 +1,6 @@
 import { AvatarModelWithProxy } from "./api/avatars"
 import { CombinedAvatar, MediaItem, MediaUploadPayload, MissionStatistics } from "./api/models"
-import { ActivationStatus, ScenarioWithResult } from "./api/operator"
+import { ActivationStatus, ProfileWorkerView, ScenarioWithResult } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
 import { ClientEnv, read_client_env } from "./client-env"
 import { logger } from "./logger"
@@ -56,9 +56,17 @@ export class ServiceBrowserClient {
     }
   }
 
-  async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
-    const resp = await fetch("/api/operator/scenario")
+  async getOperatorScenarios(operatorSlot?: number): Promise<{ [key: string]: ScenarioWithResult }> {
+    const endpoint = operatorSlot ? `/api/operator/${operatorSlot}/scenario` : "/api/operator/scenario"
+    const resp = await fetch(endpoint)
     const json = (await resp.json()) as { [key: string]: ScenarioWithResult }
+    return json
+  }
+
+  async getOperatorCharacters(operatorSlot?: number): Promise<ProfileWorkerView[]> {
+    const endpoint = operatorSlot ? `/api/operator/${operatorSlot}/characters` : "/api/operator/characters"
+    const resp = await fetch(endpoint)
+    const json = (await resp.json()) as ProfileWorkerView[]
     return json
   }
 
@@ -201,7 +209,12 @@ export class ServiceBrowserClient {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ profile_id: profileId, activation_type: activationType, should_override: shouldOverride, session_data: sessionData }),
+      body: JSON.stringify({
+        profile_id: profileId,
+        activation_type: activationType,
+        should_override: shouldOverride,
+        session_data: sessionData,
+      }),
     })
     const json = await resp.json()
     return json

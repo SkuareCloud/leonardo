@@ -1,12 +1,14 @@
 import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ScenarioWithResult } from "@lib/api/operator/types.gen"
 import { ServiceClient } from "@lib/service-client"
 import { ClockIcon, FlagIcon, SquareArrowUpRightIcon } from "lucide-react"
 import Link from "next/link"
+import { OperatorSlotDisplay } from "../../components/operator-slot-display"
+import { ScenarioFormModal } from "../scenario-form-modal"
 import ActionsList from "./actions-list"
-import { ReplayScenarioButton } from "./replay-scenario-button"
 
 const formatDate = (date: Date, withoutDate: boolean = false) => {
   return date.toLocaleString("en-GB", {
@@ -27,6 +29,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
 
   const serviceClient = new ServiceClient()
   const scenario: ScenarioWithResult | null = await serviceClient.getOperatorScenarioById(id)
+  const avatars: AvatarModelWithProxy[] = await serviceClient.getAvatars()
 
   if (!scenario) {
     throw new Error("Scenario not found")
@@ -58,8 +61,11 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
           }
         ></PageHeader>
         <div className="flex gap-2">
-          <ReplayScenarioButton scenario={scenario.scenario} />
+          <ScenarioFormModal avatars={avatars} initialScenario={scenario.scenario} isNew={false} />
         </div>
+      </div>
+      <div className="mb-6">
+        <OperatorSlotDisplay readOnly={true} />
       </div>
 
       <div className="grid gap-6">

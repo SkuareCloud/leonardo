@@ -13,16 +13,17 @@ import {
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import { getAllCharactersCharactersGet } from "@lib/api/operator/sdk.gen"
 import { logger } from "@lib/logger"
+import { useOperatorStore } from "@lib/store-provider"
 import { CircleStop, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 export function StopAllButton() {
   const [isLoading, setIsLoading] = useState(false)
-
+  const operatorSlot = useOperatorStore(state => state.operatorSlot)
   const handleStopAll = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/operator/stop-all", {
+      const response = await fetch(`/api/operator/${operatorSlot}/stop-all`, {
         method: "POST",
       })
       const data = await response.json()

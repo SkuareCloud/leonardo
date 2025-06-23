@@ -1,16 +1,7 @@
 "use client";
 
-import { DataTable } from "@/components/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { ColumnDef } from "@tanstack/react-table";
-import { RefreshCcwIcon, CircleStop } from "lucide-react";
-import { useState } from "react";
 import { ActiveIndicator } from "@/app/avatars/avatars/active-indicator";
-import { ProfileWorkerView } from "@lib/api/operator/types.gen";
-import { toast } from "sonner";
+import { DataTable } from "@/components/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +13,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { ProfileWorkerView } from "@lib/api/operator/types.gen";
+import { ServiceBrowserClient } from "@lib/service-browser-client";
+import { useOperatorStore } from "@lib/store-provider";
+import { useQuery } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
+import { CircleStop, Loader2, RefreshCcwIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const characterColumns: ColumnDef<ProfileWorkerView>[] = [
   {
@@ -93,7 +96,7 @@ const characterColumns: ColumnDef<ProfileWorkerView>[] = [
     size: 150,
     cell: ({ row }) => {
       const character = row.original;
-      const status = character.current_scenario_result?.status.status_code;
+      const status = character.current_scenario_result?.status?.status_code;
       if (!status) return <span>No result</span>;
       
       return (
@@ -146,7 +149,7 @@ const characterColumns: ColumnDef<ProfileWorkerView>[] = [
               <Button
                 className="cursor-pointer hover:bg-amber-200 uppercase"
                 variant="destructive"
-                size="xs"
+                size="sm"
               >
                 <CircleStop className="mr-1 h-3 w-3" />
                 Stop
@@ -172,12 +175,98 @@ const characterColumns: ColumnDef<ProfileWorkerView>[] = [
   },
 ];
 
-export function CharactersList({
-  characters: initialCharacters,
-}: {
-  characters: ProfileWorkerView[];
-}) {
-  const [isRefreshing, setIsRefreshing] = useState(false);
+export function CharactersList() {
+  const operatorSlot = useOperatorStore(state => state.operatorSlot);
+  const previousOperatorSlotRef = useRef(operatorSlot);
+  const [isSlotChanging, setIsSlotChanging] = useState(false);
+  
+  const {
+    isPending,
+    isRefetching,
+    error,
+    data: characters,
+  } = useQuery({
+    queryKey: ["operator-characters", operatorSlot],
+    queryFn: () => new ServiceBrowserClient().getOperatorCharacters(operatorSlot),
+    refetchInterval: 10000, // poll every 10 seconds
+  });
+
+  // Track operator slot changes and show loading state
+  useEffect(() => {
+    if (previousOperatorSlotRef.current !== operatorSlot) {
+      setIsSlotChanging(true);
+      toast.info(`Switching to Operator Slot ${operatorSlot}`, {
+        description: "Loading characters for the new slot...",
+      });
+      
+      // Reset loading state after a short delay to allow the query to complete
+      const timer = setTimeout(() => {
+        setIsSlotChanging(false);
+        toast.success(`Switched to Operator Slot ${operatorSlot}`, {
+          description: "Characters loaded successfully.",
+        });
+      }, 2000);
+      
+      previousOperatorSlotRef.current = operatorSlot;
+      
+      return () => clearTimeout(timer);
+    }
+  }, [operatorSlot]);
+
+  // Show loading overlay when slot is changing
+  if (isSlotChanging) {
+    return (
+      <>
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-lg bg-background border shadow-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-center">
+              <h3 className="text-lg font-semibold">Switching Operator Slot</h3>
+              <p className="text-sm text-muted-foreground">
+                Loading characters for Operator Slot {operatorSlot}...
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col w-full">
+          <div className="flex flex-row w-full pr-16">
+            <div className="mb-12 flex flex-row items-center gap-6 h-4 w-full">
+              <Button
+                variant="link"
+                className="bg-gray-100 p-1 rounded-full hover:bg-gray-200"
+                disabled
+              >
+                <RefreshCcwIcon className="size-3 text-gray-500" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 max-w-[1280px]">
+            <DataTable
+              columns={characterColumns}
+              data={characters || []}
+              isRefreshing={isRefetching}
+              header={({ table }) => {
+                return (
+                  <div>
+                    <Input
+                      placeholder="Filter by ID..."
+                      value={
+                        (table.getColumn("id")?.getFilterValue() as string) ?? ""
+                      }
+                      onChange={(event) =>
+                        table.getColumn("id")?.setFilterValue(event.target.value)
+                      }
+                      className="max-w-sm"
+                    />
+                  </div>
+                );
+              }}
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col w-full">
@@ -187,15 +276,13 @@ export function CharactersList({
             variant="link"
             className="bg-gray-100 p-1 rounded-full hover:bg-gray-200"
             onClick={async () => {
-              setIsRefreshing(true);
               // TODO: Implement refresh functionality
-              setIsRefreshing(false);
             }}
           >
             <RefreshCcwIcon
               className={cn(
                 "size-3 text-gray-500",
-                isRefreshing && "animate-[spin_1s_linear_reverse_infinite]"
+                isRefetching && "animate-[spin_1s_linear_reverse_infinite]"
               )}
             />
           </Button>
@@ -204,7 +291,8 @@ export function CharactersList({
       <div className="flex flex-col gap-4 max-w-[1280px]">
         <DataTable
           columns={characterColumns}
-          data={initialCharacters}
+          data={characters || []}
+          isRefreshing={isRefetching}
           header={({ table }) => {
             return (
               <div>

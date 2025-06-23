@@ -4,12 +4,17 @@ import { CopyableTrimmedId } from "@/components/copyable-trimmed-id"
 import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { DataTable } from "@/components/table"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ScenarioWithResult } from "@lib/api/operator"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
+import { useOperatorStore } from "@lib/store-provider"
 import { cn } from "@lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table"
+import { Loader2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 interface ScenarioDataRow {
   scenarioId: string
@@ -83,43 +88,69 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
 ]
 
 export function ScenariosList({
-  scenarios,
   avatarsData,
 }: {
-  scenarios: { [key: string]: ScenarioWithResult }
   avatarsData: AvatarModelWithProxy[]
 }) {
   return (
     <QueryClientWrapper>
-      <ScenariosListInner scenarios={scenarios} avatarsData={avatarsData} />
+      <ScenariosListInner avatarsData={avatarsData} />
     </QueryClientWrapper>
   )
 }
 
 const ScenariosListInner = ({
-  scenarios: initialScenarios,
+  // scenarios: initialScenarios,
   avatarsData,
 }: {
-  scenarios: { [key: string]: ScenarioWithResult }
+  // scenarios: { [key: string]: ScenarioWithResult }
   avatarsData: AvatarModelWithProxy[]
 }) => {
+  const operatorSlot = useOperatorStore(state => state.operatorSlot)
+  const previousOperatorSlotRef = useRef(operatorSlot)
+  const [isSlotChanging, setIsSlotChanging] = useState(false)
+  
   const {
     isPending,
     isRefetching,
     error,
     data: scenarios,
   } = useQuery({
-    queryKey: ["operator-scenarios"],
-    queryFn: () => new ServiceBrowserClient().getOperatorScenarios(),
-    initialData: initialScenarios,
+    queryKey: [operatorSlot],
+    queryFn: () => new ServiceBrowserClient().getOperatorScenarios(operatorSlot),
+    // initialData: initialScenarios,
     refetchInterval: 10000, // poll every 10 seconds
   })
 
-  const data: ScenarioDataRow[] = Object.entries(scenarios || initialScenarios || {}).flatMap(
+  // Track operator slot changes and show loading state
+  useEffect(() => {
+    if (previousOperatorSlotRef.current !== operatorSlot) {
+      setIsSlotChanging(true)
+      toast.info(`Switching to Operator Slot ${operatorSlot}`, {
+        description: "Loading scenarios for the new slot...",
+      })
+      
+      // Reset loading state after a short delay to allow the query to complete
+      const timer = setTimeout(() => {
+        setIsSlotChanging(false)
+        toast.success(`Switched to Operator Slot ${operatorSlot}`, {
+          description: "Scenarios loaded successfully.",
+        })
+      }, 2000)
+      
+      previousOperatorSlotRef.current = operatorSlot
+      
+      return () => clearTimeout(timer)
+    }
+  }, [operatorSlot])
+
+  const data: ScenarioDataRow[] = Object.entries(scenarios || {}).flatMap(
     ([scenarioId, scenarioWithResult]) => {
       const avatar = avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)
-      const profileName = 
-        avatar?.data.eliza_character && typeof avatar.data.eliza_character === 'object' && avatar.data.eliza_character !== null
+      const profileName =
+        avatar?.data.eliza_character &&
+        typeof avatar.data.eliza_character === "object" &&
+        avatar.data.eliza_character !== null
           ? (avatar.data.eliza_character as any).name || "Unknown Profile"
           : "Unknown Profile"
 
@@ -135,6 +166,60 @@ const ScenariosListInner = ({
     },
   )
 
+  // Show loading overlay when slot is changing
+  if (isSlotChanging) {
+    return (
+      <>
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-lg bg-background border shadow-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-center">
+              <h3 className="text-lg font-semibold">Switching Operator Slot</h3>
+              <p className="text-sm text-muted-foreground">
+                Loading scenarios for Operator Slot {operatorSlot}...
+              </p>
+            </div>
+          </div>
+        </div>
+        <DataTable
+          columns={columns}
+          isRefreshing={isRefetching}
+          initialSortingState={[{ id: "startTime", desc: true }]}
+          data={data}
+          onClickRow={row => {
+            window.location.href = `/operator/scenarios/${row.scenarioId}`
+          }}
+          header={({ table }) => {
+            return (
+              <div className="flex flex-row gap-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="profileName">Profile Name</Label>
+                  <Input
+                    id="profileName"
+                    placeholder="Filter by profile name..."
+                    value={(table.getColumn("profileName")?.getFilterValue() as string) ?? ""}
+                    onChange={event => table.getColumn("profileName")?.setFilterValue(event.target.value)}
+                    className="w-[30ch]"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="scenarioId">Scenario ID</Label>
+                  <Input
+                    id="scenarioId"
+                    placeholder="Filter by scenario ID..."
+                    value={(table.getColumn("scenarioId")?.getFilterValue() as string) ?? ""}
+                    onChange={event => table.getColumn("scenarioId")?.setFilterValue(event.target.value)}
+                    className="w-[30ch]"
+                  />
+                </div>
+              </div>
+            )
+          }}
+        />
+      </>
+    )
+  }
+
   return (
     <DataTable
       columns={columns}
@@ -146,13 +231,27 @@ const ScenariosListInner = ({
       }}
       header={({ table }) => {
         return (
-          <div>
-            <Input
-              placeholder="Filter by profile name..."
-              value={(table.getColumn("profileName")?.getFilterValue() as string) ?? ""}
-              onChange={event => table.getColumn("profileName")?.setFilterValue(event.target.value)}
-              className="max-w-sm"
-            />
+          <div className="flex flex-row gap-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="profileName">Profile Name</Label>
+              <Input
+                id="profileName"
+                placeholder="Filter by profile name..."
+                value={(table.getColumn("profileName")?.getFilterValue() as string) ?? ""}
+                onChange={event => table.getColumn("profileName")?.setFilterValue(event.target.value)}
+                className="w-[30ch]"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="scenarioId">Scenario ID</Label>
+              <Input
+                id="scenarioId"
+                placeholder="Filter by scenario ID..."
+                value={(table.getColumn("scenarioId")?.getFilterValue() as string) ?? ""}
+                onChange={event => table.getColumn("scenarioId")?.setFilterValue(event.target.value)}
+                className="w-[30ch]"
+              />
+            </div>
           </div>
         )
       }}

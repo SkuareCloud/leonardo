@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { Toaster } from "sonner"
 import "./globals.css"
+import { OperatorStoreProvider } from "@lib/store-provider"
 
 export const metadata: Metadata = {
   title: "Shepherd",
@@ -21,21 +22,23 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <SidebarProvider>
-          <AppSidebar pathname={pathname ?? ""} />
-          <SidebarInset>
-            <div className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-                <div className="ml-6">
-                  <AppBreadcrumbs pathname={pathname ?? ""} />
+        <OperatorStoreProvider>
+          <SidebarProvider>
+            <AppSidebar pathname={pathname ?? ""} />
+            <SidebarInset>
+              <div className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+                <div className="flex items-center gap-2 px-4">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="ml-6">
+                    <AppBreadcrumbs pathname={pathname ?? ""} />
+                  </div>
                 </div>
               </div>
-            </div>
-            <main className="flex flex-1 flex-col gap-4 p-8 pt-4 bg-background">{children}</main>
-          </SidebarInset>
-        </SidebarProvider>
-        <Toaster />
+              <main className="flex flex-1 flex-col gap-4 p-8 pt-4 bg-background">{children}</main>
+            </SidebarInset>
+          </SidebarProvider>
+          <Toaster />
+        </OperatorStoreProvider>
       </body>
     </html>
   )
