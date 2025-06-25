@@ -2,6 +2,7 @@
 
 export type ActionPrefrences = {
     fail_fast?: boolean | null;
+    timeout?: number | null;
 };
 
 export type ActionResponse = {
@@ -18,7 +19,7 @@ export type ActionStatus = {
     error?: string | null;
 };
 
-export type ActionStatusCode = 'success' | 'failed' | 'cancelled' | 'running' | 'pending';
+export type ActionStatusCode = 'success' | 'failed' | 'cancelled' | 'fail_fast' | 'running' | 'pending';
 
 export type ActivationRequest = {
     /**
@@ -244,7 +245,7 @@ export type ScenarioResult = {
     actions_responses?: Array<ActionResponse>;
 };
 
-export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished' | 'proxy_error' | 'browser_error' | 'telegram_error' | 'profile_not_logged_in' | 'profile_already_running';
+export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished' | 'proxy_error' | 'browser_error' | 'telegram_error' | 'profile_not_logged_in' | 'profile_already_running' | 'profile_failed_to_start' | 'profile_startup_timeout' | 'profile_proxy_not_configured';
 
 export type ScenarioStatus = {
     status_code?: ScenarioResultStatus;
@@ -253,7 +254,7 @@ export type ScenarioStatus = {
 
 export type ScenarioWithResult = {
     scenario: Scenario;
-    result?: ScenarioResult | null;
+    result?: ScenarioResult;
 };
 
 export type SendBulkMessagesAction = {

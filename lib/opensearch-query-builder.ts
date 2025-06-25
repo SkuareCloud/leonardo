@@ -73,12 +73,13 @@ export const buildOpenSearchLink = ({
   const _g = {
     filters: [],
     refreshInterval: { pause: true, value: 3000 },
-    time: { from: "now-24h", to: "now" },
+    time: { from: "now-12h", to: "now" },
   }
 
   const _a = {
     discover: {
       columns,
+      sort: [["@timestamp", "desc"]],
     },
     metadata: {
       indexPattern: opensearchIndexPatternId,

@@ -6,6 +6,10 @@ export const zActionPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
         z.null()
+    ]).optional(),
+    timeout: z.union([
+        z.number().int(),
+        z.null()
     ]).optional()
 });
 
@@ -13,6 +17,7 @@ export const zActionStatusCode = z.enum([
     'success',
     'failed',
     'cancelled',
+    'fail_fast',
     'running',
     'pending'
 ]);
@@ -490,7 +495,10 @@ export const zScenarioResultStatus = z.enum([
     'browser_error',
     'telegram_error',
     'profile_not_logged_in',
-    'profile_already_running'
+    'profile_already_running',
+    'profile_failed_to_start',
+    'profile_startup_timeout',
+    'profile_proxy_not_configured'
 ]);
 
 export const zScenarioStatus = z.object({
@@ -536,10 +544,7 @@ export const zProfileWorkerView = z.object({
 
 export const zScenarioWithResult = z.object({
     scenario: zScenario,
-    result: z.union([
-        zScenarioResult,
-        z.null()
-    ]).optional()
+    result: zScenarioResult.optional()
 });
 
 export const zSubmitCredentialsResponse = z.object({

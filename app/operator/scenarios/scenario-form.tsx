@@ -63,9 +63,9 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
   const router = useRouter()
   const [preferences, setPreferences] = useState(
     initialScenario?.prefrences || {
-      actions_timeout: 300,
-      action_interval: 5,
-      close_browser_when_finished: true,
+      actions_timeout: 0,
+      action_interval: 0,
+      close_browser_when_finished: false,
       should_login_telegram: false,
       verify_proxy_working: true,
       fail_fast: false,
