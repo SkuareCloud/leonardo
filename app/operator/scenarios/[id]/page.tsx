@@ -6,9 +6,12 @@ import { ScenarioWithResult } from "@lib/api/operator/types.gen"
 import { ServiceClient } from "@lib/service-client"
 import { ClockIcon, FlagIcon, SquareArrowUpRightIcon } from "lucide-react"
 import Link from "next/link"
+import { ViewJsonButton } from "../../../../components/view-json-button"
 import { OperatorSlotDisplay } from "../../components/operator-slot-display"
 import { ScenarioFormModal } from "../scenario-form-modal"
 import ActionsList from "./actions-list"
+import { LogButtons } from "./log-buttons"
+import { S3ImagesModal } from "./s3-images-modal"
 
 const formatDate = (date: Date, withoutDate: boolean = false) => {
   return date.toLocaleString("en-GB", {
@@ -61,6 +64,13 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
           }
         ></PageHeader>
         <div className="flex gap-2">
+          <LogButtons scenarioId={scenario.scenario.id || ""} profileId={scenario.scenario.profile.id || ""} />
+          <ViewJsonButton
+            content={scenario}
+            title="Scenario JSON"
+            subtitle="Full scenario object in JSON format (read-only)"
+          />
+          <S3ImagesModal scenarioId={scenario.scenario.id || ""} />
           <ScenarioFormModal avatars={avatars} initialScenario={scenario.scenario} isNew={false} />
         </div>
       </div>

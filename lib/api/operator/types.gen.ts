@@ -122,7 +122,7 @@ export type ForwardMessageArgs = {
     from_chat: ChatInfo;
     message_info: MessageInfo;
     target_chat: ChatInfo;
-    message?: InputMessage | null;
+    message?: InputMessage;
 };
 
 export type ForwardMessageResponseContent = {
@@ -643,5 +643,5 @@ export type GetStatusActivationStatusGetResponses = {
 export type GetStatusActivationStatusGetResponse = GetStatusActivationStatusGetResponses[keyof GetStatusActivationStatusGetResponses];
 
 export type ClientOptions = {
-    baseUrl: 'http://localhost:8080' | (string & {});
+    baseUrl: (string & {});
 };

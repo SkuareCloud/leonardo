@@ -12,7 +12,7 @@ import { logger } from "@lib/logger"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
-import { FieldWithLabel, ModeButtonSelector } from "./mission-builder-utils"
+import { FieldWithLabel, InputWithLabel, ModeButtonSelector } from "./mission-builder-utils"
 
 export type EchoMissionMode = "message-plain" | "message-reference" | "scenario-id"
 
@@ -34,6 +34,12 @@ export function EchoMissionBuilder({
   const [profileCategories, setProfileCategories] = useState<{ id: string; label: string }[]>([])
   const [sendAtTriggerTime, setSendAtTriggerTime] = useState(false)
   const [triggerTime, setTriggerTime] = useState<Date | undefined>(undefined)
+  const [messageReferencePlatformChatId, setMessageReferencePlatformChatId] = useState<number | undefined>(undefined)
+  const [messageReferencePlatformChatName, setMessageReferencePlatformChatName] = useState<string | undefined>(
+    undefined,
+  )
+  const [messageReferenceTimestamp, setMessageReferenceTimestamp] = useState<string | undefined>(undefined)
+  const [messageReferenceMessageId, setMessageReferenceMessageId] = useState<number | undefined>(undefined)
   const { onChangeMissionPayload } = useContext(MissionBuilderContext)
 
   // TODO: filter by chats with avatars
@@ -78,6 +84,27 @@ export function EchoMissionBuilder({
           },
         }
       }
+    } else if (mode === "message-reference") {
+      payload.message = {
+        message_info: {
+          platform_chat_id: messageReferencePlatformChatId || undefined,
+          platform_chat_name: messageReferencePlatformChatName || undefined,
+          timestamp: messageReferenceTimestamp || undefined,
+          message_id: messageReferenceMessageId || undefined,
+        },
+        message_content: {
+          text: messagePlain?.text,
+          attachments: messagePlain?.media
+            ? [
+                {
+                  url: messagePlain.media.s3Uri,
+                  mime_type: messagePlain.media.mimeType,
+                  name: messagePlain.media.name,
+                },
+              ]
+            : [],
+        },
+      }
     } else {
       payload.message = undefined
     }
@@ -100,6 +127,10 @@ export function EchoMissionBuilder({
     profileCategories,
     triggerTime,
     sendAtTriggerTime,
+    messageReferencePlatformChatId,
+    messageReferencePlatformChatName,
+    messageReferenceTimestamp,
+    messageReferenceMessageId,
     mode,
   ])
 
@@ -154,8 +185,34 @@ export function EchoMissionBuilder({
             onValueChange={value => setChatId(value)}
           />
         </FieldWithLabel>
-        {mode === "message-plain" && (
-          <MessageBuilder singleMessage onUpdateMessages={messages => setMessagePlain(messages[0] ?? null)} />
+        {mode === "message-plain" ||
+          (mode === "message-reference" && (
+            <MessageBuilder singleMessage onUpdateMessages={messages => setMessagePlain(messages[0] ?? null)} />
+          ))}
+        {mode === "message-reference" && (
+          <div className="flex flex-col gap-2">
+            <InputWithLabel
+              label="Platform chat ID"
+              type="number"
+              value={messageReferencePlatformChatId}
+              onChange={e => setMessageReferencePlatformChatId(e.target.value)}
+            />
+            <InputWithLabel
+              label="Platform chat name"
+              value={messageReferencePlatformChatName}
+              onChange={e => setMessageReferencePlatformChatName(e.target.value)}
+            />
+            <InputWithLabel
+              label="Timestamp"
+              value={messageReferenceTimestamp}
+              onChange={e => setMessageReferenceTimestamp(e.target.value)}
+            />
+            <InputWithLabel
+              label="Message ID"
+              value={messageReferenceMessageId}
+              onChange={e => setMessageReferenceMessageId(e.target.value)}
+            />
+          </div>
         )}
         {mode === "scenario-id" && (
           <Combobox

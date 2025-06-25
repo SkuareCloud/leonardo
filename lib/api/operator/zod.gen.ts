@@ -311,10 +311,7 @@ export const zForwardMessageArgs = z.object({
     from_chat: zChatInfo,
     message_info: zMessageInfo,
     target_chat: zChatInfo,
-    message: z.union([
-        zInputMessage,
-        z.null()
-    ]).optional()
+    message: zInputMessage.optional()
 });
 
 export const zForwardMessageAction = z.object({

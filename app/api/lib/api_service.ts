@@ -57,13 +57,14 @@ import {
   runMissionMissionsRunMissionMissionIdPost,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
+import { ServerSettings } from "@lib/server-settings"
 import { Web1Client } from "@lib/web1/web1-client"
 import { Web1Account } from "@lib/web1/web1-models"
 import { read_server_env, ServerEnv } from "../../../lib/server-env"
-import { ServerSettings } from "@lib/server-settings"
 
 export class ApiService {
   private mediaS3Client: S3Client
+  private operatorLogsS3Client: S3Client
   private env: ServerEnv
 
   constructor(
@@ -95,7 +96,6 @@ export class ApiService {
     if (!effectiveOperatorApiEndpoint) {
       throw new Error("Operator API endpoint not defined")
     }
-    console.log("effectiveOperatorApiEndpoint", effectiveOperatorApiEndpoint)
     const effectiveOrchestratorApiEndpoint = orchestratorApiEndpoint || env.orchestratorApiEndpoint
     if (!effectiveOrchestratorApiEndpoint) {
       throw new Error("Orchestrator API endpoint not defined")
@@ -122,6 +122,7 @@ export class ApiService {
     })
 
     this.mediaS3Client = new S3Client({ region: env.mediaBucketRegion })
+    this.operatorLogsS3Client = new S3Client({ region: env.mediaBucketRegion })
   }
 
   async listProfiles(): Promise<CombinedAvatar[]> {
@@ -677,6 +678,75 @@ export class ApiService {
     return filteredMediaItems
   }
 
+  async getS3Images(path: string): Promise<MediaItem[]> {
+    logger.info(`Getting S3 images from bucket ${this.env.operatorLogsBucketName} with path ${path}`)
+    const objects = await this.operatorLogsS3Client.send(
+      new ListObjectsV2Command({
+        Bucket: this.env.operatorLogsBucketName,
+        Prefix: path,
+      }),
+    )
+    logger.info(`Found ${objects.Contents?.length} images in ${path}`)
+
+    const imageItems = await Promise.all(
+      objects.Contents?.map(async item => {
+        if (!item.Key || item.Key === path) {
+          return null
+        }
+
+        // Parse the path structure: {scenarioId}/{actionId}/{runningIndex}/screenshot.png
+        const pathParts = item.Key.split("/")
+        if (pathParts.length < 4) {
+          return null
+        }
+
+        const fileName = pathParts[pathParts.length - 1]
+        if (fileName !== "screenshot.png") {
+          return null
+        }
+
+        const actionId = pathParts[pathParts.length - 3] // Second to last part
+        const runningIndex = pathParts[pathParts.length - 2] // Third to last part
+
+        logger.info(`Creating presigned url for ${item.Key}`)
+        const uri = await this.createPresignedUrlForOperatorLogs(item.Key)
+        const s3Uri = `s3://${this.env.operatorLogsBucketName}/${item.Key}`
+
+        return {
+          name: `Action ${actionId} - Run ${runningIndex}`,
+          key: item.Key,
+          lastUpdated: item.LastModified || new Date(),
+          size: item.Size || 0,
+          uri,
+          s3Uri,
+          mimeType: "image/png",
+          // Add metadata for better organization
+          metadata: {
+            actionId,
+            runningIndex: parseInt(runningIndex),
+            scenarioId: path,
+            displayName: `Action ${actionId} - Run ${runningIndex}`,
+          },
+        } satisfies MediaItem
+      }) || [],
+    )
+
+    const filteredImageItems = imageItems.filter(item => item !== null)
+    
+    // Sort by actionId and then by runningIndex
+    return filteredImageItems.sort((a, b) => {
+      const aActionId = a.metadata?.actionId || ""
+      const bActionId = b.metadata?.actionId || ""
+      const aRunningIndex = a.metadata?.runningIndex || 0
+      const bRunningIndex = b.metadata?.runningIndex || 0
+      
+      if (aActionId !== bActionId) {
+        return aActionId.localeCompare(bActionId)
+      }
+      return aRunningIndex - bRunningIndex
+    })
+  }
+
   private getMimeTypeFromExtension(fileExtension: string | undefined): string {
     if (!fileExtension) {
       return "application/octet-stream"
@@ -751,6 +821,12 @@ export class ApiService {
   private async createPresignedUrlWithClient(key: string) {
     const client = this.getS3Client()
     const command = new GetObjectCommand({ Bucket: this.env.mediaBucketName, Key: key })
+    return getSignedUrl(client, command, { expiresIn: 3600 })
+  }
+
+  private async createPresignedUrlForOperatorLogs(key: string) {
+    const client = this.operatorLogsS3Client
+    const command = new GetObjectCommand({ Bucket: this.env.operatorLogsBucketName, Key: key })
     return getSignedUrl(client, command, { expiresIn: 3600 })
   }
 

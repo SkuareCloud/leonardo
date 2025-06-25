@@ -8,7 +8,6 @@ import { Slider } from "@/components/ui/slider"
 import { MessageWithMedia, MissionInput } from "@lib/api/models"
 import { CategoryRead, ChatRead, RandomDistributionMissionInput } from "@lib/api/orchestrator"
 import { logger } from "@lib/logger"
-import { cn } from "@lib/utils"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
@@ -124,9 +123,6 @@ export function RandomDistributionMissionBuilder({
                   setStartTime(value)
                 }}
               />
-              <div className={cn("flex flex-row self-start relative top-9 ml-2 text-sm")}>
-                <div>UTC</div>
-              </div>
             </div>
             <div className="text-sm pl-2">{triggerTimeFromNow}</div>
           </div>

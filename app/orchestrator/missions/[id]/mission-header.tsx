@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { ViewJsonButton } from "@/components/view-json-button"
 import { MissionRead, ScenarioRead } from "@lib/api/orchestrator/types.gen"
 import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
@@ -20,6 +21,18 @@ export function MissionHeader({
   const router = useRouter()
   return (
     <div className="flex flex-row items-center gap-8">
+      {/* <ViewAttachmentsButton content={mission.payload} title="Attachments" subtitle="Attachments for the mission" /> */}
+
+      <Separator orientation="vertical" className="max-h-6 border-1" />
+
+      <ViewJsonButton
+        content={mission}
+        title="Mission JSON"
+        subtitle="Full mission object in JSON format (read-only)"
+      />
+
+      <Separator orientation="vertical" className="max-h-6 border-1" />
+
       <div className="flex flex-row gap-2 text-[16px] tracking-wide text-nowrap items-center">
         <div className="text-gray-600">Current stage:</div>
         <Badge className="text-green-600 bg-green-50 text-[16px] uppercase flex flex-row items-center justify-center font-bold px-4 py-1">

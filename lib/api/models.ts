@@ -55,6 +55,12 @@ export interface MediaItem {
   size: number
   uri: string
   s3Uri: string
+  metadata?: {
+    actionId?: string
+    runningIndex?: number
+    scenarioId?: string
+    displayName?: string
+  }
 }
 
 export interface MessageWithMedia {

@@ -5,19 +5,19 @@ import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
-    ActionResponse,
-    BehaviouralArgs,
-    BehaviouralResponseContent,
-    ForwardMessageArgs,
-    ForwardMessageResponseContent,
-    JoinGroupArgs,
-    JoinGroupResponseContent,
-    LeaveGroupArgs,
-    LeaveGroupResponseContent,
-    ReplyToMessageArgs,
-    ReplyToMessageResponseContent,
-    SendMessageArgs,
-    SendMessageResponseContent,
+  ActionResponse,
+  BehaviouralArgs,
+  BehaviouralResponseContent,
+  ForwardMessageArgs,
+  ForwardMessageResponseContent,
+  JoinGroupArgs,
+  JoinGroupResponseContent,
+  LeaveGroupArgs,
+  LeaveGroupResponseContent,
+  ReplyToMessageArgs,
+  ReplyToMessageResponseContent,
+  SendMessageArgs,
+  SendMessageResponseContent,
 } from "@lib/api/operator/types.gen"
 import { ColumnDef } from "@tanstack/react-table"
 import { ClockIcon, FlagIcon } from "lucide-react"
@@ -104,8 +104,20 @@ export function ActionsList({ scenario }: ActionsListProps) {
         return "bg-green-100 text-green-800"
       case "pending":
         return "bg-yellow-100 text-yellow-800"
-      default:
+      case "scheduled":
+        return "bg-blue-100 text-blue-800"
+      case "in_process":
+        return "bg-purple-100 text-purple-800"
+      case "running":
+        return "bg-indigo-100 text-indigo-800"
+      case "planned":
+        return "bg-gray-100 text-gray-800"
+      case "cancelled":
+        return "bg-orange-100 text-orange-800"
+      case "failed":
         return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
   }
 

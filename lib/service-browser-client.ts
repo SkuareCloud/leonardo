@@ -153,6 +153,16 @@ export class ServiceBrowserClient {
     return result
   }
 
+  async getS3Images(path: string = "attachments/") {
+    const resp = await fetch(`/api/s3-images?path=${encodeURIComponent(path)}`)
+    if (!resp.ok) {
+      throw new Error(`Failed to get S3 images: ${resp.statusText}`)
+    }
+    const json = (await resp.json()) as MediaItem[]
+    const result = json.map(item => ({ ...item, lastUpdated: new Date(item.lastUpdated) }))
+    return result
+  }
+
   async uploadMedia(files: File[]) {
     console.log(`Uploading ${files.length} files...`)
     const filePayloads: MediaUploadPayload[] = await Promise.all(

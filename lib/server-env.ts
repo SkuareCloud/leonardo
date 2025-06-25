@@ -10,6 +10,9 @@ export interface ServerEnv {
   allowedCountries: string[]
   mediaBucketRegion: string
   mediaBucketName: string
+  operatorLogsBucketName: string
+  opensearchBaseUrl: string
+  opensearchIndexPatternId: string
 }
 
 export function read_server_env(): ServerEnv {
@@ -49,6 +52,20 @@ export function read_server_env(): ServerEnv {
   const allowedCountries = process.env.ALLOWED_COUNTRIES || ""
   const parsedAllowedCountries = allowedCountries.split(",")
 
+  const operatorLogsBucketName = process.env.OPERATOR_LOGS_BUCKET_NAME
+  if (!operatorLogsBucketName) {
+    throw new Error("Missing environment variable 'OPERATOR_LOGS_BUCKET_NAME'")
+  }
+
+  const opensearchBaseUrl = process.env.OPENSEARCH_BASE_URL
+  if (!opensearchBaseUrl) {
+    throw new Error("Missing environment variable 'OPENSEARCH_BASE_URL'")
+  }
+  const opensearchIndexPatternId = process.env.OPENSEARCH_INDEX_PATTERN_ID
+  if (!opensearchIndexPatternId) {
+    throw new Error("Missing environment variable 'OPENSEARCH_INDEX_PATTERN_ID'")
+  }
+
   return {
     isLocal,
     avatarsApiEndpoint,
@@ -61,5 +78,8 @@ export function read_server_env(): ServerEnv {
     allowedCountries: parsedAllowedCountries,
     mediaBucketRegion,
     mediaBucketName,
+    operatorLogsBucketName,
+    opensearchBaseUrl,
+    opensearchIndexPatternId,
   }
 }

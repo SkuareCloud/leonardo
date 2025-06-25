@@ -5,19 +5,10 @@ import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import { XIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { ChatBubble } from "./chat-bubble"
 import { Button } from "./ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Textarea } from "./ui/textarea"
-
-function ChatBubble({ children, className }: { children?: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn("relative w-fit max-w-[80%] mb-4 flex items-start gap-2", className)}>
-      <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/50 text-gray-900 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex-1">
-        {children}
-      </div>
-    </div>
-  )
-}
 
 function MessagePreview({
   message,
@@ -34,12 +25,10 @@ function MessagePreview({
         <div className="flex flex-col gap-3">
           <div className="flex flex-row items-start justify-between gap-3 min-w-0">
             <div className="text-sm leading-relaxed break-words">{message.text}</div>
-            <button
+            <XIcon
+              className="w-8 h-8 text-gray-500 hover:text-gray-700 flex-shrink-0 p-2 cursor-pointer hover:bg-gray-200 hover:scale-110 scale-100 active:scale-90 rounded-full transition-colors duration-200"
               onClick={() => onRemove()}
-              className="flex-shrink-0 p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
-            >
-              <XIcon className="w-3.5 h-3.5 text-gray-500 hover:text-gray-700" />
-            </button>
+            />
           </div>
           {message.media && (
             <div className="rounded-lg overflow-hidden border border-gray-200">
@@ -104,7 +93,7 @@ export function MessageBuilder({
       {/* preview */}
       {messages.map((message, index) => (
         <div key={index} className="flex flex-row items-center gap-2 w-fit">
-          <MessagePreview message={message} onRemove={() => removeMessage(i)} />
+          <MessagePreview message={message} onRemove={() => removeMessage(index)} />
         </div>
       ))}
 
