@@ -6,11 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { AvatarModelWithProxy } from "@lib/api/avatars"
-import { ProxyData } from "@lib/api/models"
+import { AvatarModelWithProxy, Proxy } from "@lib/api/avatars"
 import { logger } from "@lib/logger"
 import { getSocialNetworkStatus } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
@@ -22,7 +20,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { AvatarDrawer } from "./avatar-drawer"
 import { getBadgeClassNamesByActivationSource } from "./avatars-utils"
-import { Proxy } from "./proxy"
+import { Proxy as ProxyComponent } from "./proxy"
 
 export type ViewMode = "Grid" | "Table"
 
@@ -44,7 +42,7 @@ export interface ProfileDataRow {
   age: string | undefined
   telegram: number | undefined
   profileId: string
-  proxy: ProxyData | undefined
+  proxy: Proxy | null
   phone: string | undefined
   socialNetworks: { [network: string]: boolean }
   activationSource: string | undefined
@@ -53,13 +51,13 @@ export interface ProfileDataRow {
 function avatarToRow(avatar: AvatarModelWithProxy): ProfileDataRow {
   return {
     original: avatar,
-    name: avatar?.data.eliza_character?.name || "Unknown",
+    name: (avatar.data?.eliza_character as any)?.name || "Unknown",
     city: avatar?.home_city,
     geocode: avatar?.home_iso_3166_1_alpha_2_code,
     gender: (avatar?.data.gender as string) || "Female",
     age: (avatar?.data.date_of_birth as string) || undefined,
-    telegram: avatar?.data.social_network_accounts?.telegram?.active
-      ? avatar?.data.social_network_accounts?.telegram.api?.api_id
+    telegram: (avatar?.data.social_network_accounts as any)?.telegram?.active
+      ? (avatar?.data.social_network_accounts as any)?.telegram?.api?.api_id
       : undefined,
     profileId: avatar?.id || "",
     proxy: avatar?.proxy || null,
@@ -208,7 +206,7 @@ const profileColumns: ColumnDef<ProfileDataRow>[] = [
     size: 60,
     cell: ({ row }) => {
       const profile = row.original
-      return profile.proxy && <Proxy proxy={profile.proxy} />
+      return profile.proxy && <ProxyComponent proxy={profile.proxy} />
     },
   },
   {
@@ -224,14 +222,14 @@ const profileColumns: ColumnDef<ProfileDataRow>[] = [
 
 export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelWithProxy[] }) {
   const [activeRow, setActiveRow] = useState<ProfileDataRow | undefined>(undefined)
+  const [avatars, setAvatars] = useState<AvatarModelWithProxy[]>(initialAvatars)
   const tableRef = useRef<HTMLDivElement>(null)
-  const avatarDrawerRef = useRef<HTMLDivElement>(null)
 
   const searchParams = useSearchParams()
   const id = searchParams.get("id")
 
   const activationSources = new Set(
-    initialAvatars.map(
+    avatars.map(
       avatar => (avatar.data.social_network_accounts as any)?.telegram?.activation_source?.toUpperCase() || "",
     ),
   )
@@ -240,12 +238,12 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
 
   useEffect(() => {
     if (id) {
-      const avatar = initialAvatars.find(avatar => avatar.id === id)
+      const avatar = avatars.find(avatar => avatar.id === id)
       if (avatar) {
         setActiveRow(avatarToRow(avatar))
       }
     }
-  }, [id, initialAvatars])
+  }, [id, avatars])
 
   const refreshAvatar = async () => {
     // HACK: Slight delay to allow DB to catch up.
@@ -257,6 +255,10 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
     logger.info(`Refreshing field for profile ${activeRow.original.id}...`)
     const avatar = await new ServiceBrowserClient().getProfile(activeRow.original.id)
     logger.info("Refreshed profile: ", avatar)
+
+    // Update the avatar in the list
+    setAvatars(prevAvatars => prevAvatars.map(av => (av.id === avatar.id ? avatar : av)))
+
     setActiveRow(avatarToRow(avatar))
     return avatar
   }
@@ -267,6 +269,32 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
     }
     logger.info("Updating avatar...")
     await new ServiceBrowserClient().updateProfile(activeRow.original.id, path, value)
+
+    // Update the avatar in the list immediately
+    setAvatars(prevAvatars =>
+      prevAvatars.map(avatar => {
+        if (avatar.id === activeRow.original.id) {
+          const updatedAvatar = { ...avatar }
+          const pathParts = path.split(".")
+          let current = updatedAvatar.data as { [key: string]: unknown }
+
+          // Navigate to the parent object
+          for (let i = 0; i < pathParts.length - 1; i++) {
+            if (!current[pathParts[i]]) {
+              current[pathParts[i]] = {}
+            }
+            current = current[pathParts[i]] as { [key: string]: unknown }
+          }
+
+          // Set the final value
+          current[pathParts[pathParts.length - 1]] = value
+
+          return updatedAvatar
+        }
+        return avatar
+      }),
+    )
+
     await refreshAvatar()
   }
 
@@ -281,94 +309,80 @@ export function AvatarsList({ avatars: initialAvatars }: { avatars: AvatarModelW
       // Required for onKeyDown to work
       tabIndex={0}
     >
-      <div
-        className="flex flex-row w-full pr-16"
-        onClick={e => {
-          if (tableRef.current?.contains(e.target as Node) || avatarDrawerRef.current?.contains(e.target as Node)) {
-            return
-          }
-          setActiveRow(undefined)
-        }}
-      >
-        <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel className="pr-8">
-            <div className="flex flex-col gap-4 max-w-[1280px]" ref={tableRef}>
-              <DataTable
-                columns={profileColumns}
-                onClickRow={row => {
-                  logger.info("Clicked row: ", row.original)
-                  setActiveRow(row)
-                }}
-                data={initialAvatars.map(avatar => avatarToRow(avatar))}
-                header={({ table }) => {
-                  return (
-                    <div className="flex flex-row gap-2">
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input
-                          id="name"
-                          placeholder="Filter by name..."
-                          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                          onChange={event => table.getColumn("name")?.setFilterValue(event.target.value)}
-                          className="w-[30ch]"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="profileId">Profile ID</Label>
-                        <Input
-                          id="profileId"
-                          placeholder="Filter by ID..."
-                          value={(table.getColumn("profileId")?.getFilterValue() as string) ?? ""}
-                          onChange={event => table.getColumn("profileId")?.setFilterValue(event.target.value)}
-                          className="w-[30ch]"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor="activationSource">Activation Source</Label>
-                        <Select
-                          onValueChange={value => {
-                            if (value === "all") {
-                              table.getColumn("activationSource")?.setFilterValue(undefined)
-                            } else {
-                              table.getColumn("activationSource")?.setFilterValue(value)
-                            }
-                          }}
-                          defaultValue={table.getColumn("activationSource")?.getFilterValue() as string}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Filter by activation source..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            {activationSourcesArray.map(source => (
-                              <SelectItem key={source} value={source}>
-                                {source}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )
-                }}
-              />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel className={cn("pl-8", activeRow && "min-w-[400px]", !activeRow && "max-w-24")}>
-            <div ref={avatarDrawerRef}>
-              {activeRow && (
-                <AvatarDrawer
-                  avatar={activeRow.original}
-                  avatarsList={initialAvatars}
-                  updateField={updateField}
-                  refreshAvatar={refreshAvatar}
-                />
-              )}
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+      <div className="flex flex-row w-full">
+        <div className="flex flex-col gap-4 max-w-[1280px] w-full" ref={tableRef}>
+          <DataTable
+            columns={profileColumns}
+            onClickRow={row => {
+              logger.info("Clicked row: ", row.original)
+              setActiveRow(row)
+            }}
+            data={avatars.map(avatar => avatarToRow(avatar))}
+            header={({ table }) => {
+              return (
+                <div className="flex flex-row gap-2">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="Filter by name..."
+                      value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                      onChange={event => table.getColumn("name")?.setFilterValue(event.target.value)}
+                      className="w-[30ch]"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="profileId">Profile ID</Label>
+                    <Input
+                      id="profileId"
+                      placeholder="Filter by ID..."
+                      value={(table.getColumn("profileId")?.getFilterValue() as string) ?? ""}
+                      onChange={event => table.getColumn("profileId")?.setFilterValue(event.target.value)}
+                      className="w-[30ch]"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="activationSource">Activation Source</Label>
+                    <Select
+                      onValueChange={value => {
+                        if (value === "all") {
+                          table.getColumn("activationSource")?.setFilterValue(undefined)
+                        } else {
+                          table.getColumn("activationSource")?.setFilterValue(value)
+                        }
+                      }}
+                      defaultValue={table.getColumn("activationSource")?.getFilterValue() as string}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filter by activation source..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {activationSourcesArray.map(source => (
+                          <SelectItem key={source} value={source}>
+                            {source}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )
+            }}
+          />
+        </div>
       </div>
+      
+      {/* Drawer Overlay */}
+      {activeRow && (
+        <AvatarDrawer
+          avatar={activeRow.original}
+          avatarsList={avatars}
+          updateField={updateField}
+          refreshAvatar={refreshAvatar}
+          onClose={() => setActiveRow(undefined)}
+        />
+      )}
     </div>
   )
 }

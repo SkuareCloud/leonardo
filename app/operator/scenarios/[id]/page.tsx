@@ -4,13 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
 import { ScenarioWithResult } from "@lib/api/operator/types.gen"
 import { ServiceClient } from "@lib/service-client"
-import { ClockIcon, FlagIcon, SquareArrowUpRightIcon } from "lucide-react"
-import Link from "next/link"
+import { ClockIcon, FlagIcon } from "lucide-react"
 import { ViewJsonButton } from "../../../../components/view-json-button"
 import { OperatorSlotDisplay } from "../../components/operator-slot-display"
 import { ScenarioFormModal } from "../scenario-form-modal"
 import ActionsList from "./actions-list"
 import { LogButtons } from "./log-buttons"
+import { ProfileIdLink } from "./profile-id-link"
 import { S3ImagesModal } from "./s3-images-modal"
 
 const formatDate = (date: Date, withoutDate: boolean = false) => {
@@ -55,12 +55,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
         <PageHeader
           title={`Scenario ${scenario.scenario.id}`}
           subtitle={
-            <Link href={`/avatars/avatars?id=${scenario.scenario.profile.id}`}>
-              <div className="flex text-sm text-gray-600 flex-row gap-2 my-2">
-                <b>Profile ID:</b> <span className="underline">{scenario.scenario.profile.id}</span>{" "}
-                <SquareArrowUpRightIcon className="size-4" />
-              </div>
-            </Link>
+            <ProfileIdLink profileId={scenario.scenario.profile.id || ""} avatars={avatars} />
           }
         ></PageHeader>
         <div className="flex gap-2">

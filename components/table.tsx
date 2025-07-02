@@ -67,6 +67,22 @@ export function DataTable<T>({
   const columnsWithSelection = React.useMemo(() => {
     if (!enableRowSelection) return columns
 
+    const columnsWithDefaultSortingFunctions = columns.map(column => {
+      if (column.sortingFn) return column
+      if (!column.enableSorting) return column
+      return {
+        ...column,
+        sortingFn: (rowA: any, rowB: any) => {
+          const valueA = rowA.original[column.id as keyof T]
+          const valueB = rowB.original[column.id as keyof T]
+          if (typeof valueA === "number" && typeof valueB === "number") {
+            return valueA - valueB
+          }
+          return 0
+        },
+      }
+    })
+
     const selectionColumn: ColumnDef<T> = {
       id: "select",
       header: ({ table }) => (
@@ -119,7 +135,7 @@ export function DataTable<T>({
   })
 
   return (
-    <div className="w-full lex flex-col min-h-[600px] relative">
+    <div className="w-full flex flex-col min-h-[600px] relative">
       {isRefreshing && (
         <div className="absolute -top-4 left-0 flex items-center space-x-2 text-sm text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" />

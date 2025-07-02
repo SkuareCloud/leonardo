@@ -24,16 +24,20 @@ import {
   MediaItem,
   MediaUploadPayload,
   MissionStatistics,
+  MissionType,
+  MissionWithExposureStats,
 } from "@lib/api/models"
 import { ActivationStatus, Scenario, ScenarioWithResult } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
+  activateActivationActivatePost,
   getAllCharactersCharactersGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOperator,
   getScenarioByIdScenarioScenarioScenarioIdGet,
   getScenariosScenarioScenarioGet,
   getStatusActivationStatusGet,
   stopProfileCharactersCharacterIdStopPost,
+  submitCredentialsAuthPost,
   submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
 import { CategoryRead, CharacterRead, ChatRead, MissionCreate, MissionRead, ScenarioRead } from "@lib/api/orchestrator"
@@ -50,6 +54,7 @@ import {
   getChatChatsChatIdGet,
   getChatsViewChatsViewChatsGet,
   getMissionMissionsMissionIdGet,
+  getMissionPotentialExposureMissionsExposureMissionIdGet,
   getMissionsMissionsGet,
   getMissionsStatisticsMissionsStatisticsGet,
   getRootCategoryCategoriesRootGet,
@@ -429,6 +434,38 @@ export class ApiService {
     return response.data ?? []
   }
 
+  async getOrchestratorMissionsWithExposureStats(): Promise<MissionWithExposureStats[]> {
+    logger.info("Getting orchestrator missions")
+    const missions = await this.getOrchestratorMissions(true)
+    const missionTypesRelevantForExposure: MissionType[] = [
+      "EchoMission",
+      "RandomDistributionMission",
+      "PuppetShowMission",
+    ]
+    const relevantMissions = missions.filter(mission =>
+      missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),
+    )
+    const missionsWithExposureStats = await Promise.all(
+      relevantMissions.map(async mission => {
+        const response = await getMissionPotentialExposureMissionsExposureMissionIdGet({
+          client: orchestratorClient,
+          path: {
+            mission_id: mission.id,
+          },
+        })
+        if (response.error) {
+          throw new Error(`Failed to get orchestrator mission: ${JSON.stringify(response.error)}`)
+        }
+        return {
+          mission,
+          exposureStats: response.data ?? null,
+        } satisfies MissionWithExposureStats
+      }),
+    )
+    logger.info("Successfully got orchestrator missions")
+    return missionsWithExposureStats
+  }
+
   async getOrchestratorMissionStatistics(missionId: string): Promise<MissionStatistics> {
     logger.info(`Getting orchestrator mission statistics: ${missionId}`)
     const response = await getMissionsStatisticsMissionsStatisticsGet({
@@ -562,6 +599,38 @@ export class ApiService {
     }
     logger.info("Successfully got operator characters")
     return response.data ?? []
+  }
+
+  async startActivation(
+    profileId: string,
+    verify_profile_exists: boolean,
+    should_override: boolean,
+    session_data: { [key: string]: unknown } | null,
+  ) {
+    logger.info(
+      `Starting activation: ${profileId}: { profile_id: ${profileId}, verify_profile_exists: ${verify_profile_exists}, should_override: ${should_override}, session_data: ${session_data} }`,
+    )
+    const response = await activateActivationActivatePost({
+      client: operatorClient,
+      body: { profile_id: profileId, verify_profile_exists, should_override, session_data: {} },
+    })
+    if (response.error) {
+      throw new Error(`Failed to start activation: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully started activation: ${profileId}`)
+    return response.data ?? null
+  }
+
+  async submitCredentials(profileId: string, otp: string, password: string) {
+    const response = await submitCredentialsAuthPost({
+      client: operatorClient,
+      body: { profile_id: profileId, otp, password },
+    })
+    if (response.error) {
+      throw new Error(`Failed to submit credentials: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully submitted credentials: ${profileId}`)
+    return response.data ?? null
   }
 
   async getActivationStatus(profileId: string): Promise<ActivationStatus> {
@@ -732,14 +801,14 @@ export class ApiService {
     )
 
     const filteredImageItems = imageItems.filter(item => item !== null)
-    
+
     // Sort by actionId and then by runningIndex
     return filteredImageItems.sort((a, b) => {
       const aActionId = a.metadata?.actionId || ""
       const bActionId = b.metadata?.actionId || ""
       const aRunningIndex = a.metadata?.runningIndex || 0
       const bRunningIndex = b.metadata?.runningIndex || 0
-      
+
       if (aActionId !== bActionId) {
         return aActionId.localeCompare(bActionId)
       }

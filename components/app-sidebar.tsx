@@ -2,7 +2,6 @@
 
 import {
   ActivityIcon,
-  BrickWallIcon,
   Crosshair,
   HardHat,
   ImageIcon,
@@ -44,6 +43,28 @@ export interface NavItem {
 const data = {
   navMain: [
     {
+      title: "Orchestrator",
+      url: "#",
+      icon: SpeechIcon,
+      items: [
+        {
+          title: "Missions",
+          url: "/orchestrator/missions",
+          icon: Crosshair,
+        },
+        {
+          title: "Characters",
+          url: "/orchestrator/characters",
+          icon: VenetianMask,
+        },
+        {
+          title: "Chats",
+          url: "/orchestrator/chats",
+          icon: MessagesSquare,
+        },
+      ],
+    },
+    {
       title: "Avatars",
       url: "#",
       icon: Users2Icon,
@@ -66,18 +87,6 @@ const data = {
       ],
     },
     {
-      title: "WEB1",
-      url: "#",
-      localOnly: true,
-      items: [
-        {
-          title: "WEB1 Accounts",
-          url: "/profiles/web1",
-          icon: Users2Icon,
-        },
-      ],
-    },
-    {
       title: "Operator",
       url: "#",
       icon: HardHat,
@@ -94,33 +103,7 @@ const data = {
         },
       ],
     },
-    {
-      title: "Orchestrator",
-      url: "#",
-      icon: SpeechIcon,
-      items: [
-        {
-          title: "Characters",
-          url: "/orchestrator/characters",
-          icon: VenetianMask,
-        },
-        {
-          title: "Chats",
-          url: "/orchestrator/chats",
-          icon: MessagesSquare,
-        },
-        {
-          title: "Missions",
-          url: "/orchestrator/missions",
-          icon: Crosshair,
-        },
-        {
-          title: "Mission Builder",
-          url: "/orchestrator/mission-builder",
-          icon: BrickWallIcon,
-        },
-      ],
-    },
+
     {
       title: "Inventory",
       url: "#",
@@ -130,6 +113,18 @@ const data = {
           title: "Media",
           url: "/inventory/media",
           icon: ImageIcon,
+        },
+      ],
+    },
+    {
+      title: "WEB1",
+      url: "#",
+      localOnly: true,
+      items: [
+        {
+          title: "WEB1 Accounts",
+          url: "/profiles/web1",
+          icon: Users2Icon,
         },
       ],
     },

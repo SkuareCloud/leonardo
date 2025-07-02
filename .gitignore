@@ -44,3 +44,5 @@ openapi
 
 temp
 secrets
+
+openapi-ts-error*

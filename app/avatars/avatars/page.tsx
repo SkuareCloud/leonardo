@@ -7,7 +7,7 @@ export default async function Page() {
   const avatars = await serviceClient.getAvatars()
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container py-6">
       <div className="flex justify-between items-center mb-6">
         <PageHeader title="Avatars" subtitle="Inventory of all avatars in the system." />
       </div>

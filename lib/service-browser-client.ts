@@ -1,5 +1,11 @@
 import { AvatarModelWithProxy } from "./api/avatars"
-import { CombinedAvatar, MediaItem, MediaUploadPayload, MissionStatistics } from "./api/models"
+import {
+  CombinedAvatar,
+  MediaItem,
+  MediaUploadPayload,
+  MissionStatistics,
+  MissionWithExposureStats,
+} from "./api/models"
 import { ActivationStatus, ProfileWorkerView, ScenarioWithResult } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
 import { ClientEnv, read_client_env } from "./client-env"
@@ -79,6 +85,12 @@ export class ServiceBrowserClient {
   async getOrchestratorMissions(includeScenarios: boolean = true): Promise<MissionRead[]> {
     const resp = await fetch(`/api/orchestrator/missions?include_scenarios=${includeScenarios}`)
     const json = (await resp.json()) as MissionRead[]
+    return json
+  }
+
+  async getOrchestratorMissionsWithExposureStats(): Promise<MissionWithExposureStats[]> {
+    const resp = await fetch(`/api/orchestrator/missions/missions-with-statistics`)
+    const json = (await resp.json()) as MissionWithExposureStats[]
     return json
   }
 
@@ -212,8 +224,8 @@ export class ServiceBrowserClient {
     return base64
   }
 
-  async activate(profileId: string, activationType: string, shouldOverride: boolean, sessionData: string) {
-    const resp = await fetch("/api/avatars/activate", {
+  async activate(profileId: string, verify_profile_exists: boolean, shouldOverride: boolean, sessionData: any) {
+    const resp = await fetch("/api/operator/activation/activate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -221,7 +233,7 @@ export class ServiceBrowserClient {
       },
       body: JSON.stringify({
         profile_id: profileId,
-        activation_type: activationType,
+        verify_profile_exists: verify_profile_exists,
         should_override: shouldOverride,
         session_data: sessionData,
       }),
@@ -271,6 +283,19 @@ export class ServiceBrowserClient {
         Accept: "application/json",
       },
       body: JSON.stringify({ profile_id: profileId, password }),
+    })
+    const json = await resp.json()
+    return json
+  }
+
+  async submitCredentials(profileId: string, otp: string, password: string) {
+    const resp = await fetch("/api/operator/auth", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ profileId, otp, password }),
     })
     const json = await resp.json()
     return json

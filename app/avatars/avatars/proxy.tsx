@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label"
-import { ProxyData } from "@lib/api/models"
+import { Proxy } from "@lib/api/avatars"
 
-export function Proxy({ proxy }: { proxy: ProxyData }) {
+export function Proxy({ proxy }: { proxy: Proxy }) {
   return (
     <span>
       {`${proxy.ip_address || proxy.fqdn || ""}`}

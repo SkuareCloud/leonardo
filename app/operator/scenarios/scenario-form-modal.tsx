@@ -10,9 +10,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { Scenario } from "@lib/api/operator"
 import { PlayIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
-import { Scenario } from "@lib/api/operator"
 import { ScenarioForm } from "./scenario-form"
 
 interface ScenarioFormModalProps {
