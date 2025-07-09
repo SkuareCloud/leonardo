@@ -105,10 +105,7 @@ export function MessageBuilder({
               id="message"
               value={activeMessageText ?? ""}
               onChange={e => {
-                if (!e.currentTarget.value) {
-                  return
-                }
-                return setActiveMessageText(e.currentTarget.value)
+                setActiveMessageText(e.currentTarget.value || null)
               }}
               onKeyDown={e => {
                 if (e.key === "Enter") {

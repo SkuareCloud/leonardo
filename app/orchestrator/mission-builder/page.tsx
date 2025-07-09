@@ -3,11 +3,10 @@ import { MissionBuilderView } from "./mission-builder-view"
 
 export default async function Page() {
   const apiService = new ApiService()
-  const [allScenarios, chats, categories] = await Promise.all([
-    apiService.getOrchestratorScenarios(),
-    apiService.getOrchestratorChats(),
+  const [categories] = await Promise.all([
+    // apiService.getOrchestratorChats(), #TODO: Find why it takes so long to load
     apiService.getOrchestratorCategories(),
   ])
 
-  return <MissionBuilderView chats={chats} scenarios={allScenarios} categories={categories} />
+  return <MissionBuilderView chats={[]} scenarios={[]} categories={categories} /> //#TODO remove scenarios from all Mission functions
 }

@@ -75,8 +75,8 @@ export type AllocateProfilesGroupsMissionInput = {
      * Stop planning after this amount of seconds
      */
     planning_timeout?: number | null;
-    batch_size?: number | null;
-    batch_interval?: number | null;
+    batch_size?: number;
+    batch_interval?: number;
 };
 
 export type Attachment = {
@@ -537,6 +537,15 @@ export type ChatView = {
     system_chat_members?: Array<string>;
 };
 
+export type DependentScenario = {
+    scenario: Scenario;
+    /**
+     * Raletive seconds from father scenario
+     */
+    relative_seconds_delay?: number;
+    dependent_scenarios?: Array<DependentScenario>;
+};
+
 export type EchoMissionInput = {
     target_group_id?: string | null;
     message: MessageForwardRequest;
@@ -545,8 +554,8 @@ export type EchoMissionInput = {
     /**
      * The time to start the mission - in UTC timezone
      */
-    trigger_time?: string | null;
-    max_retries?: number | null;
+    trigger_time?: string;
+    max_retries?: number;
     keep_hype?: boolean;
     scenario_external_id?: string | null;
 };
@@ -562,16 +571,16 @@ export type FluffMissionInput = {
      * If character_ids is provided, this field is ignored
      */
     characters_categories?: Array<string> | null;
-    is_routine?: boolean | null;
-    batch_size?: number | null;
+    is_routine?: boolean;
+    batch_size?: number;
     /**
      * in minutes
      */
-    batch_interval?: number | null;
-    get_chats?: boolean | null;
-    sync_personal_details?: boolean | null;
-    disable_auto_download_media?: boolean | null;
-    delete_all_active_sessions?: boolean | null;
+    batch_interval?: number;
+    get_chats?: boolean;
+    sync_personal_details?: boolean;
+    disable_auto_download_media?: boolean;
+    delete_all_active_sessions?: boolean;
 };
 
 export type ForwardMessageAction = {
@@ -657,6 +666,10 @@ export type LeaveGroupResponseContent = {
     [key: string]: unknown;
 };
 
+export type ManualMissionInput = {
+    scenarios: Array<SeedScenario>;
+};
+
 export type Message = {
     message_content: InputMessage;
     metadata?: MessageMetadata | null;
@@ -690,6 +703,9 @@ export type MissionCreate = {
     };
     mission_type: string;
     status_code?: MissionStatus | null;
+    run_result?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type MissionExposure = {
@@ -713,7 +729,32 @@ export type MissionRead = {
     };
     mission_type: string;
     status_code?: MissionStatus | null;
+    run_result?: {
+        [key: string]: unknown;
+    } | null;
     scenarios?: Array<ScenarioRead>;
+    scenarios_count?: number;
+};
+
+export type MissionRunResult = {
+    mission_exposure?: MissionExposure | null;
+    mission_statistics?: MissionStatistics | null;
+};
+
+export type MissionStatistics = {
+    mission_type?: string | null;
+    description?: string | null;
+    created_at?: string | null;
+    status_code: MissionStatus;
+    cnt: number;
+    planned: number;
+    scheduled: number;
+    pending: number;
+    in_process: number;
+    running: number;
+    success: number;
+    failed: number;
+    cancelled: number;
 };
 
 export type MissionStatus = 'submitted' | 'planning' | 'failed_planning' | 'running' | 'completed' | 'canceled' | 'planned';
@@ -742,14 +783,14 @@ export type RandomDistributionMissionInput = {
     characters_categories?: Array<string> | null;
     chat_categories?: Array<string> | null;
     messages: Array<InputMessage>;
-    messages_amount?: number | null;
-    messages_amount_per_character?: number | null;
-    max_messages_per_chat?: number | null;
-    batch_size?: number | null;
-    batch_interval?: number | null;
-    start_time?: string | null;
-    max_retries?: number | null;
-    random_choice?: boolean | null;
+    messages_amount?: number;
+    messages_amount_per_character?: number;
+    max_messages_per_chat?: number;
+    batch_size?: number;
+    batch_interval?: number;
+    start_time?: string;
+    max_retries?: number;
+    random_choice?: boolean;
 };
 
 export type ReplyToMessageAction = {
@@ -787,7 +828,7 @@ export type ScenarioCreate = {
     external_id?: string | null;
     scenario_parent_id?: string | null;
     character_id: string;
-    mission_id: string | null;
+    mission_id: string;
     expiration_time?: string | null;
     max_retries?: number;
 };
@@ -839,6 +880,12 @@ export type ScenarioUpdate = {
     end_time?: string | null;
     error?: string | null;
     retries?: number;
+};
+
+export type SeedScenario = {
+    scenario: Scenario;
+    trigger_time?: string;
+    dependent_scenarios?: Array<DependentScenario>;
 };
 
 export type SendBulkMessagesAction = {
@@ -2389,7 +2436,6 @@ export type GetMissionsMissionsGetData = {
     query?: {
         skip?: number;
         limit?: number;
-        include_scenarios?: boolean;
     };
     url: '/missions/';
 };
@@ -2690,7 +2736,7 @@ export type CancelMissionMissionsCancelMissionMissionIdPostResponses = {
 export type CancelMissionMissionsCancelMissionMissionIdPostResponse = CancelMissionMissionsCancelMissionMissionIdPostResponses[keyof CancelMissionMissionsCancelMissionMissionIdPostResponses];
 
 export type CreateMission2MissionsCreateMission2PostData = {
-    body: FluffMissionInput | AllocateProfilesGroupsMissionInput | EchoMissionInput | PuppetShowInput | RandomDistributionMissionInput;
+    body: FluffMissionInput | AllocateProfilesGroupsMissionInput | EchoMissionInput | PuppetShowInput | RandomDistributionMissionInput | ManualMissionInput;
     path?: never;
     query?: never;
     url: '/missions/create_mission2/';
@@ -2713,7 +2759,7 @@ export type CreateMission2MissionsCreateMission2PostResponses = {
     /**
      * Successful Response
      */
-    200: MissionRead;
+    200: boolean;
 };
 
 export type CreateMission2MissionsCreateMission2PostResponse = CreateMission2MissionsCreateMission2PostResponses[keyof CreateMission2MissionsCreateMission2PostResponses];
@@ -2819,6 +2865,37 @@ export type GetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetRespon
 };
 
 export type GetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetResponse = GetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetResponses[keyof GetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetResponses];
+
+export type GetMissionRunResultMissionsRunResultMissionIdGetData = {
+    body?: never;
+    path: {
+        mission_id: string;
+    };
+    query?: never;
+    url: '/missions/run_result/{mission_id}';
+};
+
+export type GetMissionRunResultMissionsRunResultMissionIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMissionRunResultMissionsRunResultMissionIdGetError = GetMissionRunResultMissionsRunResultMissionIdGetErrors[keyof GetMissionRunResultMissionsRunResultMissionIdGetErrors];
+
+export type GetMissionRunResultMissionsRunResultMissionIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: MissionRunResult;
+};
+
+export type GetMissionRunResultMissionsRunResultMissionIdGetResponse = GetMissionRunResultMissionsRunResultMissionIdGetResponses[keyof GetMissionRunResultMissionsRunResultMissionIdGetResponses];
 
 export type GetAllCategoriesCategoriesGetData = {
     body?: never;

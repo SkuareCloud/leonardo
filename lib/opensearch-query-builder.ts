@@ -104,12 +104,21 @@ export const buildOpenSearchLink = ({
   return url
 }
 
-export const buildOpenSearchOperatorProfileLogsLink = (profileId: string) => {
+export const buildOpenSearchOperatorProfileLogsLink = (profileId: string, scenarioId?: string, actionId?: string) => {
+  const baseFilters = [
+    buildOpenSearchFilter("level", `DEBUG`, "Debug Logs", false, true),
+    buildOpenSearchFilter("thread", `AsyncWorker-${profileId}`, `Avatar ${profileId}`),
+    buildOpenSearchFilter("rsrq", false, `No RSRQ`, false, true),
+  ]
+  if (scenarioId) {
+    baseFilters.push(
+      buildOpenSearchFilter("scenario_id", scenarioId, `Scenario ${scenarioId.split("-")[0]}...`),
+    )
+  }
+  if (actionId) {
+    baseFilters.push(buildOpenSearchFilter("action_id", actionId, `Action ${actionId.split("-")[0]}...`))
+  }
   return buildOpenSearchLink({
-    filters: [
-      buildOpenSearchFilter("level", `DEBUG`, "Debug Logs", false, true),
-      buildOpenSearchFilter("thread", `AsyncWorker-${profileId}`, `Avatar ${profileId}`),
-      buildOpenSearchFilter("rsrq", false, `No RSRQ`, false, true),
-    ],
+    filters: baseFilters,
   })
 }

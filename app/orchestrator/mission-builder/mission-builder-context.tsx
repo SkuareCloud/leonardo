@@ -8,6 +8,6 @@ export const MissionBuilderContext = createContext<{
   missionType: MissionType
   onChangeMissionPayload: OnChangeMissionPayloadCallback
 }>({
-  missionType: "EchoMission",
+  missionType: "RandomDistributionMission",
   onChangeMissionPayload: () => {},
 })

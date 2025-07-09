@@ -9,13 +9,24 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@lib/utils"
 
+
+const getCurrentDateTimeUTC = () => {
+  const now = new Date()
+  return new Date(now.getTime() + now.getTimezoneOffset() * 60000)
+}
+
 export function DateTimePicker({
   disabled,
   onSelectDate,
+  resetable = false,
   ...rest
-}: React.ComponentProps<typeof Input> & { onSelectDate?: (date: Date) => void }) {
+}: React.ComponentProps<typeof Input> & {
+  onSelectDate?: (date: Date) => void
+  resetable?: boolean
+}) {
   const [open, setOpen] = React.useState(false)
-  const [dateTime, setDateTime] = React.useState<Date | undefined>(undefined)
+  const [dateTime, setDateTime] = React.useState<Date | undefined>(getCurrentDateTimeUTC())
+
 
   return (
     <div className="flex flex-row items-center gap-4">
@@ -54,18 +65,13 @@ export function DateTimePicker({
           min="00:00"
           max="23:59"
           disabled={disabled}
+          value={dateTime ? `${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}` : ""}
           className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
           onChange={e => {
             if (!e.target.value) return
-            if (!dateTime) return
-            let newDateTime = new Date(dateTime)
+            let newDateTime = dateTime ? new Date(dateTime) : new Date()
             if (newDateTime.toString() === "Invalid Date") {
               newDateTime = new Date()
-            }
-            if (newDateTime.toString() === "Invalid Date") {
-              newDateTime.setHours(0)
-              newDateTime.setMinutes(0)
-              newDateTime.setSeconds(0)
             }
             const [hours, minutes, seconds] = e.target.value.split(":")
             if (hours) newDateTime.setHours(parseInt(hours))
@@ -80,6 +86,15 @@ export function DateTimePicker({
       <div className={cn("flex flex-row relative ml-2 text-sm", !disabled && "text-gray-500")}>
         <div>UTC</div>
       </div>
+      {resetable && (
+        <Button variant="outline" size="sm" onClick={() => {
+          const now = getCurrentDateTimeUTC()
+          setDateTime(now)
+          onSelectDate?.(now)
+        }}>
+          Reset
+        </Button>
+      )}
     </div>
   )
 }

@@ -90,6 +90,26 @@ export const zChannelInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     subscribers: z.union([
         z.number().int(),
         z.null()
@@ -112,6 +132,26 @@ export const zGroupInfo = z.object({
     type: zChatType.optional(),
     description: z.union([
         z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
         z.null()
     ]).optional(),
     members: z.union([
@@ -141,6 +181,49 @@ export const zForwardMessageResponseContent = z.object({
     message_info: zMessageInfo
 });
 
+export const zChatInfo = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
 export const zBehaviouralResponseContent = z.object({
     current_context: z.union([
         z.unknown(),
@@ -152,11 +235,19 @@ export const zBehaviouralResponseContent = z.object({
     ]).optional(),
     personal_details_synced: z.boolean().optional().default(false),
     auto_download_media_disabled: z.boolean().optional().default(false),
-    all_active_sessions_deleted: z.boolean().optional().default(false)
+    all_active_sessions_deleted: z.boolean().optional().default(false),
+    unread_messages: z.union([
+        z.array(zChatInfo),
+        z.null()
+    ]).optional()
 });
 
 export const zSendBulkMessagesResponseContent = z.object({
     message_infos: z.array(zMessageInfo)
+});
+
+export const zReadMessagesResponseContent = z.object({
+    messages_read: z.number().int()
 });
 
 export const zActionResponse = z.object({
@@ -169,7 +260,8 @@ export const zActionResponse = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]),
     content: z.union([
         zSendMessageResponseContent,
@@ -179,6 +271,7 @@ export const zActionResponse = z.object({
         zForwardMessageResponseContent,
         zBehaviouralResponseContent,
         zSendBulkMessagesResponseContent,
+        zReadMessagesResponseContent,
         z.null()
     ]),
     start_time: z.string().datetime(),
@@ -259,7 +352,8 @@ export const zBehaviouralArgs = z.object({
     get_chats: z.boolean().optional().default(false),
     sync_personal_details: z.boolean().optional().default(false),
     disable_auto_download_media: z.boolean().optional().default(false),
-    delete_all_active_sessions: z.boolean().optional().default(false)
+    delete_all_active_sessions: z.boolean().optional().default(false),
+    get_unread_messages: z.boolean().optional().default(false)
 });
 
 export const zBehaviouralAction = z.object({
@@ -271,7 +365,8 @@ export const zBehaviouralAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zBehaviouralArgs
@@ -279,29 +374,6 @@ export const zBehaviouralAction = z.object({
 
 export const zCharacter = z.object({
     id: z.string().optional()
-});
-
-export const zChatInfo = z.object({
-    id: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    name: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    title: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    type: z.union([
-        zChatType,
-        z.null()
-    ]).optional(),
-    description: z.union([
-        z.string(),
-        z.null()
-    ]).optional()
 });
 
 export const zInputMessage = z.object({
@@ -328,7 +400,8 @@ export const zForwardMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zForwardMessageArgs
@@ -365,7 +438,8 @@ export const zJoinGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zJoinGroupArgs
@@ -384,7 +458,8 @@ export const zLeaveGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
@@ -432,7 +507,8 @@ export const zReplyToMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReplyToMessageArgs
@@ -452,7 +528,8 @@ export const zSendMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
@@ -473,10 +550,36 @@ export const zSendBulkMessagesAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendBulkMessagesArgs
+});
+
+export const zReadMessagesArgs = z.object({
+    chat: zChatInfo,
+    amount_messages: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_all_in_end: z.boolean().optional().default(false)
+});
+
+export const zReadMessagesAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zReadMessagesArgs
 });
 
 export const zScenario = z.object({

@@ -22,6 +22,7 @@ type ActionType =
   | "reply_to_message"
   | "forward_message"
   | "behavioural"
+  | "read_messages"
 
 interface ActionFormData {
   type: ActionType
@@ -160,7 +161,8 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
         action.type === "send_bulk_messages" ||
         action.type === "join_group" ||
         action.type === "leave_group" ||
-        action.type === "reply_to_message"
+        action.type === "reply_to_message" ||
+        action.type === "read_messages"
       ) {
         if (action.args.chat && !action.args.chat?.id && !action.args.chat?.name) {
           toast.error("Please provide either Chat ID or Chat Name")
@@ -270,7 +272,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 <Label>Actions Timeout (seconds)</Label>
                 <Input
                   type="number"
-                  value={preferences.actions_timeout}
+                  value={preferences.actions_timeout || 0}
                   onChange={e =>
                     setPreferences({
                       ...preferences,
@@ -284,7 +286,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 <Label>Action Interval (seconds)</Label>
                 <Input
                   type="number"
-                  value={preferences.action_interval}
+                  value={preferences.action_interval || 0}
                   onChange={e =>
                     setPreferences({
                       ...preferences,
@@ -298,7 +300,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 <input
                   type="checkbox"
                   id="close-browser"
-                  checked={preferences.close_browser_when_finished}
+                  checked={preferences.close_browser_when_finished || false}
                   onChange={e =>
                     setPreferences({
                       ...preferences,
@@ -312,7 +314,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 <input
                   type="checkbox"
                   id="login-telegram"
-                  checked={preferences.should_login_telegram}
+                  checked={preferences.should_login_telegram || false}
                   onChange={e =>
                     setPreferences({
                       ...preferences,
@@ -326,7 +328,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 <input
                   type="checkbox"
                   id="verify-proxy"
-                  checked={preferences.verify_proxy_working}
+                  checked={preferences.verify_proxy_working || false}
                   onChange={e =>
                     setPreferences({
                       ...preferences,
@@ -340,7 +342,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 <input
                   type="checkbox"
                   id="fail-fast"
-                  checked={preferences.fail_fast}
+                  checked={preferences.fail_fast || false}
                   onChange={e =>
                     setPreferences({
                       ...preferences,
@@ -391,6 +393,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                     <SelectItem value="reply_to_message">Reply to Message</SelectItem>
                     <SelectItem value="forward_message">Forward Message</SelectItem>
                     <SelectItem value="behavioural">Behavioural</SelectItem>
+                    <SelectItem value="read_messages">Read Messages</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1423,6 +1426,91 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                       }
                     />
                     <Label htmlFor={`delete-all-active-sessions-${index}`}>Delete All Active Sessions</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`get-unread-messages-${index}`}
+                      checked={action.args.get_unread_messages || false}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            get_unread_messages: e.target.checked,
+                          },
+                        })
+                      }
+                    />
+                    <Label htmlFor={`get-unread-messages-${index}`}>Get Unread Messages</Label>
+                  </div>
+                </div>
+              )}
+
+              {action.type === "read_messages" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <Label>
+                      Chat <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="-?[0-9]*"
+                        value={action.args.chat?.id || ""}
+                        onChange={e => handleChatIdChange(index, e.target.value, "chat")}
+                        placeholder="Chat ID (number)"
+                        className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
+                      />
+                      <Input
+                        value={action.args.chat?.name || ""}
+                        onChange={e =>
+                          updateAction(index, {
+                            args: {
+                              ...action.args,
+                              chat: { ...action.args.chat, name: e.target.value },
+                            },
+                          })
+                        }
+                        placeholder="Chat Name"
+                        className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
+                      />
+                    </div>
+                    {!action.args.chat?.id && !action.args.chat?.name && (
+                      <p className="text-sm text-red-500">Please provide either Chat ID or Chat Name</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label>Amount of Messages</Label>
+                    <Input
+                      type="number"
+                      value={action.args.amount_messages || ""}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            amount_messages: parseInt(e.target.value) || null,
+                          },
+                        })
+                      }
+                      placeholder="Enter number of messages to read (optional)"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`read-all-in-end-${index}`}
+                      checked={action.args.read_all_in_end || false}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            read_all_in_end: e.target.checked,
+                          },
+                        })
+                      }
+                    />
+                    <Label htmlFor={`read-all-in-end-${index}`}>Read all messages in the end</Label>
                   </div>
                 </div>
               )}

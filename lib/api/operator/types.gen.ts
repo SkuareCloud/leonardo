@@ -8,8 +8,8 @@ export type ActionPrefrences = {
 export type ActionResponse = {
     id?: string;
     status: ActionStatus;
-    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
+    content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | ReadMessagesResponseContent | null;
     start_time: Date;
     end_time?: Date | null;
 };
@@ -67,7 +67,7 @@ export type AuthRequest = {
 
 export type BehaviouralAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: BehaviouralArgs;
 };
@@ -79,6 +79,7 @@ export type BehaviouralArgs = {
     sync_personal_details?: boolean;
     disable_auto_download_media?: boolean;
     delete_all_active_sessions?: boolean;
+    get_unread_messages?: boolean;
 };
 
 export type BehaviouralResponseContent = {
@@ -87,6 +88,7 @@ export type BehaviouralResponseContent = {
     personal_details_synced?: boolean;
     auto_download_media_disabled?: boolean;
     all_active_sessions_deleted?: boolean;
+    unread_messages?: Array<ChatInfo> | null;
 };
 
 export type ChannelInfo = {
@@ -95,6 +97,11 @@ export type ChannelInfo = {
     title?: string | null;
     type?: ChatType;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
     subscribers?: number | null;
 };
 
@@ -108,13 +115,18 @@ export type ChatInfo = {
     title?: string | null;
     type?: ChatType | null;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
 };
 
 export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
 
 export type ForwardMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: ForwardMessageArgs;
 };
@@ -136,6 +148,11 @@ export type GroupInfo = {
     title?: string | null;
     type?: ChatType;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
     members?: number | null;
     online?: number | null;
 };
@@ -151,7 +168,7 @@ export type InputMessage = {
 
 export type JoinGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: JoinGroupArgs;
 };
@@ -169,7 +186,7 @@ export type JoinGroupResponseContent = {
 
 export type LeaveGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: LeaveGroupArgs;
 };
@@ -209,9 +226,26 @@ export type ProfileWorkerView = {
     browser_port: number | null;
 };
 
+export type ReadMessagesAction = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
+    prefrences?: ActionPrefrences;
+    args: ReadMessagesArgs;
+};
+
+export type ReadMessagesArgs = {
+    chat: ChatInfo;
+    amount_messages?: number | null;
+    read_all_in_end?: boolean;
+};
+
+export type ReadMessagesResponseContent = {
+    messages_read: number;
+};
+
 export type ReplyToMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: ReplyToMessageArgs;
 };
@@ -230,7 +264,7 @@ export type Scenario = {
     id?: string;
     profile: Character;
     prefrences?: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction>;
 };
 
 export type ScenarioInfo = {
@@ -259,7 +293,7 @@ export type ScenarioWithResult = {
 
 export type SendBulkMessagesAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: SendBulkMessagesArgs;
 };
@@ -276,7 +310,7 @@ export type SendBulkMessagesResponseContent = {
 
 export type SendMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages';
     prefrences?: ActionPrefrences;
     args: SendMessageArgs;
 };

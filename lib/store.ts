@@ -1,3 +1,4 @@
+import { persist } from "zustand/middleware"
 import { createStore } from "zustand/vanilla"
 
 export type OperatorState = {
@@ -18,9 +19,20 @@ export const defaultInitState: OperatorState = {
 }
 
 export const createOperatorStore = (initState: OperatorState = defaultInitState) => {
-  return createStore<OperatorStore>()(set => ({
-    ...initState,
-    setOperatorSlot: (operatorSlot: number) => set(() => ({ operatorSlot })),
-    setMaxSlots: (maxSlots: number) => set(() => ({ maxSlots })),
-  }))
+  return createStore<OperatorStore>()(
+    persist(
+      (set) => ({
+        ...initState,
+        setOperatorSlot: (operatorSlot: number) => set(() => ({ operatorSlot })),
+        setMaxSlots: (maxSlots: number) => set(() => ({ maxSlots })),
+      }),
+      {
+        name: "operator-store", // unique name for localStorage key
+        partialize: (state) => ({
+          operatorSlot: state.operatorSlot,
+          maxSlots: state.maxSlots,
+        }), // only persist these fields
+      }
+    )
+  )
 }

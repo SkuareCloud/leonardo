@@ -54,9 +54,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
       <div className="flex justify-between items-center mb-6">
         <PageHeader
           title={`Scenario ${scenario.scenario.id}`}
-          subtitle={
-            <ProfileIdLink profileId={scenario.scenario.profile.id || ""} avatars={avatars} />
-          }
+          subtitle={<ProfileIdLink profileId={scenario.scenario.profile.id || ""} avatars={avatars} />}
         ></PageHeader>
         <div className="flex gap-2">
           <LogButtons scenarioId={scenario.scenario.id || ""} profileId={scenario.scenario.profile.id || ""} />

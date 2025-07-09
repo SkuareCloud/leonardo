@@ -361,14 +361,8 @@ export const zAllocateProfilesGroupsMissionInput = z.object({
         z.number().int(),
         z.null()
     ]).optional(),
-    batch_size: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    batch_interval: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional()
+    batch_size: z.number().int().optional().default(10),
+    batch_interval: z.number().int().optional().default(15)
 });
 
 export const zAttachment = z.object({
@@ -872,12 +866,195 @@ export const zChatView = z.object({
     system_chat_members: z.array(z.string().uuid()).optional().default([])
 });
 
+export const zPrefrences = z.object({
+    actions_timeout: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    action_interval: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    close_browser_when_finished: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    should_login_telegram: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    verify_proxy_working: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    fail_fast: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional()
+});
+
+export const zJoinGroupArgs = z.object({
+    chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    join_discussion_group_if_availble: z.boolean().optional().default(false),
+    invite_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zJoinGroupAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zJoinGroupArgs
+});
+
+export const zLeaveGroupArgs = z.object({
+    chat: zChatInfo
+});
+
+export const zLeaveGroupAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zLeaveGroupArgs
+});
+
 export const zInputMessage = z.object({
     text: z.union([
         z.string(),
         z.null()
     ]).optional(),
     attachments: z.array(zAttachment).optional().default([])
+});
+
+export const zReplyToMessageArgs = z.object({
+    chat: zChatInfo,
+    message_info: z.union([
+        zModelsOperatorCommonMessageInfoMessageInfo,
+        z.string(),
+        z.null()
+    ]).optional(),
+    input_message_content: zInputMessage
+});
+
+export const zReplyToMessageAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zReplyToMessageArgs
+});
+
+export const zSendMessageArgs = z.object({
+    chat: zChatInfo,
+    input_message_content: zInputMessage
+});
+
+export const zSendMessageAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zSendMessageArgs
+});
+
+export const zForwardMessageArgs = z.object({
+    from_chat: zChatInfo,
+    message_info: z.union([
+        zModelsOperatorCommonMessageInfoMessageInfo,
+        z.string(),
+        z.null()
+    ]).optional(),
+    target_chat: zChatInfo,
+    message: z.union([
+        zInputMessage,
+        z.null()
+    ]).optional()
+});
+
+export const zForwardMessageAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zForwardMessageArgs
+});
+
+export const zSendBulkMessagesArgs = z.object({
+    chat: zChatInfo,
+    messages: z.array(z.string()),
+    interval: z.number().optional().default(1)
+});
+
+export const zSendBulkMessagesAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zSendBulkMessagesArgs
+});
+
+export const zScenario = z.object({
+    id: z.string().optional(),
+    profile: zCharacter,
+    prefrences: zPrefrences.optional(),
+    actions: z.array(z.unknown())
+});
+
+export const zDependentScenario: z.AnyZodObject = z.object({
+    scenario: zScenario,
+    relative_seconds_delay: z.number().int().optional().default(0),
+    dependent_scenarios: z.array(z.lazy(() => {
+        return zDependentScenario;
+    })).optional().default([])
 });
 
 export const zModelsPlannerMessageInfo = z.object({
@@ -932,14 +1109,8 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.union([
-        z.string().datetime(),
-        z.null()
-    ]).optional(),
-    max_retries: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
+    trigger_time: z.string().datetime().optional().default('2025-07-06T21:13:34.442276Z'),
+    max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
         z.string().uuid(),
@@ -981,63 +1152,13 @@ export const zFluffMissionInput = z.object({
         z.array(z.string()),
         z.null()
     ]).optional(),
-    is_routine: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional(),
-    batch_size: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    batch_interval: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    get_chats: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional(),
-    sync_personal_details: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional(),
-    disable_auto_download_media: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional(),
-    delete_all_active_sessions: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional()
-});
-
-export const zForwardMessageArgs = z.object({
-    from_chat: zChatInfo,
-    message_info: z.union([
-        zModelsOperatorCommonMessageInfoMessageInfo,
-        z.string(),
-        z.null()
-    ]).optional(),
-    target_chat: zChatInfo,
-    message: z.union([
-        zInputMessage,
-        z.null()
-    ]).optional()
-});
-
-export const zForwardMessageAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zForwardMessageArgs
+    is_routine: z.boolean().optional().default(false),
+    batch_size: z.number().int().optional().default(20),
+    batch_interval: z.number().int().optional().default(10),
+    get_chats: z.boolean().optional().default(false),
+    sync_personal_details: z.boolean().optional().default(false),
+    disable_auto_download_media: z.boolean().optional().default(false),
+    delete_all_active_sessions: z.boolean().optional().default(false)
 });
 
 export const zOperatorValidationError = z.object({
@@ -1063,50 +1184,14 @@ export const zHttpValidationError = z.object({
     detail: z.array(zValidationError).optional()
 });
 
-export const zJoinGroupArgs = z.object({
-    chat: z.union([
-        zChatInfo,
-        z.null()
-    ]).optional(),
-    join_discussion_group_if_availble: z.boolean().optional().default(false),
-    invite_link: z.union([
-        z.string(),
-        z.null()
-    ]).optional()
+export const zSeedScenario = z.object({
+    scenario: zScenario,
+    trigger_time: z.string().datetime().optional().default('2025-07-06T21:13:34.346570Z'),
+    dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
-export const zJoinGroupAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zJoinGroupArgs
-});
-
-export const zLeaveGroupArgs = z.object({
-    chat: zChatInfo
-});
-
-export const zLeaveGroupAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zLeaveGroupArgs
+export const zManualMissionInput = z.object({
+    scenarios: z.array(zSeedScenario)
 });
 
 export const zMissionStatus = z.enum([
@@ -1128,6 +1213,10 @@ export const zMissionCreate = z.object({
     mission_type: z.string(),
     status_code: z.union([
         zMissionStatus,
+        z.null()
+    ]).optional(),
+    run_result: z.union([
+        z.object({}),
         z.null()
     ]).optional()
 });
@@ -1218,32 +1307,46 @@ export const zMissionRead = z.object({
         zMissionStatus,
         z.null()
     ]).optional(),
-    scenarios: z.array(zScenarioRead).optional()
+    run_result: z.union([
+        z.object({}),
+        z.null()
+    ]).optional(),
+    scenarios: z.array(zScenarioRead).optional(),
+    scenarios_count: z.number().int().optional().default(0)
 });
 
-export const zPrefrences = z.object({
-    actions_timeout: z.union([
-        z.number().int(),
+export const zMissionStatistics = z.object({
+    mission_type: z.union([
+        z.string(),
         z.null()
     ]).optional(),
-    action_interval: z.union([
-        z.number().int(),
+    description: z.union([
+        z.string(),
         z.null()
     ]).optional(),
-    close_browser_when_finished: z.union([
-        z.boolean(),
+    created_at: z.union([
+        z.string(),
         z.null()
     ]).optional(),
-    should_login_telegram: z.union([
-        z.boolean(),
+    status_code: zMissionStatus,
+    cnt: z.number().int(),
+    planned: z.number().int(),
+    scheduled: z.number().int(),
+    pending: z.number().int(),
+    in_process: z.number().int(),
+    running: z.number().int(),
+    success: z.number().int(),
+    failed: z.number().int(),
+    cancelled: z.number().int()
+});
+
+export const zMissionRunResult = z.object({
+    mission_exposure: z.union([
+        zMissionExposure,
         z.null()
     ]).optional(),
-    verify_proxy_working: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional(),
-    fail_fast: z.union([
-        z.boolean(),
+    mission_statistics: z.union([
+        zMissionStatistics,
         z.null()
     ]).optional()
 });
@@ -1266,111 +1369,14 @@ export const zRandomDistributionMissionInput = z.object({
         z.null()
     ]).optional(),
     messages: z.array(zInputMessage),
-    messages_amount: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    messages_amount_per_character: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    max_messages_per_chat: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    batch_size: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    batch_interval: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    start_time: z.union([
-        z.string().datetime(),
-        z.null()
-    ]).optional(),
-    max_retries: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    random_choice: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional()
-});
-
-export const zReplyToMessageArgs = z.object({
-    chat: zChatInfo,
-    message_info: z.union([
-        zModelsOperatorCommonMessageInfoMessageInfo,
-        z.string(),
-        z.null()
-    ]).optional(),
-    input_message_content: zInputMessage
-});
-
-export const zReplyToMessageAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zReplyToMessageArgs
-});
-
-export const zSendMessageArgs = z.object({
-    chat: zChatInfo,
-    input_message_content: zInputMessage
-});
-
-export const zSendMessageAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zSendMessageArgs
-});
-
-export const zSendBulkMessagesArgs = z.object({
-    chat: zChatInfo,
-    messages: z.array(z.string()),
-    interval: z.number().optional().default(1)
-});
-
-export const zSendBulkMessagesAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zSendBulkMessagesArgs
-});
-
-export const zScenario = z.object({
-    id: z.string().optional(),
-    profile: zCharacter,
-    prefrences: zPrefrences.optional(),
-    actions: z.array(z.unknown())
+    messages_amount: z.number().int().optional().default(1000),
+    messages_amount_per_character: z.number().int().optional().default(5),
+    max_messages_per_chat: z.number().int().optional().default(1),
+    batch_size: z.number().int().optional().default(10),
+    batch_interval: z.number().int().optional().default(5),
+    start_time: z.string().datetime().optional().default('2025-07-06T21:13:34.445371Z'),
+    max_retries: z.number().int().optional().default(2),
+    random_choice: z.boolean().optional().default(false)
 });
 
 export const zScenarioCreate = z.object({
@@ -1386,10 +1392,7 @@ export const zScenarioCreate = z.object({
         z.null()
     ]).optional(),
     character_id: z.string().uuid(),
-    mission_id: z.union([
-        z.string().uuid(),
-        z.null()
-    ]),
+    mission_id: z.string().uuid(),
     expiration_time: z.union([
         z.string().datetime(),
         z.null()
@@ -1552,13 +1555,15 @@ export const zRunMissionMissionsRunMissionMissionIdPostResponse = z.array(zScena
 
 export const zCancelMissionMissionsCancelMissionMissionIdPostResponse = zMissionRead;
 
-export const zCreateMission2MissionsCreateMission2PostResponse = zMissionRead;
+export const zCreateMission2MissionsCreateMission2PostResponse = z.boolean();
 
 export const zGetMissionsStatisticsMissionsStatisticsGetResponse = z.array(z.object({}));
 
 export const zGetMissionPotentialExposureMissionsExposureMissionIdGetResponse = zMissionExposure;
 
 export const zGetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetResponse = zMissionRead;
+
+export const zGetMissionRunResultMissionsRunResultMissionIdGetResponse = zMissionRunResult;
 
 export const zGetAllCategoriesCategoriesGetResponse = z.array(zCategoryRead);
 

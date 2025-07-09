@@ -82,8 +82,8 @@ export class ServiceBrowserClient {
     return json
   }
 
-  async getOrchestratorMissions(includeScenarios: boolean = true): Promise<MissionRead[]> {
-    const resp = await fetch(`/api/orchestrator/missions?include_scenarios=${includeScenarios}`)
+  async getOrchestratorMissions(): Promise<MissionRead[]> {
+    const resp = await fetch(`/api/orchestrator/missions`)
     const json = (await resp.json()) as MissionRead[]
     return json
   }

@@ -27,17 +27,17 @@ const MissionMetadata: Record<
     supported?: boolean
   }
 > = {
-  EchoMission: {
-    name: "Echo",
-    description: "Relay a message to a group of profiles.",
-    supported: true,
-    icon: PodcastIcon,
-  },
   RandomDistributionMission: {
     name: "Random Distribution",
     description: "Distribute messages to multiple groups by multiple profiles.",
     supported: true,
     icon: DicesIcon,
+  },
+  EchoMission: {
+    name: "Echo",
+    description: "Relay a message to a group of profiles.",
+    supported: false,
+    icon: PodcastIcon,
   },
   AllocateProfilesGroupsMission: {
     name: "Allocate Profiles/Groups",
@@ -69,7 +69,7 @@ export function MissionBuilderView({
   categories: CategoryRead[]
 }) {
   const router = useRouter()
-  const [selectedMissionType, setSelectedMissionType] = React.useState<MissionType>("EchoMission")
+  const [selectedMissionType, setSelectedMissionType] = React.useState<MissionType>("RandomDistributionMission")
   const [missionCreateRequest, setMissionCreateRequest] = React.useState<Partial<MissionCreate>>()
   const [error, setError] = React.useState<string | null>(null)
 

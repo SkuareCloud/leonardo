@@ -14,10 +14,12 @@ import {
   JoinGroupResponseContent,
   LeaveGroupArgs,
   LeaveGroupResponseContent,
+  ReadMessagesArgs,
+  ReadMessagesResponseContent,
   ReplyToMessageArgs,
   ReplyToMessageResponseContent,
   SendMessageArgs,
-  SendMessageResponseContent,
+  SendMessageResponseContent
 } from "@lib/api/operator/types.gen"
 import { ColumnDef } from "@tanstack/react-table"
 import { ClockIcon, FlagIcon } from "lucide-react"
@@ -144,6 +146,11 @@ export function ActionsList({ scenario }: ActionsListProps) {
           label: "Wait",
           className: "bg-yellow-100 text-yellow-800",
         }
+      case "read_messages":
+        return {
+          label: "Read Messages",
+          className: "bg-cyan-100 text-cyan-800",
+        }
       default:
         return {
           label: type || "Unknown",
@@ -154,7 +161,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
 
   const formatActionArgs = (
     type: string,
-    args: BehaviouralArgs | SendMessageArgs | JoinGroupArgs | LeaveGroupArgs | ReplyToMessageArgs | ForwardMessageArgs,
+    args: BehaviouralArgs | SendMessageArgs | JoinGroupArgs | LeaveGroupArgs | ReplyToMessageArgs | ForwardMessageArgs | ReadMessagesArgs,
   ) => {
     const actionType = type.toLowerCase()
     if (!args) return "No arguments"
@@ -170,6 +177,18 @@ export function ActionsList({ scenario }: ActionsListProps) {
         }
         if (behaviouralArgs.get_chats) {
           parts.push("Get Chats")
+        }
+        if (behaviouralArgs.sync_personal_details) {
+          parts.push("Sync Personal Details")
+        }
+        if (behaviouralArgs.disable_auto_download_media) {
+          parts.push("Disable Auto Download Media")
+        }
+        if (behaviouralArgs.delete_all_active_sessions) {
+          parts.push("Delete All Active Sessions")
+        }
+        if (behaviouralArgs.get_unread_messages) {
+          parts.push("Get Unread Messages")
         }
         return parts.length > 0 ? parts.join(", ") : "No specific behavior"
       }
@@ -284,6 +303,26 @@ export function ActionsList({ scenario }: ActionsListProps) {
           </div>
         )
       }
+      case "read_messages": {
+        const readArgs = args as ReadMessagesArgs
+        return (
+          <div className="space-y-2">
+            <ChatInfoDisplay chat={readArgs.chat} />
+            <div className="flex flex-col gap-1">
+              {readArgs.amount_messages !== undefined && readArgs.amount_messages !== null && (
+                <div className="text-sm text-gray-600">
+                  Amount: {readArgs.amount_messages} messages
+                </div>
+              )}
+              {readArgs.read_all_in_end && (
+                <div className="text-sm text-gray-600">
+                  Read all messages in the end
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      }
       default:
         return JSON.stringify(args)
     }
@@ -298,6 +337,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
       | JoinGroupResponseContent
       | ForwardMessageResponseContent
       | BehaviouralResponseContent
+      | ReadMessagesResponseContent
       | null,
   ) => {
     if (!content) return null
@@ -386,7 +426,44 @@ export function ActionsList({ scenario }: ActionsListProps) {
       case "behavioural": {
         const behaviouralContent = content as BehaviouralResponseContent
         return (
-          <div className="space-y-2">
+          <div className="space-y-4">
+            {/* Personal Details Sync Status */}
+            {behaviouralContent.personal_details_synced !== undefined && (
+              <div className="flex items-center gap-2">
+                <Badge variant={behaviouralContent.personal_details_synced ? "default" : "secondary"}>
+                  {behaviouralContent.personal_details_synced ? "✓" : "✗"} Personal Details
+                </Badge>
+                <span className="text-sm text-gray-600">
+                  {behaviouralContent.personal_details_synced ? "Synced" : "Not synced"}
+                </span>
+              </div>
+            )}
+
+            {/* Auto Download Media Status */}
+            {behaviouralContent.auto_download_media_disabled !== undefined && (
+              <div className="flex items-center gap-2">
+                <Badge variant={behaviouralContent.auto_download_media_disabled ? "default" : "secondary"}>
+                  {behaviouralContent.auto_download_media_disabled ? "✓" : "✗"} Auto Download Media
+                </Badge>
+                <span className="text-sm text-gray-600">
+                  {behaviouralContent.auto_download_media_disabled ? "Disabled" : "Enabled"}
+                </span>
+              </div>
+            )}
+
+            {/* Active Sessions Deletion Status */}
+            {behaviouralContent.all_active_sessions_deleted !== undefined && (
+              <div className="flex items-center gap-2">
+                <Badge variant={behaviouralContent.all_active_sessions_deleted ? "default" : "secondary"}>
+                  {behaviouralContent.all_active_sessions_deleted ? "✓" : "✗"} Active Sessions
+                </Badge>
+                <span className="text-sm text-gray-600">
+                  {behaviouralContent.all_active_sessions_deleted ? "Deleted" : "Not deleted"}
+                </span>
+              </div>
+            )}
+
+            {/* Available Chats */}
             {behaviouralContent.chats && behaviouralContent.chats.length > 0 && (
               <div>
                 <div className="text-sm font-medium mb-2">Available Chats ({behaviouralContent.chats.length}):</div>
@@ -447,6 +524,86 @@ export function ActionsList({ scenario }: ActionsListProps) {
                 </div>
               </div>
             )}
+
+            {/* Unread Messages */}
+            {behaviouralContent.unread_messages && behaviouralContent.unread_messages.length > 0 && (
+              <div>
+                <div className="text-sm font-medium mb-2">Unread Messages ({behaviouralContent.unread_messages.length}):</div>
+                <div className="border rounded-md">
+                  <div className="max-h-48 overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-white z-10">
+                        <TableRow>
+                          <TableHead className="text-xs font-medium">Chat</TableHead>
+                          <TableHead className="text-xs font-medium">Type</TableHead>
+                          <TableHead className="text-xs font-medium">Unread Count</TableHead>
+                          <TableHead className="text-xs font-medium">Mentions</TableHead>
+                          <TableHead className="text-xs font-medium">Reactions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {behaviouralContent.unread_messages.map((chat, idx) => (
+                          <TableRow key={idx} className="hover:bg-gray-50">
+                            <TableCell className="py-2">
+                              <div className="font-medium text-sm">{chat.title || chat.name || "Unnamed"}</div>
+                              <div className="text-xs text-gray-500">ID: {chat.id || "N/A"}</div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <Badge variant="outline" className="text-xs">
+                                {chat.type || "Unknown"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600">
+                              {chat.unread_count || 0}
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600">
+                              {chat.unread_mentions_count || 0}
+                            </TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600">
+                              {chat.unread_reactions_count || 0}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Current Context */}
+            {behaviouralContent.current_context && (
+              <div>
+                <div className="text-sm font-medium mb-2">Current Context:</div>
+                <div className="bg-gray-50 p-3 rounded-md text-sm">
+                  <pre className="whitespace-pre-wrap text-xs">
+                    {(() => {
+                      try {
+                        const context = behaviouralContent.current_context
+                        return typeof context === 'string' ? context : JSON.stringify(context, null, 2)
+                      } catch {
+                        return String(behaviouralContent.current_context)
+                      }
+                    })()}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      }
+      case "read_messages": {
+        const readContent = content as ReadMessagesResponseContent
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="default" className="bg-green-100 text-green-800">
+                ✓ Messages Read
+              </Badge>
+              <span className="text-sm text-gray-600 font-semibold">
+                {readContent.messages_read} messages read
+              </span>
+            </div>
           </div>
         )
       }

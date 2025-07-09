@@ -84,7 +84,7 @@ const missionColumns: ColumnDef<MissionWithExposureStats>[] = [
     size: 100,
     cell: ({ row }) => {
       const mission = row.original
-      return <span>{mission.mission.scenarios?.length || 0}</span>
+      return <span>{mission.mission.scenarios_count || 0}</span>
     },
   },
   {

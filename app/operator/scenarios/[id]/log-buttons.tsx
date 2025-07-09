@@ -11,7 +11,11 @@ export function LogButtons({ scenarioId, profileId }: LogButtonsProps) {
   return (
     <>
       <Button variant="outline" asChild className="flex items-center gap-2">
-        <a href={buildOpenSearchOperatorProfileLogsLink(profileId)} target="_blank" rel="noopener noreferrer">
+        <a
+          href={buildOpenSearchOperatorProfileLogsLink(profileId, scenarioId)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <ExternalLinkIcon className="h-4 w-4" />
           Profile Logs
         </a>

@@ -421,11 +421,11 @@ export class ApiService {
     return response.data
   }
 
-  async getOrchestratorMissions(includeScenarios: boolean = true): Promise<MissionRead[]> {
+  async getOrchestratorMissions(): Promise<MissionRead[]> {
     logger.info("Getting orchestrator missions")
     const response = await getMissionsMissionsGet({
       client: orchestratorClient,
-      query: { include_scenarios: includeScenarios },
+      query: { limit: 0 },
     })
     if (response.error) {
       throw new Error(`Failed to get orchestrator missions: ${JSON.stringify(response.error)}`)
@@ -436,7 +436,7 @@ export class ApiService {
 
   async getOrchestratorMissionsWithExposureStats(): Promise<MissionWithExposureStats[]> {
     logger.info("Getting orchestrator missions")
-    const missions = await this.getOrchestratorMissions(true)
+    const missions = await this.getOrchestratorMissions()
     const missionTypesRelevantForExposure: MissionType[] = [
       "EchoMission",
       "RandomDistributionMission",
