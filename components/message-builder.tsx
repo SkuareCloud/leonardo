@@ -3,10 +3,12 @@
 import { MediaItem, MessageWithMedia } from "@lib/api/models"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
-import { XIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import EmojiPicker, { Theme } from "emoji-picker-react"
+import { SmileIcon, XIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { ChatBubble } from "./chat-bubble"
 import { Button } from "./ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Textarea } from "./ui/textarea"
 
@@ -21,10 +23,10 @@ function MessagePreview({
 }) {
   return (
     <div className={cn("flex flex-row items-center gap-20", className)}>
-      <ChatBubble>
+      <ChatBubble className="max-w-[280px] w-fit">
         <div className="flex flex-col gap-3">
           <div className="flex flex-row items-start justify-between gap-3 min-w-0">
-            <div className="text-sm leading-relaxed break-words">{message.text}</div>
+            <div className="text-sm leading-relaxed break-words flex-1">{message.text}</div>
             <XIcon
               className="w-8 h-8 text-gray-500 hover:text-gray-700 flex-shrink-0 p-2 cursor-pointer hover:bg-gray-200 hover:scale-110 scale-100 active:scale-90 rounded-full transition-colors duration-200"
               onClick={() => onRemove()}
@@ -57,6 +59,8 @@ export function MessageBuilder({
   const [activeMessageMedia, setActiveMessageMedia] = useState<MediaItem | null>(null)
   const [media, setMedia] = useState<MediaItem[]>([])
   const [isLoadingMedia, setIsLoadingMedia] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const activeMessageMediaKey = activeMessageMedia?.name ? activeMessageMedia.name.split("/").pop() : null
 
@@ -86,6 +90,25 @@ export function MessageBuilder({
     setMessages(newMessages)
   }
 
+  function handleEmojiClick(emojiData: any) {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const currentText = activeMessageText || ""
+      const newText = currentText.substring(0, start) + emojiData.emoji + currentText.substring(end)
+      
+      setActiveMessageText(newText)
+      
+      // Set cursor position after the emoji
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(start + emojiData.emoji.length, start + emojiData.emoji.length)
+      }, 0)
+    }
+    setShowEmojiPicker(false)
+  }
+
   const showNewMessage = singleMessage ? messages.length === 0 : true
 
   return (
@@ -101,23 +124,51 @@ export function MessageBuilder({
       {showNewMessage && (
         <div className="flex flex-row items-center gap-20">
           <ChatBubble className="flex flex-col gap-2 bg-transparent border-1 w-[300px]">
-            <Textarea
-              id="message"
-              value={activeMessageText ?? ""}
-              onChange={e => {
-                setActiveMessageText(e.currentTarget.value || null)
-              }}
-              onKeyDown={e => {
-                if (e.key === "Enter") {
-                  if (!activeMessageText || !activeMessageMedia) {
-                    return
+            <div className="relative">
+              <Textarea
+                ref={textareaRef}
+                id="message"
+                value={activeMessageText ?? ""}
+                onChange={e => {
+                  setActiveMessageText(e.currentTarget.value || null)
+                }}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    if (!activeMessageText || !activeMessageMedia) {
+                      return
+                    }
+                    addMessage()
                   }
-                  addMessage()
-                }
-              }}
-              className="w-[300px] bg-transparent placeholder:text-gray-700 border-0 outline-0 focus-0 ring-0 shadow-none"
-              placeholder="Type a message..."
-            />
+                }}
+                className="w-[300px] bg-transparent placeholder:text-gray-700 border-0 outline-0 focus-0 ring-0 shadow-none pr-10"
+                placeholder="Type a message..."
+              />
+              <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-10 top-1.5 h-5 w-5 p-0 hover:bg-gray-100 rounded-full"
+                  >
+                    <SmileIcon className="h-3.5 w-3.5 text-gray-500" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" align="end" className="w-auto p-0">
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiClick}
+                    width={300}
+                    height={350}
+                    theme={Theme.LIGHT}
+                    lazyLoadEmojis={true}
+                    previewConfig={{
+                      showPreview: false
+                    }}
+                    skinTonesDisabled={true}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <Select
               value={activeMessageMediaKey ?? undefined}
               onOpenChange={async () => {

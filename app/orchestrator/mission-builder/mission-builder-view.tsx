@@ -28,32 +28,32 @@ const MissionMetadata: Record<
   }
 > = {
   RandomDistributionMission: {
-    name: "Random Distribution",
-    description: "Distribute messages to multiple groups by multiple profiles.",
+    name: "Mass send messages",
+    description: "Send messages to multiple groups by multiple profiles.",
     supported: true,
     icon: DicesIcon,
   },
   EchoMission: {
-    name: "Echo",
-    description: "Relay a message to a group of profiles.",
+    name: "Mass forward message",
+    description: "Forward a message oraganiclly accross open and closed groups",
     supported: false,
     icon: PodcastIcon,
   },
   AllocateProfilesGroupsMission: {
-    name: "Allocate Profiles/Groups",
-    description: "Allocate a group of profiles to a group of scenarios.",
+    name: "Join groups",
+    description: "Make profiles join groups and channels",
     supported: false,
     icon: ShuffleIcon,
   },
   PuppetShowMission: {
     name: "Puppet Show",
-    description: "Orchestrate an interactive reply session.",
+    description: "Orchestrate a debate on a certain group",
     supported: false,
     icon: DramaIcon,
   },
   FluffMission: {
-    name: "Fluff",
-    description: "Fluff a group of profiles.",
+    name: "Sync profiles",
+    description: "Sync a group of characters with their platform feed and preferences",
     supported: false,
     icon: RabbitIcon,
   },

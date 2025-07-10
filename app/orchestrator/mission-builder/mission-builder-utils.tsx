@@ -35,7 +35,7 @@ export function FieldWithLabel({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label className="text-sm font-semibold mb-1">
+      <Label className="text-sm mb-1">
         <div>{label}</div>
         {required && (
           <Tooltip>

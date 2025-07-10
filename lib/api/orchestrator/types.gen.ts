@@ -782,6 +782,7 @@ export type PuppetShowInput = {
 export type RandomDistributionMissionInput = {
     characters_categories?: Array<string> | null;
     chat_categories?: Array<string> | null;
+    additional_chats?: Array<string> | null;
     messages: Array<InputMessage>;
     messages_amount?: number;
     messages_amount_per_character?: number;

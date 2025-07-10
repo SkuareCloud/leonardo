@@ -1,5 +1,4 @@
 "use client"
-
 import { DateTimePicker } from "@/components/date-time-picker"
 import { MessageBuilder } from "@/components/message-builder"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -12,8 +11,11 @@ import { logger } from "@lib/logger"
 import { ChevronDown } from "lucide-react"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
+import { ChatSelector } from "./chat-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
 import { FieldWithLabel, InputWithLabel } from "./mission-builder-utils"
+
+type ChatSelectionMode = "all" | "select"
 
 export function RandomDistributionMissionBuilder({
   categories,
@@ -27,6 +29,9 @@ export function RandomDistributionMissionBuilder({
   const [messagesAmountPerCharacter, setMessagesAmountPerCharacter] = useState<number | string>(5)
   const [chatCategories, setChatCategories] = useState<{ id: string; label: string }[]>([])
   const [profileCategories, setProfileCategories] = useState<{ id: string; label: string }[]>([])
+  const [additionalChats, setAdditionalChats] = useState<{ id: string; label: string }[]>([])
+  const [chatSelectionMode, setChatSelectionMode] = useState<ChatSelectionMode>("all")
+
   const [startTime, setStartTime] = useState<Date | undefined>(() => {
     const now = new Date()
     // Create a new Date in UTC
@@ -80,9 +85,16 @@ export function RandomDistributionMissionBuilder({
     payload.batch_interval = typeof batchInterval === 'string' ? Number(batchInterval) || 5 : batchInterval
     payload.random_choice = randomChoice
 
-    payload.chat_categories = chatCategories.length > 0 ? chatCategories.map(c => c.label) : []
-    payload.characters_categories = profileCategories.length > 0 ? profileCategories.map(c => c.label) : []
+    // Handle chat selection based on mode
+    if (chatSelectionMode === "all") {
+      payload.chat_categories = []
+      payload.additional_chats = []
+    } else if (chatSelectionMode === "select") {
+      payload.chat_categories = chatCategories.length > 0 ? chatCategories.map(c => c.label) : []
+      payload.additional_chats = additionalChats.length > 0 ? additionalChats.map(c => c.id) : []
+    }
 
+    payload.characters_categories = profileCategories.length > 0 ? profileCategories.map(c => c.label) : []
     onChangeMissionPayload(payload as MissionInput<RandomDistributionMissionInput>)
   }, [
     messages,
@@ -95,6 +107,8 @@ export function RandomDistributionMissionBuilder({
     randomChoice,
     chatCategories,
     profileCategories,
+    additionalChats,
+    chatSelectionMode,
     startTime,
   ])
 
@@ -112,17 +126,94 @@ export function RandomDistributionMissionBuilder({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-8 p-2">
-        <MessageBuilder onUpdateMessages={messages => setMessages(messages)} />
+        {/* Messages and Chat Selection Side by Side */}
+        <div className="flex flex-row gap-0">
+          {/* Messages Section */}
+          <div className="flex-1">
+            <MessageBuilder onUpdateMessages={messages => setMessages(messages)} />
+          </div>
+
+          {/* Chat Selection Section */}
+          <div className="flex-1 max-w-[400px] -ml-2">
+            <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/50 text-gray-900 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
+              <div className="flex flex-col gap-3">
+                <div className="w-full flex justify-center">
+                  <Label className="text-base md:text-sm text-gray-700">Chat Selection</Label>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="all-chats"
+                      name="chat-selection"
+                      value="all"
+                      checked={chatSelectionMode === "all"}
+                      onChange={() => setChatSelectionMode("all")}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="all-chats" className="text-base md:text-sm text-gray-700">
+                      Write to all chats
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="select-chats"
+                      name="chat-selection"
+                      value="select"
+                      checked={chatSelectionMode === "select"}
+                      onChange={() => setChatSelectionMode("select")}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="select-chats" className="text-base md:text-sm text-gray-700">
+                      Select chats
+                    </Label>
+                  </div>
+                </div>
+                
+                {/* Conditional selectors based on mode */}
+                {chatSelectionMode === "select" && (
+                  <div className="mt-4 w-full flex flex-row gap-4">
+                    <div className="flex-1">
+                      <CategorySelector
+                        categories={activeChatCategories}
+                        label="Chat categories"
+                        onChangeValue={value => setChatCategories(value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <ChatSelector
+                        label="Target chats"
+                        onChangeValue={value => setAdditionalChats(value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
         
         <Collapsible open={isAdvancedOptionsOpen} onOpenChange={setIsAdvancedOptionsOpen}>
           <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-80">
-            <Label>Advanced Settings</Label>
+            <Label className="text-base font-semibold">Advanced Settings</Label>
             <ChevronDown
               className={`h-4 w-4 transition-transform duration-200 ${isAdvancedOptionsOpen ? "rotate-180" : ""}`}
             />
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-4 animate-in slide-in-from-top-2 duration-300">
             <div className="flex flex-col gap-8 p-6 border-2 border-dashed border-blue-200 rounded-lg bg-gradient-to-br from-blue-50/50 to-purple-50/50 backdrop-blur-sm dark:from-blue-950/30 dark:to-purple-950/30 dark:border-blue-800">
+              {/* Profile Categories Section */}
+              <div className="flex flex-col gap-4">
+                <CategorySelector
+                  categories={activeProfileCategories}
+                  label="Profile categories"
+                  onChangeValue={value => setProfileCategories(value)}
+                />
+              </div>
+              
               <InputWithLabel
                 label="Global messages amount"
                 type="number"
@@ -202,7 +293,7 @@ export function RandomDistributionMissionBuilder({
                       setRandomChoice(checked === "indeterminate" ? false : checked)
                     }}
                   />
-                  <Label htmlFor="random-choice" className="text-sm">
+                  <Label htmlFor="random-choice" className="text-sm font-medium">
                     Enable random character selection
                   </Label>
                 </div>
@@ -221,28 +312,12 @@ export function RandomDistributionMissionBuilder({
                     />
                   </div>
                   {triggerTimeFromNow && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400 pl-2">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 pl-2">
                       {triggerTimeFromNow}
                     </div>
                   )}
                 </div>
               </FieldWithLabel>
-              <div className="flex flex-row items-center gap-4">
-                <div className="flex flex-col gap-4">
-                  <CategorySelector
-                    categories={activeChatCategories}
-                    label="Chat categories"
-                    onChangeValue={value => setChatCategories(value)}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-4">
-                <CategorySelector
-                  categories={activeProfileCategories}
-                  label="Profile categories"
-                  onChangeValue={value => setProfileCategories(value)}
-                />
-              </div>
               <FieldWithLabel label="Maximum retries">
                 <Slider
                   min={0} 
