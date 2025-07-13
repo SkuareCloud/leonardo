@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MissionType } from "@lib/api/models"
 import { CategoryRead, ChatRead, MissionCreate, ScenarioRead } from "@lib/api/orchestrator"
-import { zEchoMissionInput, zMissionCreate, zRandomDistributionMissionInput } from "@lib/api/orchestrator/zod.gen"
+import { zAllocateProfilesGroupsMissionInput, zEchoMissionInput, zFluffMissionInput, zMissionCreate, zPuppetShowInput, zRandomDistributionMissionInput } from "@lib/api/orchestrator/zod.gen"
 import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
@@ -42,7 +42,7 @@ const MissionMetadata: Record<
   AllocateProfilesGroupsMission: {
     name: "Join groups",
     description: "Make profiles join groups and channels",
-    supported: false,
+    supported: true,
     icon: ShuffleIcon,
   },
   PuppetShowMission: {
@@ -54,7 +54,7 @@ const MissionMetadata: Record<
   FluffMission: {
     name: "Sync profiles",
     description: "Sync a group of characters with their platform feed and preferences",
-    supported: false,
+    supported: true,
     icon: RabbitIcon,
   },
 }
@@ -118,6 +118,27 @@ export function MissionBuilderView({
                     // validate specific mission payload
                     if (selectedMissionType === "EchoMission") {
                       const validatedPayload = zEchoMissionInput.safeParse(missionCreateRequest.payload)
+                      if (validatedPayload.error) {
+                        toast.error("Invalid payload: " + validatedPayload.error.message)
+                        setError(validatedPayload.error.message)
+                        return
+                      }
+                    } else if (selectedMissionType === "AllocateProfilesGroupsMission") {
+                      const validatedPayload = zAllocateProfilesGroupsMissionInput.safeParse(missionCreateRequest.payload)
+                      if (validatedPayload.error) {
+                        toast.error("Invalid payload: " + validatedPayload.error.message)
+                        setError(validatedPayload.error.message)
+                        return
+                      }
+                    } else if (selectedMissionType === "PuppetShowMission") {
+                      const validatedPayload = zPuppetShowInput.safeParse(missionCreateRequest.payload)
+                      if (validatedPayload.error) {
+                        toast.error("Invalid payload: " + validatedPayload.error.message)
+                        setError(validatedPayload.error.message)
+                        return
+                      }
+                    } else if (selectedMissionType === "FluffMission") {
+                      const validatedPayload = zFluffMissionInput.safeParse(missionCreateRequest.payload)
                       if (validatedPayload.error) {
                         toast.error("Invalid payload: " + validatedPayload.error.message)
                         setError(validatedPayload.error.message)

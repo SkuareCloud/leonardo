@@ -1,7 +1,7 @@
 import { ApiService } from "../../lib/api_service";
 
 export async function GET() {
-  const avatars = await new ApiService().listProfiles();
+  const avatars = await new ApiService().getOrchestratorCharacters();
 
   return new Response(JSON.stringify(avatars), {
     status: 200,

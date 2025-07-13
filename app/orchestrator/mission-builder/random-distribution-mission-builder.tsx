@@ -1,4 +1,5 @@
 "use client"
+
 import { DateTimePicker } from "@/components/date-time-picker"
 import { MessageBuilder } from "@/components/message-builder"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -34,7 +35,6 @@ export function RandomDistributionMissionBuilder({
 
   const [startTime, setStartTime] = useState<Date | undefined>(() => {
     const now = new Date()
-    // Create a new Date in UTC
     const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000)
     utcNow.setMilliseconds(0)
     return utcNow
@@ -85,7 +85,6 @@ export function RandomDistributionMissionBuilder({
     payload.batch_interval = typeof batchInterval === 'string' ? Number(batchInterval) || 5 : batchInterval
     payload.random_choice = randomChoice
 
-    // Handle chat selection based on mode
     if (chatSelectionMode === "all") {
       payload.chat_categories = []
       payload.additional_chats = []
@@ -93,8 +92,8 @@ export function RandomDistributionMissionBuilder({
       payload.chat_categories = chatCategories.length > 0 ? chatCategories.map(c => c.label) : []
       payload.additional_chats = additionalChats.length > 0 ? additionalChats.map(c => c.id) : []
     }
-
     payload.characters_categories = profileCategories.length > 0 ? profileCategories.map(c => c.label) : []
+    
     onChangeMissionPayload(payload as MissionInput<RandomDistributionMissionInput>)
   }, [
     messages,
@@ -127,15 +126,15 @@ export function RandomDistributionMissionBuilder({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-8 p-2">
         {/* Messages and Chat Selection Side by Side */}
-        <div className="flex flex-row gap-0">
+        <div className="flex flex-row gap-4">
           {/* Messages Section */}
           <div className="flex-1">
             <MessageBuilder onUpdateMessages={messages => setMessages(messages)} />
           </div>
-
+          
           {/* Chat Selection Section */}
-          <div className="flex-1 max-w-[400px] -ml-2">
-            <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/50 text-gray-900 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
+          <div className="flex-1">
+            <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/50 text-gray-900 px-4 py-3 rounded-2xl shadow-sm">
               <div className="flex flex-col gap-3">
                 <div className="w-full flex justify-center">
                   <Label className="text-base md:text-sm text-gray-700">Chat Selection</Label>

@@ -287,12 +287,12 @@ export class ApiService {
     return response.data ?? []
   }
 
-  async getOrchestratorChats(): Promise<ChatRead[]> {
-    const limit = process.env.ORCHESTRATOR_CHATS_LIMIT ? parseInt(process.env.ORCHESTRATOR_CHATS_LIMIT) : 0
+  async getOrchestratorChats(skip: number = 0, limit: number = 0): Promise<ChatRead[]> {
     logger.info(`Getting orchestrator chats (limit: ${limit})`)
     const response = await getChatsViewChatsViewChatsGet({
       client: orchestratorClient,
       query: {
+        skip,
         limit,
       },
     })
@@ -441,6 +441,8 @@ export class ApiService {
       "EchoMission",
       "RandomDistributionMission",
       "PuppetShowMission",
+      "AllocateProfilesGroupsMission",
+      "FluffMission"
     ]
     const relevantMissions = missions.filter(mission =>
       missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),

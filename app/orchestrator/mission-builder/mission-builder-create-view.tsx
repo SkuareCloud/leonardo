@@ -6,9 +6,12 @@ import { MissionType } from "@lib/api/models"
 import { CategoryRead, ChatRead, MissionCreate, ScenarioRead } from "@lib/api/orchestrator"
 import { Editor } from "@monaco-editor/react"
 import { useEffect, useState } from "react"
+import { AllocateProfilesGroupsMissionBuilder } from "./allocate-profiles-groups-mission-builder"
 import { EchoMissionBuilder } from "./echo-mission-builder"
+import { FluffMissionBuilder } from "./fluff-mission-builder"
 import { MissionBuilderContext } from "./mission-builder-context"
 import { InputWithLabel } from "./mission-builder-utils"
+import { PuppetShowMissionBuilder } from "./puppet-show-mission-builder"
 import { RandomDistributionMissionBuilder } from "./random-distribution-mission-builder"
 
 export function MissionBuilderCreateView({
@@ -75,6 +78,15 @@ export function MissionBuilderCreateView({
               <Separator orientation="horizontal" className="my-4" />
               {mission === "EchoMission" && (
                 <EchoMissionBuilder chats={chats} scenarios={scenarios || []} categories={categories || []} />
+              )}
+              {mission === "AllocateProfilesGroupsMission" && (
+                <AllocateProfilesGroupsMissionBuilder categories={categories || []} />
+              )}
+              {mission === "PuppetShowMission" && (
+                <PuppetShowMissionBuilder />
+              )}
+              {mission === "FluffMission" && (
+                <FluffMissionBuilder categories={categories || []} />
               )}
               {mission === "RandomDistributionMission" && (
                 <RandomDistributionMissionBuilder chats={chats} categories={categories || []} />

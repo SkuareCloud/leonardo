@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { ChatRead } from "@lib/api/orchestrator"
+import { CharacterRead } from "@lib/api/orchestrator"
 import { Loader2, PlusCircleIcon, XIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { FieldWithLabel } from "./mission-builder-utils"
 
-export function ChatSelector({
+export function CharacterSelector({
   header,
   label,
   required,
@@ -22,98 +22,99 @@ export function ChatSelector({
 }) {
   const [selected, setSelected] = useState<{ id: string; label: string }[]>([])
   const [isAdding, setIsAdding] = useState(false)
-  const [availableChats, setAvailableChats] = useState<ChatRead[]>([])
+  const [availableCharacters, setAvailableCharacters] = useState<CharacterRead[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
+  const pageSize = 50
 
   useEffect(() => {
     onChangeValue?.(selected)
   }, [selected, onChangeValue])
 
-  const loadChats = async (page: number = 0, pageSize: number = 50, search: string = "", append: boolean = false) => {
+  const loadCharacters = async (page: number = 0, search: string = "", append: boolean = false) => {
     setLoading(true)
     try {
       const skip = page * pageSize
-      const response = await fetch(`/api/orchestrator/chats?skip=${skip}&limit=${pageSize}`)
+      const response = await fetch(`/api/orchestrator/characters?is_active=true&skip=${skip}&limit=${pageSize}`)
       if (!response.ok) {
-        throw new Error(`Failed to load chats: ${response.statusText}`)
+        throw new Error(`Failed to load characters: ${response.statusText}`)
       }
-      const chats: ChatRead[] = await response.json()
+      const characters: CharacterRead[] = await response.json()
       
-      // Filter chats based on search term
-      const filteredChats = chats.filter((chat: ChatRead) => {
+      // Filter characters based on search term
+      const filteredCharacters = characters.filter((Character: CharacterRead) => {
         const searchLower = search.toLowerCase()
         return (
-          chat.username?.toLowerCase().includes(searchLower) ||
-          chat.title?.toLowerCase().includes(searchLower) ||
-          chat.platform_id?.toString().includes(searchLower)
+            Character.id?.toLowerCase().includes(searchLower) ||
+            Character.name?.toLowerCase().includes(searchLower) ||
+            Character.slot?.toString().includes(searchLower)
         )
       })
 
       if (append) {
-        setAvailableChats(prev => [...prev, ...filteredChats])
+        setAvailableCharacters(prev => [...prev, ...filteredCharacters])
       } else {
-        setAvailableChats(filteredChats)
+        setAvailableCharacters(filteredCharacters)
       }
       
-      setHasMore(chats.length === pageSize)
+      setHasMore(characters.length === pageSize)
       setCurrentPage(page)
     } catch (error) {
-      console.error("Failed to load chats:", error)
+      console.error("Failed to load characters:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
     setIsAdding(true)
-    if (availableChats.length === 0) {
-      loadChats(0, 50, searchTerm)
+    if (availableCharacters.length === 0) {
+      await loadCharacters(0, searchTerm)
     }
   }
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
     setCurrentPage(0)
-    loadChats(0, 200, value)
+    loadCharacters(0, value)
   }
 
   const handleLoadMore = () => {
     if (hasMore && !loading) {
-      loadChats(currentPage + 1, 50, searchTerm, true)
+      loadCharacters(currentPage + 1, searchTerm, true)
     }
   }
 
-  const handleChatSelect = (chatId: string) => {
-    const chat = availableChats.find(c => {
+  const handleCharacterSelect = (characterId: string) => {
+    const Character = availableCharacters.find(c => {
       const id = c.id
-      return id === chatId
+      return id === characterId
     })
     
-    if (chat) {
-      const chatIdentifier = chat.id
-      const displayName = chat.username || `Chat ${chat.platform_id}`
+    if (Character) {
+      const characterIdentifier = Character.id
+      const displayName = Character.name
       
       setSelected(prev => [
         ...prev,
-        { id: chatIdentifier, label: displayName }
+        { id: characterIdentifier, label: displayName }
       ])
     }
     setIsAdding(false)
   }
 
-  const availableChoices = availableChats
-    .filter(chat => {
-      const chatId = chat.id
-      return !selected.some(s => s.id === chatId)
+  const availableChoices = availableCharacters
+    .filter(Character => {
+      const characterId = Character.id
+      return !selected.some(s => s.id === characterId)
     })
-    .map(chat => {
-      const chatId = chat.id
-      const displayName = chat.username || chat.platform_id
+    .map(Character => {
+      const characterId = Character.id
+      const displayName = Character.name|| Character.id
       return {
-        value: chatId,
+        value: characterId,
         label: displayName,
       }
     })
@@ -162,7 +163,7 @@ export function ChatSelector({
             <div className="flex flex-col gap-2 w-full max-w-md">
               <div className="flex gap-2 items-center">
                 <Input
-                  placeholder="Search chats..."
+                  placeholder="Search characters..."
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="flex-1"
@@ -179,7 +180,7 @@ export function ChatSelector({
               {loading && (
                 <div className="flex items-center justify-center p-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="ml-2">Loading chats...</span>
+                  <span className="ml-2">Loading characters...</span>
                 </div>
               )}
               
@@ -189,7 +190,7 @@ export function ChatSelector({
                     <div
                       key={choice.value}
                       className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                      onClick={() => handleChatSelect(choice.value)}
+                      onClick={() => handleCharacterSelect(choice.value)}
                     >
                       {choice.label}
                     </div>
@@ -218,9 +219,9 @@ export function ChatSelector({
                 </div>
               )}
               
-              {!loading && availableChoices.length === 0 && availableChats.length === 0 && (
+              {!loading && availableChoices.length === 0 && availableCharacters.length === 0 && (
                 <div className="text-sm text-gray-500 italic p-4 text-center">
-                  No chats found. Try adjusting your search.
+                  No characters found. Try adjusting your search.
                 </div>
               )}
             </div>

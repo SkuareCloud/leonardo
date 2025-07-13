@@ -68,6 +68,7 @@ export type AddManyChatsToCategoryRequest = {
 export type AllocateProfilesGroupsMissionInput = {
     characters_categories?: Array<string> | null;
     chat_categories?: Array<string> | null;
+    additional_chats?: Array<string> | null;
     diversify_chats?: boolean | null;
     start_time?: string | null;
     end_time?: string | null;

@@ -19,13 +19,17 @@ export function DateTimePicker({
   disabled,
   onSelectDate,
   resetable = false,
+  defaultDate,
   ...rest
 }: React.ComponentProps<typeof Input> & {
-  onSelectDate?: (date: Date) => void
-  resetable?: boolean
+  onSelectDate?: (date: Date) => void;
+  resetable?: boolean;
+  defaultDate?: Date;
 }) {
+
+  const initialDateTime = defaultDate || getCurrentDateTimeUTC();
   const [open, setOpen] = React.useState(false)
-  const [dateTime, setDateTime] = React.useState<Date | undefined>(getCurrentDateTimeUTC())
+  const [dateTime, setDateTime] = React.useState<Date | undefined>(initialDateTime)
 
 
   return (
