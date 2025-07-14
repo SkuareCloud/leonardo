@@ -246,10 +246,6 @@ export const zSendBulkMessagesResponseContent = z.object({
     message_infos: z.array(zMessageInfo)
 });
 
-export const zReadMessagesResponseContent = z.object({
-    messages_read: z.number().int()
-});
-
 export const zActionResponse = z.object({
     id: z.string().optional(),
     status: zActionStatus,
@@ -260,8 +256,7 @@ export const zActionResponse = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]),
     content: z.union([
         zSendMessageResponseContent,
@@ -271,7 +266,6 @@ export const zActionResponse = z.object({
         zForwardMessageResponseContent,
         zBehaviouralResponseContent,
         zSendBulkMessagesResponseContent,
-        zReadMessagesResponseContent,
         z.null()
     ]),
     start_time: z.string().datetime(),
@@ -365,8 +359,7 @@ export const zBehaviouralAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zBehaviouralArgs
@@ -400,8 +393,7 @@ export const zForwardMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zForwardMessageArgs
@@ -438,8 +430,7 @@ export const zJoinGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zJoinGroupArgs
@@ -458,8 +449,7 @@ export const zLeaveGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
@@ -507,8 +497,7 @@ export const zReplyToMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReplyToMessageArgs
@@ -528,8 +517,7 @@ export const zSendMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
@@ -550,36 +538,10 @@ export const zSendBulkMessagesAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural',
-        'read_messages'
+        'behavioural'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendBulkMessagesArgs
-});
-
-export const zReadMessagesArgs = z.object({
-    chat: zChatInfo,
-    amount_messages: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    read_all_in_end: z.boolean().optional().default(false)
-});
-
-export const zReadMessagesAction = z.object({
-    id: z.string().optional(),
-    type: z.enum([
-        'send_message',
-        'send_bulk_messages',
-        'join_group',
-        'leave_group',
-        'reply_to_message',
-        'forward_message',
-        'behavioural',
-        'read_messages'
-    ]).optional(),
-    prefrences: zActionPrefrences.optional(),
-    args: zReadMessagesArgs
 });
 
 export const zScenario = z.object({

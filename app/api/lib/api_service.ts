@@ -25,7 +25,8 @@ import {
   MediaUploadPayload,
   MissionStatistics,
   MissionType,
-  MissionWithExposureStats,
+  MissionWithExposureAndStats,
+  MissionWithExposureStats
 } from "@lib/api/models"
 import { ActivationStatus, Scenario, ScenarioWithResult } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
@@ -40,16 +41,26 @@ import {
   submitCredentialsAuthPost,
   submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
-import { CategoryRead, CharacterRead, ChatRead, MissionCreate, MissionRead, ScenarioRead } from "@lib/api/orchestrator"
+import {
+  CategoryRead,
+  CharacterRead,
+  ChatRead,
+  MissionCreate,
+  MissionRead,
+  ScenarioRead
+} from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
+  addChatToCategoryChatsChatIdCategoriesCategoryIdPost,
   createMissionMissionsPost,
   deleteMissionMissionsMissionIdDelete,
   getAllCategoriesCategoriesGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
   getScenariosScenariosGet as getAllOrchestratorScenariosGet,
+  getAllWriteableGroupsChatsCanSendMessageChatsGet,
   getCategoryChatsCategoriesCategoryIdChatsGet,
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
+  getChatCategoriesChatsChatIdCategoriesGet,
   getChatCharactersChatsChatIdCharactersGet,
   getChatChatsChatIdGet,
   getChatsViewChatsViewChatsGet,
@@ -59,6 +70,7 @@ import {
   getMissionsStatisticsMissionsStatisticsGet,
   getRootCategoryCategoriesRootGet,
   planMissionMissionsPlanMissionMissionIdPost,
+  removeChatFromCategoryChatsChatIdCategoriesCategoryIdDelete,
   runMissionMissionsRunMissionMissionIdPost,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
@@ -287,15 +299,28 @@ export class ApiService {
     return response.data ?? []
   }
 
-  async getOrchestratorChats(skip: number = 0, limit: number = 0): Promise<ChatRead[]> {
+  async getOrchestratorChats(skip: number = 0, limit: number = 0, writeable: boolean = false): Promise<ChatRead[]> {
     logger.info(`Getting orchestrator chats (limit: ${limit})`)
-    const response = await getChatsViewChatsViewChatsGet({
-      client: orchestratorClient,
-      query: {
-        skip,
-        limit,
-      },
-    })
+    let response
+    if (writeable) {
+      response = await getAllWriteableGroupsChatsCanSendMessageChatsGet({
+        client: orchestratorClient,
+        query: {
+          skip,
+          limit,
+        },
+      })
+    }
+    else {
+      response = await getChatsViewChatsViewChatsGet({
+        client: orchestratorClient,
+        query: {
+          skip,
+          limit,
+        },
+      })
+
+    }
     if (response.error) {
       throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
     }
@@ -305,20 +330,42 @@ export class ApiService {
 
   async getOrchestratorChat(chatId: string): Promise<ChatRead> {
     logger.info(`Getting orchestrator chat: ${chatId}`)
-    const response = await getChatChatsChatIdGet({
-      client: orchestratorClient,
-      path: {
-        chat_id: chatId,
-      },
-    })
-    if (response.error) {
-      throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
+    const [chatResponse, categoryResponse] = await Promise.all([
+      getChatChatsChatIdGet({
+        client: orchestratorClient,
+        path: {
+          chat_id: chatId,
+        },
+      }),
+      getChatCategoriesChatsChatIdCategoriesGet({
+        client: orchestratorClient,
+        path: { chat_id: chatId },
+      }),
+    ])
+    if (chatResponse.error) {
+      throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(chatResponse.error)}`)
     }
     logger.info(`Successfully got orchestrator chat: ${chatId}`)
-    if (!response.data) {
+    if (!chatResponse.data) {
       throw new Error(`Failed to get orchestrator chat: ${chatId}`)
     }
-    return response.data
+    return {
+      ...chatResponse.data,
+      categories: (categoryResponse.data || []).map(category => category.name ?? category.id),
+    } satisfies ChatRead
+  }
+
+  async getOrchestratorChatCategories(chatId: string): Promise<CategoryRead[]> {
+    logger.info(`Getting orchestrator chat categories: ${chatId}`)
+    const response = await getChatCategoriesChatsChatIdCategoriesGet({
+      client: orchestratorClient,
+      path: { chat_id: chatId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chat categories: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got orchestrator chat categories: ${chatId}`)
+    return response.data ?? []
   }
 
   async getOrchestratorChatCharacters(chatId: string): Promise<CharacterRead[]> {
@@ -406,6 +453,32 @@ export class ApiService {
     ] satisfies [CategoryWithChatCount[], Record<string, ChatWithCategory[]>]
   }
 
+  async addChatToCategory(chatId: string, categoryId: string) {
+    logger.info(`Updating chat categories: ${chatId}`)
+    const response = await addChatToCategoryChatsChatIdCategoriesCategoryIdPost({
+      client: orchestratorClient,
+      path: { chat_id: chatId, category_id: categoryId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to update chat categories: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully updated chat categories: ${chatId}`)
+    return response.data ?? null
+  }
+
+  async removeChatFromCategory(chatId: string, categoryIds: string[]) {
+    logger.info(`Removing chat from category: ${chatId}`)
+    const response = await removeChatFromCategoryChatsChatIdCategoriesCategoryIdDelete({
+      client: orchestratorClient,
+      path: { chat_id: chatId, category_id: categoryIds[0] },
+    })
+    if (response.error) {
+      throw new Error(`Failed to remove chat from category: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully removed chat from category: ${chatId}`)
+    return response.data ?? null
+  }
+
   async getOrchestratorRootCategory(): Promise<CategoryRead> {
     logger.info("Getting orchestrator root category")
     const response = await getRootCategoryCategoriesRootGet({
@@ -466,6 +539,58 @@ export class ApiService {
     )
     logger.info("Successfully got orchestrator missions")
     return missionsWithExposureStats
+  }
+
+  async getOrchestratorMissionsWithExposureAndStats(): Promise<MissionWithExposureAndStats[]> {
+    logger.info("Getting orchestrator missions with exposure and statistics")
+    const missions = await this.getOrchestratorMissions()
+    const missionTypesRelevantForExposure: MissionType[] = [
+      "EchoMission",
+      "RandomDistributionMission",
+      "PuppetShowMission",
+      "AllocateProfilesGroupsMission",
+      "FluffMission"
+    ]
+    const relevantMissions = missions.filter(mission =>
+      missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),
+    )
+    
+    const missionsWithExposureAndStats = await Promise.all(
+      relevantMissions.map(async mission => {
+        const isCompleted = mission.status_code === "completed"
+        
+        if (isCompleted && mission.run_result) {
+          // For completed missions, extract data from run_result
+          const runResult = mission.run_result as any
+          return {
+            mission,
+            exposureStats: runResult.mission_exposure || null,
+            statistics: runResult.mission_statistics || null,
+          } satisfies MissionWithExposureAndStats
+        } else {
+          // For non-completed missions, fetch current exposure stats via API
+          const exposureResponse = await getMissionPotentialExposureMissionsExposureMissionIdGet({
+            client: orchestratorClient,
+            path: {
+              mission_id: mission.id,
+            },
+          })
+          
+          if (exposureResponse.error) {
+            throw new Error(`Failed to get mission exposure: ${JSON.stringify(exposureResponse.error)}`)
+          }
+          
+          return {
+            mission,
+            exposureStats: exposureResponse.data ?? null,
+            statistics: null, // Only available for completed missions
+          } satisfies MissionWithExposureAndStats
+        }
+      }),
+    )
+    
+    logger.info("Successfully got orchestrator missions with exposure and statistics")
+    return missionsWithExposureAndStats
   }
 
   async getOrchestratorMissionStatistics(missionId: string): Promise<MissionStatistics> {

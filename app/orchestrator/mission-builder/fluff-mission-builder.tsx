@@ -33,9 +33,9 @@ export function FluffMissionBuilder({
 
   useEffect(() => {
     const payload: Partial<FluffMissionInput> = {}
-    payload.characters_categories = characterCategories.length > 0 ? characterCategories.map(c => c.id) : []
+    payload.characters_categories = characterCategories.length > 0 ? characterCategories.map(c => c.label) : []
     payload.character_ids = characterIds.length > 0 ? characterIds.map(c => c.id) : []
-
+    
     payload.is_routine = isRoutine
     payload.batch_size = typeof batchSize === 'string' ? Number(batchSize) || 20 : batchSize
     payload.batch_interval = typeof batchInterval === 'string' ? Number(batchInterval) || 10 : batchInterval

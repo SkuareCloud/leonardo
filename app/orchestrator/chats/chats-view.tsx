@@ -1,14 +1,10 @@
 "use client"
 
-import { TreeNode, default as VerticalTree } from "@/components/tree"
+import { TreeNode } from "@/components/tree"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CategoryWithChatCount, ChatWithCategory } from "@lib/api/models"
-import { CategoryRead } from "@lib/api/orchestrator"
+import { CategoryWithChatCount } from "@lib/api/models"
+import { CategoryRead, ChatView } from "@lib/api/orchestrator"
 import { Handle, Position } from "@xyflow/react"
-import { ListIcon, NetworkIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 import { ChatsList } from "./chats-list"
 
 type ChatNodeData = {
@@ -49,70 +45,10 @@ function generateTree(categoriesWithChatCount: CategoryWithChatCount[]): TreeNod
   return buildNode(rootCategory) as TreeNode<ChatNodeData>
 }
 
-export function ChatsView({
-  categoriesWithChatCount,
-  chatsByCategoryId,
-  category,
-  tab,
-}: {
-  categoriesWithChatCount: CategoryWithChatCount[]
-  chatsByCategoryId: Record<string, ChatWithCategory[]>
-  category: string | null
-  tab: string | null
-}) {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState(tab || "list")
-  const [activeCategory, setActiveCategory] = useState(category || null)
-  const tree = generateTree(categoriesWithChatCount)
-
-  useEffect(() => {
-    setActiveTab(tab || "list")
-  }, [tab])
-
-  useEffect(() => {
-    setActiveCategory(category || null)
-  }, [category])
-
-  const onNodeClick = (ev: React.MouseEvent, node: any) => {
-    // @ts-ignore
-    if (!node.id) return
-    // @ts-ignore
-    const categoryId = node.id
-    setActiveTab("list")
-    setActiveCategory(categoryId)
-    router.push(`/orchestrator/chats?tab=list&category=${categoryId}`)
-  }
-
+export function ChatsView({ chats, allCategories }: { chats: ChatView[]; allCategories: CategoryRead[] }) {
   return (
     <div className="flex flex-col gap-6 w-full">
-      <Tabs value={activeTab} className="" onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="list" className="px-4 min-w-24 flex flex-row items-center">
-            <ListIcon className="size-4 mr-2" />
-            List
-          </TabsTrigger>
-          <TabsTrigger value="tree" className="px-4 min-w-24 flex flex-row items-center">
-            <NetworkIcon className="size-4 mr-2" />
-            Tree
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="list" className="pt-6">
-          <ChatsList
-            chatsWithCategory={Object.values(chatsByCategoryId).flat()}
-            categoriesWithChatCount={categoriesWithChatCount}
-            category={activeCategory}
-            onChangeTab={setActiveTab}
-          />
-        </TabsContent>
-        <TabsContent value="tree" className="pt-6 px-28 py-8">
-          <VerticalTree
-            tree={tree}
-            nodeTypes={{ chatCategory: ChatNode }}
-            onNodeClick={onNodeClick}
-            className="w-[70vw] h-[60vh]"
-          />
-        </TabsContent>
-      </Tabs>
+      <ChatsList chats={chats} allCategories={allCategories} />
     </div>
   )
 }

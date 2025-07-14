@@ -52,6 +52,12 @@ export interface MissionWithExposureStats {
   exposureStats: MissionExposure | null
 }
 
+export interface MissionWithExposureAndStats {
+  mission: MissionRead
+  exposureStats: MissionExposure | null
+  statistics: MissionStatistics | null
+}
+
 export interface MediaItem {
   name: string
   key: string
@@ -80,17 +86,17 @@ export interface MediaUploadPayload {
 }
 
 export interface MissionStatistics {
-  id: string
-  mission_type: MissionType
-  description: string
-  created_at: string
+  mission_type?: string | null
+  description?: string | null
+  created_at?: string | null
   status_code: string
   cnt: number
-  SCHEDULED: number
-  PENDING: number
-  IN_PROCESS: number
-  RUNNING: number
-  SUCCESS: number
-  FAILED: number
-  CANCELLED: number
+  planned: number
+  scheduled: number
+  pending: number
+  in_process: number
+  running: number
+  success: number
+  failed: number
+  cancelled: number
 }

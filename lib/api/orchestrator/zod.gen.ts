@@ -345,6 +345,10 @@ export const zAllocateProfilesGroupsMissionInput = z.object({
         z.array(z.string()),
         z.null()
     ]).optional(),
+    additional_chats: z.union([
+        z.array(z.string().uuid()),
+        z.null()
+    ]).optional(),
     diversify_chats: z.union([
         z.boolean(),
         z.null()
@@ -1109,7 +1113,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-07-06T21:13:34.442276Z'),
+    trigger_time: z.string().datetime().optional().default('2025-07-13T11:43:54.596947Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1137,6 +1141,10 @@ export const zMessage: z.AnyZodObject = z.object({
 
 export const zFirstPuppetShowMessage: z.AnyZodObject = z.object({
     message: zMessage,
+    reference_message_info: z.union([
+        zModelsPlannerMessageInfo,
+        z.null()
+    ]).optional(),
     start_time: z.union([
         z.string().datetime(),
         z.null()
@@ -1186,7 +1194,7 @@ export const zHttpValidationError = z.object({
 
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-07-06T21:13:34.346570Z'),
+    trigger_time: z.string().datetime().optional().default('2025-07-13T11:43:53.961597Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -1368,13 +1376,17 @@ export const zRandomDistributionMissionInput = z.object({
         z.array(z.string()),
         z.null()
     ]).optional(),
+    additional_chats: z.union([
+        z.array(z.unknown()),
+        z.null()
+    ]).optional(),
     messages: z.array(zInputMessage),
     messages_amount: z.number().int().optional().default(1000),
     messages_amount_per_character: z.number().int().optional().default(5),
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-07-06T21:13:34.445371Z'),
+    start_time: z.string().datetime().optional().default('2025-07-13T11:43:54.609532Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });

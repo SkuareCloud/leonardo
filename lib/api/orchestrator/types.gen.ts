@@ -563,6 +563,7 @@ export type EchoMissionInput = {
 
 export type FirstPuppetShowMessage = {
     message: Message;
+    reference_message_info?: ModelsPlannerMessageInfo | null;
     start_time?: string | null;
 };
 

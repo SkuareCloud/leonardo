@@ -36,8 +36,10 @@ export interface DataTableProps<T> {
   data: T[]
   pageSize?: number
   header?: ({ table }: { table: TTable<T> }) => React.ReactElement
+  rowClassName?: string
   onClickRow?: (rowData: T) => void
   enableRowSelection?: boolean
+  tableContainerClassName?: string
 }
 
 export function DataTable<T>({
@@ -49,6 +51,8 @@ export function DataTable<T>({
   header,
   onClickRow,
   enableRowSelection = false,
+  rowClassName,
+  tableContainerClassName,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSortingState)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -182,7 +186,7 @@ export function DataTable<T>({
         </div>
       </div>
       <div className="flex-1 pt-8">
-        <div className="rounded-md border bg-white">
+        <div className={cn("rounded-md border bg-white", tableContainerClassName)}>
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map(headerGroup => (
@@ -241,6 +245,7 @@ export function DataTable<T>({
                         onClickRow(row.original)
                       }
                     }}
+                    className={rowClassName}
                   >
                     {row.getVisibleCells().map(cell => (
                       <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>

@@ -8,7 +8,7 @@ import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { ChatSelector } from "./chat-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
-import { FieldWithLabel } from "./mission-builder-utils"
+import { FieldWithLabel, InputWithLabel } from "./mission-builder-utils"
 
 export function AllocateProfilesGroupsMissionBuilder({
   categories,
@@ -18,7 +18,6 @@ export function AllocateProfilesGroupsMissionBuilder({
   const [characterCategories, setCharacterCategories] = useState<{ id: string; label: string }[]>([])
   const [chatCategories, setChatCategories] = useState<{ id: string; label: string }[]>([])
   const [additionalChats, setAdditionalChats] = useState<{ id: string; label: string }[]>([])
-
   const [diversifyChats, setDiversifyChats] = useState(false)
   const [startTime, setStartTime] = useState<Date | undefined>(() => {
     const now = new Date()
@@ -71,7 +70,10 @@ export function AllocateProfilesGroupsMissionBuilder({
     if (planningTimeout) {
       payload.planning_timeout = typeof planningTimeout === 'string' ? Number(planningTimeout) || 3600 : planningTimeout
     }
-    payload.additional_chats = additionalChats.length > 0 ? additionalChats.map(c => c.id) : []
+
+    if (additionalChats) {
+      payload.additional_chats = additionalChats.map(c => c.id)
+    }
 
     payload.batch_size = typeof batchSize === 'string' ? Number(batchSize) || 10 : batchSize
     payload.batch_interval = typeof batchInterval === 'string' ? Number(batchInterval) || 15 : batchInterval
@@ -80,6 +82,7 @@ export function AllocateProfilesGroupsMissionBuilder({
   }, [
     characterCategories,
     chatCategories,
+    additionalChats,
     diversifyChats,
     startTime,
     endTime,
@@ -185,7 +188,43 @@ export function AllocateProfilesGroupsMissionBuilder({
             </div>
           </div>
         </div>
-      </div>  
+      </div> 
+
+      <div className="flex flex-col gap-4">
+        <h3 className="text-lg font-medium">Batch Settings</h3>
+        
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
+          <InputWithLabel
+            label="Batch size [Number of characters running simultaneously]"
+            type="number"
+            min="1"
+            value={batchSize}
+            onBlur={e => {
+              const value = Number(e.target.value)
+              if (e.target.value === "" || value <= 0 || isNaN(value)) {
+                setBatchSize(20)
+              }
+            }}
+            onChange={e => setBatchSize(e.target.value)}
+            className="w-32"
+          />
+          
+          <InputWithLabel
+            label="Batch interval [minutes]"
+            type="number"
+            min="1"
+            value={batchInterval}
+            onBlur={e => {
+              const value = Number(e.target.value)
+              if (e.target.value === "" || value <= 0 || isNaN(value)) {
+                setBatchInterval(10)
+              }
+            }}
+            onChange={e => setBatchInterval(e.target.value)}
+            className="w-32"
+          />
+        </div>
+      </div> 
     </div>
   )
 } 

@@ -6,7 +6,7 @@ import Link from "next/link"
 import { MissionsList } from "./missions-list"
 
 export default async function Page() {
-  const missions = await new ApiService().getOrchestratorMissionsWithExposureStats()
+  const missions = await new ApiService().getOrchestratorMissionsWithExposureAndStats()
 
   return (
     <div className="flex flex-col gap-8 w-full pr-92">

@@ -93,7 +93,7 @@ export function RandomDistributionMissionBuilder({
       payload.additional_chats = additionalChats.length > 0 ? additionalChats.map(c => c.id) : []
     }
     payload.characters_categories = profileCategories.length > 0 ? profileCategories.map(c => c.label) : []
-    
+
     onChangeMissionPayload(payload as MissionInput<RandomDistributionMissionInput>)
   }, [
     messages,
@@ -185,6 +185,7 @@ export function RandomDistributionMissionBuilder({
                     <div className="flex-1">
                       <ChatSelector
                         label="Target chats"
+                        writeable
                         onChangeValue={value => setAdditionalChats(value)}
                       />
                     </div>

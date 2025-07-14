@@ -3,23 +3,26 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TooltipContent } from "@radix-ui/react-tooltip"
 import { PlusCircleIcon, XIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 export function LabelSelector({
+  defaultSelected,
   choices,
   onChangeValue,
 }: {
+  defaultSelected: { id: string; label: string }[]
   choices: { id: string; label: string }[]
   onChangeValue?: (selected: { id: string; label: string }[]) => void
 }) {
-  const [selected, setSelected] = useState<{ id: string; label: string }[]>([])
+  const [selected, setSelected] = useState<{ id: string; label: string }[]>(defaultSelected)
   const [isAdding, setIsAdding] = useState(false)
 
   const availableChoices = choices.filter(choice => !selected.some(s => s.id === choice.id))
 
-  useEffect(() => {
+  function handleChangeSelected(selected: { id: string; label: string }[]) {
+    setSelected(selected)
     onChangeValue?.(selected)
-  }, [selected])
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -37,14 +40,18 @@ export function LabelSelector({
                   <div
                     className="px-2 pr-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                     onClick={() => {
-                      setSelected(selected.filter(c => c !== choice))
+                      handleChangeSelected(selected.filter(c => c.id !== choice.id))
                     }}
                   >
                     <XIcon className="h-3 w-3 hover:text-destructive" />
                   </div>
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent side="top" sideOffset={10} className="z-20 bg-gray-50 px-6 py-2 rounded-md text-foreground">
+              <TooltipContent
+                side="top"
+                sideOffset={10}
+                className="z-20 bg-gray-50 px-6 py-2 rounded-md text-foreground"
+              >
                 {choice.id}
               </TooltipContent>
             </Tooltip>
@@ -69,7 +76,7 @@ export function LabelSelector({
             open={availableChoices.length > 0}
             onValueChange={value => {
               if (value) {
-                setSelected([
+                handleChangeSelected([
                   ...selected,
                   // Inefficient, but it's ok for now
                   { id: value, label: availableChoices.find(c => c.id === value)?.label ?? "" },

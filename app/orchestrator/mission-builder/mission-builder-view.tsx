@@ -91,7 +91,7 @@ export function MissionBuilderView({
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button
                   className="uppercase font-bold cursor-pointer scale-100 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={async () => {

@@ -13,11 +13,13 @@ export function ChatSelector({
   header,
   label,
   required,
+  writeable,
   onChangeValue,
 }: {
   header?: React.ReactNode
   label: string
   required?: boolean
+  writeable?: boolean
   onChangeValue?: (selected: { id: string; label: string }[]) => void
 }) {
   const [selected, setSelected] = useState<{ id: string; label: string }[]>([])
@@ -34,9 +36,14 @@ export function ChatSelector({
 
   const loadChats = async (page: number = 0, pageSize: number = 50, search: string = "", append: boolean = false) => {
     setLoading(true)
+    
     try {
       const skip = page * pageSize
-      const response = await fetch(`/api/orchestrator/chats?skip=${skip}&limit=${pageSize}`)
+      let url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}`
+      if (writeable) {
+        url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}&writeable=true`
+      }
+      const response = await fetch(url)
       if (!response.ok) {
         throw new Error(`Failed to load chats: ${response.statusText}`)
       }
@@ -67,22 +74,22 @@ export function ChatSelector({
     }
   }
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
     setIsAdding(true)
     if (availableChats.length === 0) {
-      loadChats(0, 50, searchTerm)
+      await loadChats(0, 50, searchTerm)
     }
   }
 
-  const handleSearch = (value: string) => {
+  const handleSearch = async (value: string) => {
     setSearchTerm(value)
     setCurrentPage(0)
-    loadChats(0, 200, value)
+    await loadChats(0, 0, value)
   }
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     if (hasMore && !loading) {
-      loadChats(currentPage + 1, 50, searchTerm, true)
+      await loadChats(currentPage + 1, 50, searchTerm, true)
     }
   }
 

@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -142,6 +142,7 @@ export function LoadingSelectField({
             ))}
           </SelectContent>
         </Select>
+
         {isLoading && <Loader2 className="size-4 animate-spin" />}
       </div>
     </div>
@@ -201,11 +202,8 @@ export function AvatarDrawer({
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
+
       {/* Drawer */}
       <div className="relative ml-auto h-full w-full max-w-md bg-background shadow-xl border-l">
         {/* Header */}
@@ -264,12 +262,7 @@ export function AvatarDrawer({
                 </div>
               </DialogContent>
             </Dialog>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
               <X className="size-4" />
             </Button>
           </div>
@@ -296,7 +289,7 @@ export function AvatarDrawer({
             {/* Editable Fields Section */}
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-foreground">Profile Details</h2>
-              
+
               <LoadingInputField
                 id="name"
                 label="Name"
@@ -305,7 +298,7 @@ export function AvatarDrawer({
                 value={(avatar.data.eliza_character as any)?.name || ""}
                 updateField={value => updateField("eliza_character.name", value)}
               />
-              
+
               <LoadingSelectField
                 id="geocode"
                 value={`${avatar.home_city}|${avatar.home_iso_3166_1_alpha_2_code}|${avatar.home_iso_3166_2_subdivision_code}|${avatar.home_continent_code}`}
@@ -340,39 +333,38 @@ export function AvatarDrawer({
                   )
                 }}
               />
-              
-              <BasicFieldSection label="Proxy">
-                {avatar.proxy && <Proxy proxy={avatar.proxy} />}
-              </BasicFieldSection>
-              
+
+              <BasicFieldSection label="Proxy">{avatar.proxy && <Proxy proxy={avatar.proxy} />}</BasicFieldSection>
+
               <BasicFieldSection label="Date of Birth">
                 <span className="text-sm bg-muted px-2 py-1 rounded">
                   {new Date(avatar.data?.date_of_birth as string).toDateString()}
                 </span>
               </BasicFieldSection>
-              
+
               <LoadingInputField
                 id="phone_number"
                 label="Phone Number"
                 isLoading={false}
                 error={null}
-                value={avatar.data?.phone_number as string || ""}
+                value={(avatar.data?.phone_number as string) || ""}
                 updateField={value => updateField("phone_number", value)}
               />
-              
+
               <LoadingSelectField
                 id="activation_source"
-                value={(avatar.data?.social_network_accounts as any)?.telegram?.activation_source?.toUpperCase() || "NONE"}
+                value={
+                  (avatar.data?.social_network_accounts as any)?.telegram?.activation_source?.toUpperCase() || "NONE"
+                }
                 label="Activation Source"
                 choices={["WEB1", "WEB2", "UNKNOWN"]}
-                updateField={value => updateField("social_network_accounts.telegram.activation_source", value.toLowerCase())}
+                updateField={value =>
+                  updateField("social_network_accounts.telegram.activation_source", value.toLowerCase())
+                }
                 choiceRenderer={choice => (
                   <Badge
                     variant="outline"
-                    className={cn(
-                      "font-bold tracking-wide",
-                      getBadgeClassNamesByActivationSource(choice),
-                    )}
+                    className={cn("font-bold tracking-wide", getBadgeClassNamesByActivationSource(choice))}
                   >
                     {choice}
                   </Badge>
@@ -403,7 +395,12 @@ export function AvatarDrawer({
                       <div key={network} className="flex items-center justify-between p-4 border rounded-lg bg-card">
                         <div className="flex items-center gap-3">
                           {network === "telegram" && (
-                            <div className={cn("size-8 flex items-center justify-center", !isActive && "opacity-50 grayscale")}>
+                            <div
+                              className={cn(
+                                "size-8 flex items-center justify-center",
+                                !isActive && "opacity-50 grayscale",
+                              )}
+                            >
                               <Image src={TelegramIcon} alt="Telegram" width={24} height={24} className="size-6" />
                             </div>
                           )}
@@ -417,7 +414,7 @@ export function AvatarDrawer({
                         <div className="flex items-center gap-2">
                           <Checkbox
                             checked={isActive}
-                            onCheckedChange={async (checked) => {
+                            onCheckedChange={async checked => {
                               const newStatus = checked ? "active" : "inactive"
                               await updateField(`social_network_accounts.${network}.active`, checked)
                             }}

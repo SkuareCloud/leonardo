@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn, humanizeNumber, humanizeTimeAgo } from "@/lib/utils"
-import { MissionTypes, MissionWithExposureStats } from "@lib/api/models"
+import { MissionTypes, MissionWithExposureAndStats } from "@lib/api/models"
 import { MissionStatus } from "@lib/api/orchestrator/types.gen"
 import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
-const missionColumns: ColumnDef<MissionWithExposureStats>[] = [
+const missionColumns: ColumnDef<MissionWithExposureAndStats>[] = [
   {
     accessorKey: "mission_type",
     header: "Type",
@@ -129,7 +129,7 @@ const missionColumns: ColumnDef<MissionWithExposureStats>[] = [
       )
     },
   },
-  {
+    {
     accessorKey: "created_at",
     header: "Created",
     size: 150,
@@ -177,12 +177,12 @@ function DateTooltip({ date }: { date: Date }) {
   )
 }
 
-export function MissionsList({ data }: { data: MissionWithExposureStats[] }) {
+export function MissionsList({ data }: { data: MissionWithExposureAndStats[] }) {
   const router = useRouter()
-  const [missions, setMissions] = useState<MissionWithExposureStats[]>(data)
+  const [missions, setMissions] = useState<MissionWithExposureAndStats[]>(data)
 
   const refreshMissions = async () => {
-    const missions = await new ServiceBrowserClient().getOrchestratorMissionsWithExposureStats()
+    const missions = await new ServiceBrowserClient().getOrchestratorMissionsWithExposureAndStats()
     setMissions(missions)
   }
 

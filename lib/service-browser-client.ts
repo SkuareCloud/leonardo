@@ -4,6 +4,7 @@ import {
   MediaItem,
   MediaUploadPayload,
   MissionStatistics,
+  MissionWithExposureAndStats,
   MissionWithExposureStats,
 } from "./api/models"
 import { ActivationStatus, ProfileWorkerView, ScenarioWithResult } from "./api/operator"
@@ -45,6 +46,40 @@ export class ServiceBrowserClient {
     })
     if (!resp.ok) {
       throw new Error(`Failed to update avatar: ${resp.statusText}`)
+    }
+  }
+
+  async updateChatCategories(chatId: string, newCategoryIds: string[], removedCategoryIds: string[]) {
+    for (const categoryId of newCategoryIds) {
+      logger.info(`Adding chat to category ${categoryId}`)
+      const resp = await fetch(`/api/orchestrator/chats/${chatId}/categories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ categoryId }),
+      })
+      if (!resp.ok) {
+        throw new Error(`Failed to add chat to category ${categoryId}: ${resp.statusText}`)
+      } else {
+        logger.info(`Successfully added chat to category ${categoryId}`)
+      }
+    }
+    for (const categoryId of removedCategoryIds) {
+      const resp = await fetch(`/api/orchestrator/chats/${chatId}/categories`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ categoryId }),
+      })
+      if (!resp.ok) {
+        throw new Error(`Failed to remove chat from category ${categoryId}: ${resp.statusText}`)
+      } else {
+        logger.info(`Successfully removed chat from category ${categoryId}`)
+      }
     }
   }
 
@@ -91,6 +126,12 @@ export class ServiceBrowserClient {
   async getOrchestratorMissionsWithExposureStats(): Promise<MissionWithExposureStats[]> {
     const resp = await fetch(`/api/orchestrator/missions/missions-with-statistics`)
     const json = (await resp.json()) as MissionWithExposureStats[]
+    return json
+  }
+
+  async getOrchestratorMissionsWithExposureAndStats(): Promise<MissionWithExposureAndStats[]> {
+    const resp = await fetch(`/api/orchestrator/missions/missions-with-exposure-and-stats`)
+    const json = (await resp.json()) as MissionWithExposureAndStats[]
     return json
   }
 

@@ -29,7 +29,7 @@ export function FieldWithLabel({
   children,
   required,
 }: {
-  label: string
+  label?: string
   children?: React.ReactNode
   required?: boolean
 }) {
@@ -58,7 +58,7 @@ export function InputWithLabel({
   children,
   required,
   ...rest
-}: { label: string; children?: React.ReactNode; required?: boolean } & React.ComponentProps<typeof Input>) {
+}: { label?: string; children?: React.ReactNode; required?: boolean } & React.ComponentProps<typeof Input>) {
   return (
     <FieldWithLabel label={label} required={required}>
       <Input {...rest} className={cn("w-full max-w-[30ch] bg-white", rest.className)} />
