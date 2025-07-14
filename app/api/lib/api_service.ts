@@ -555,8 +555,13 @@ export class ApiService {
       missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),
     )
     
+    const filteredMissions = relevantMissions.filter(mission => {
+      const status = mission.status_code
+      return status !== "failed_planning" && status !== "canceled" && status !== "submitted" && status !== "planning"
+    })
+    
     const missionsWithExposureAndStats = await Promise.all(
-      relevantMissions.map(async mission => {
+      filteredMissions.map(async mission => {
         const isCompleted = mission.status_code === "completed"
         
         if (isCompleted && mission.run_result) {

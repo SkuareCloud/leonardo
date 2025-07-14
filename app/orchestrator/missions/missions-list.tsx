@@ -206,13 +206,10 @@ export function MissionsList({ data }: { data: MissionWithExposureAndStats[] }) 
               ...missionTypeOptions,
             ]
             const statusOptions = [
-              "submitted",
-              "planning",
-              "failed_planning",
               "running",
               "completed",
-              "canceled",
               "planned",
+              "submitted",
             ] satisfies MissionStatus[]
             const statusOptionsWithAll = [
               {

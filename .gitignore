@@ -46,3 +46,4 @@ temp
 secrets
 
 openapi-ts-error*
+.vscode/*
