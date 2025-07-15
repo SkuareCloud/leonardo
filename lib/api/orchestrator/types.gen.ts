@@ -534,6 +534,7 @@ export type ChatView = {
     title: string | null;
     chat_type: ChatType | null;
     linked_chat_username: string | null;
+    participants_count?: number;
     categories?: Array<string>;
     system_chat_members?: Array<string>;
 };
@@ -736,6 +737,8 @@ export type MissionRead = {
     } | null;
     scenarios?: Array<ScenarioRead>;
     scenarios_count?: number;
+    success_scenarios?: number;
+
 };
 
 export type MissionRunResult = {
@@ -2101,28 +2104,28 @@ export type GetChatsViewChatsViewChatsGetResponses = {
 
 export type GetChatsViewChatsViewChatsGetResponse = GetChatsViewChatsViewChatsGetResponses[keyof GetChatsViewChatsViewChatsGetResponses];
 
-export type GetAllWriteableGroupsChatsCanSendMessageChatsGetData = {
+export type GetAllWritableGroupsChatsCanSendMessageChatsGetData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/chats/can_send_message_chats/';
 };
 
-export type GetAllWriteableGroupsChatsCanSendMessageChatsGetErrors = {
+export type GetAllWritableGroupsChatsCanSendMessageChatsGetErrors = {
     /**
      * Not found
      */
     404: unknown;
 };
 
-export type GetAllWriteableGroupsChatsCanSendMessageChatsGetResponses = {
+export type GetAllWritableGroupsChatsCanSendMessageChatsGetResponses = {
     /**
      * Successful Response
      */
     200: Array<ChatRead>;
 };
 
-export type GetAllWriteableGroupsChatsCanSendMessageChatsGetResponse = GetAllWriteableGroupsChatsCanSendMessageChatsGetResponses[keyof GetAllWriteableGroupsChatsCanSendMessageChatsGetResponses];
+export type GetAllWritableGroupsChatsCanSendMessageChatsGetResponse = GetAllWritableGroupsChatsCanSendMessageChatsGetResponses[keyof GetAllWritableGroupsChatsCanSendMessageChatsGetResponses];
 
 export type GetChatCharactersChatsChatIdCharactersGetData = {
     body?: never;

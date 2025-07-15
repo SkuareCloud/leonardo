@@ -1537,7 +1537,7 @@ export const zGetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = zChatRea
 
 export const zGetChatsViewChatsViewChatsGetResponse = z.array(zChatView);
 
-export const zGetAllWriteableGroupsChatsCanSendMessageChatsGetResponse = z.array(zChatRead);
+export const zGetAllWritableGroupsChatsCanSendMessageChatsGetResponse = z.array(zChatRead);
 
 export const zGetChatCharactersChatsChatIdCharactersGetResponse = z.array(zCharacterRead);
 

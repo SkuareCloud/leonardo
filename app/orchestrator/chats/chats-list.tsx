@@ -13,16 +13,33 @@ import { useState } from "react"
 
 interface ChatRow {
   title: string
-  username: string
+  username?: string
+  platform_id?: number
   type: ChatType
   platform: string
-  participants: number
+  participants_count?: number
+  linked_chat_username?: string
+  system_chat_members?: string[]
   categories: string[]
   id: string
   original: ChatRead
 }
 
 const chatColumns: ColumnDef<ChatRow>[] = [
+  {
+    accessorKey: "username",
+    header: "Username",
+    size: 200,
+    cell: ({ row }) => {
+      const chat = row.original
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{chat.username || chat.platform_id}</span>
+          {/* {chat.username && <span className="text-sm text-gray-500">@{chat.username}</span>} */}
+        </div>
+      )
+    },
+  },
   {
     accessorKey: "title",
     header: "Title",
@@ -59,14 +76,27 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     },
   },
   {
-    accessorKey: "platform",
-    header: "Platform",
-    size: 100,
+    accessorKey: "participants_count",
+    header: "participants_count",
+    size: 200,
     cell: ({ row }) => {
       const chat = row.original
-      return <span>{chat.platform || "Unknown"}</span>
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{chat.participants_count || 0}</span>
+        </div>
+      )
     },
   },
+  // {
+  //   accessorKey: "platform",
+  //   header: "Platform",
+  //   size: 100,
+  //   cell: ({ row }) => {
+  //     const chat = row.original
+  //     return <span>{chat.platform || "Unknown"}</span>
+  //   },
+  // },
   {
     accessorKey: "categories",
     header: "Categories",
@@ -96,6 +126,32 @@ const chatColumns: ColumnDef<ChatRow>[] = [
               </li>
             ))}
         </ul>
+      )
+    },
+  },
+  {
+    accessorKey: "system_chat_members",
+    header: "System members count",
+    size: 200,
+    cell: ({ row }) => {
+      const chat = row.original
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{chat.system_chat_members?.length || 0}</span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "linked_chat_username",
+    header: "Linked chat (discussion or channel)",
+    size: 200,
+    cell: ({ row }) => {
+      const chat = row.original
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{chat.linked_chat_username || "None"}</span>
+        </div>
       )
     },
   },
@@ -166,9 +222,9 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
               <div className="flex flex-row gap-2">
                 <div>
                   <Input
-                    placeholder="Filter by title..."
-                    value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
-                    onChange={event => table.getColumn("title")?.setFilterValue(event.target.value)}
+                    placeholder="Filter by username..."
+                    value={(table.getColumn("username")?.getFilterValue() as string) ?? ""}
+                    onChange={event => table.getColumn("username")?.setFilterValue(event.target.value)}
                     className="max-w-sm"
                   />
                 </div>

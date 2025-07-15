@@ -46,6 +46,7 @@ import {
   CharacterRead,
   ChatRead,
   MissionCreate,
+  MissionExposure,
   MissionRead,
   ScenarioRead
 } from "@lib/api/orchestrator"
@@ -57,7 +58,7 @@ import {
   getAllCategoriesCategoriesGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
   getScenariosScenariosGet as getAllOrchestratorScenariosGet,
-  getAllWriteableGroupsChatsCanSendMessageChatsGet,
+  getAllWritableGroupsChatsCanSendMessageChatsGet,
   getCategoryChatsCategoriesCategoryIdChatsGet,
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
   getChatCategoriesChatsChatIdCategoriesGet,
@@ -299,11 +300,11 @@ export class ApiService {
     return response.data ?? []
   }
 
-  async getOrchestratorChats(skip: number = 0, limit: number = 0, writeable: boolean = false): Promise<ChatRead[]> {
+  async getOrchestratorChats(skip: number = 0, limit: number = 0, writable: boolean = false): Promise<ChatRead[]> {
     logger.info(`Getting orchestrator chats (limit: ${limit})`)
     let response
-    if (writeable) {
-      response = await getAllWriteableGroupsChatsCanSendMessageChatsGet({
+    if (writable) {
+      response = await getAllWritableGroupsChatsCanSendMessageChatsGet({
         client: orchestratorClient,
         query: {
           skip,
@@ -557,7 +558,7 @@ export class ApiService {
     
     const filteredMissions = relevantMissions.filter(mission => {
       const status = mission.status_code
-      return status !== "failed_planning" && status !== "canceled" && status !== "submitted" && status !== "planning"
+      return status !== "failed_planning" && status !== "canceled"
     })
     
     const missionsWithExposureAndStats = await Promise.all(
@@ -574,23 +575,18 @@ export class ApiService {
           } satisfies MissionWithExposureAndStats
         } else {
           // For non-completed missions, fetch current exposure stats via API
-          const exposureResponse = await getMissionPotentialExposureMissionsExposureMissionIdGet({
-            client: orchestratorClient,
-            path: {
-              mission_id: mission.id,
-            },
-          })
-          
-          if (exposureResponse.error) {
-            throw new Error(`Failed to get mission exposure: ${JSON.stringify(exposureResponse.error)}`)
+            const exposureResponse: MissionExposure = {
+              potential_exposure: 0,
+              potential_exposure_groups: 0,
+              actual_exposure: 0,
+              actual_exposure_groups: 0
+            };
+            return {
+              mission,
+              exposureStats: exposureResponse,
+              statistics: null, // Only available for completed missions
+            } satisfies MissionWithExposureAndStats
           }
-          
-          return {
-            mission,
-            exposureStats: exposureResponse.data ?? null,
-            statistics: null, // Only available for completed missions
-          } satisfies MissionWithExposureAndStats
-        }
       }),
     )
     

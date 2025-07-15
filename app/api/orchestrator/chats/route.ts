@@ -5,8 +5,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const skip = searchParams.get("skip") ? parseInt(searchParams.get("skip")!) : 0
   const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : 0
-  let writeable = searchParams.get("writeable") ? searchParams.get("writeable") == 'true' : false
-  const chats = await new ApiService().getOrchestratorChats(skip, limit, writeable);
+  let writable = searchParams.get("writable") ? searchParams.get("writable") == 'true' : false
+  const chats = await new ApiService().getOrchestratorChats(skip, limit, writable);
 
   return new Response(JSON.stringify(chats), {
     status: 200,

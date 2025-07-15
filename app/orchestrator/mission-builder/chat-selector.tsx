@@ -13,13 +13,13 @@ export function ChatSelector({
   header,
   label,
   required,
-  writeable,
+  writable,
   onChangeValue,
 }: {
   header?: React.ReactNode
   label: string
   required?: boolean
-  writeable?: boolean
+  writable?: boolean
   onChangeValue?: (selected: { id: string; label: string }[]) => void
 }) {
   const [selected, setSelected] = useState<{ id: string; label: string }[]>([])
@@ -40,8 +40,8 @@ export function ChatSelector({
     try {
       const skip = page * pageSize
       let url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}`
-      if (writeable) {
-        url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}&writeable=true`
+      if (writable) {
+        url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}&writable=true`
       }
       const response = await fetch(url)
       if (!response.ok) {

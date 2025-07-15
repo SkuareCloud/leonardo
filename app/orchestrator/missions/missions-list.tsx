@@ -88,6 +88,15 @@ const missionColumns: ColumnDef<MissionWithExposureAndStats>[] = [
     },
   },
   {
+    accessorKey: "success_rate",
+    header: "Success rate [%]",
+    size: 100,
+    cell: ({ row }) => {
+      const mission = row.original
+      return <span>{((mission.mission.success_scenarios || 0) / (mission.mission.scenarios_count || 1) * 100).toPrecision(3)}%</span>
+    },
+  },
+  {
     accessorKey: "viewers_reach",
     header: "Viewers Reach",
     size: 150,
@@ -210,6 +219,7 @@ export function MissionsList({ data }: { data: MissionWithExposureAndStats[] }) 
               "completed",
               "planned",
               "submitted",
+              "planning"
             ] satisfies MissionStatus[]
             const statusOptionsWithAll = [
               {

@@ -185,7 +185,7 @@ export function RandomDistributionMissionBuilder({
                     <div className="flex-1">
                       <ChatSelector
                         label="Target chats"
-                        writeable
+                        writable
                         onChangeValue={value => setAdditionalChats(value)}
                       />
                     </div>
