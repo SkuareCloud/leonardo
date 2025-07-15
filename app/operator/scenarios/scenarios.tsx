@@ -87,11 +87,7 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
   },
 ]
 
-export function ScenariosList({
-  avatarsData,
-}: {
-  avatarsData: AvatarModelWithProxy[]
-}) {
+export function ScenariosList({ avatarsData }: { avatarsData: AvatarModelWithProxy[] }) {
   return (
     <QueryClientWrapper>
       <ScenariosListInner avatarsData={avatarsData} />
@@ -109,7 +105,7 @@ const ScenariosListInner = ({
   const operatorSlot = useOperatorStore(state => state.operatorSlot)
   const previousOperatorSlotRef = useRef(operatorSlot)
   const [isSlotChanging, setIsSlotChanging] = useState(false)
-  
+
   const {
     isPending,
     isRefetching,
@@ -129,7 +125,7 @@ const ScenariosListInner = ({
       toast.info(`Switching to Operator Slot ${operatorSlot}`, {
         description: "Loading scenarios for the new slot...",
       })
-      
+
       // Reset loading state after a short delay to allow the query to complete
       const timer = setTimeout(() => {
         setIsSlotChanging(false)
@@ -137,34 +133,32 @@ const ScenariosListInner = ({
           description: "Scenarios loaded successfully.",
         })
       }, 2000)
-      
+
       previousOperatorSlotRef.current = operatorSlot
-      
+
       return () => clearTimeout(timer)
     }
   }, [operatorSlot])
 
-  const data: ScenarioDataRow[] = Object.entries(scenarios || {}).flatMap(
-    ([scenarioId, scenarioWithResult]) => {
-      const avatar = avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)
-      const profileName =
-        avatar?.data.eliza_character &&
-        typeof avatar.data.eliza_character === "object" &&
-        avatar.data.eliza_character !== null
-          ? (avatar.data.eliza_character as any).name || "Unknown Profile"
-          : "Unknown Profile"
+  const data: ScenarioDataRow[] = Object.entries(scenarios || {}).flatMap(([scenarioId, scenarioWithResult]) => {
+    const avatar = avatarsData.find(avatar => avatar.id === scenarioWithResult.scenario.profile.id)
+    const profileName =
+      avatar?.data.eliza_character &&
+      typeof avatar.data.eliza_character === "object" &&
+      avatar.data.eliza_character !== null
+        ? (avatar.data.eliza_character as any).name || "Unknown Profile"
+        : "Unknown Profile"
 
-      return {
-        scenarioId,
-        profileId: scenarioWithResult.scenario.profile.id || scenarioId,
-        profileName,
-        status: scenarioWithResult.result?.status?.status_code || "pending",
-        startTime: scenarioWithResult.result?.scenario_info?.start_time?.toString() || "",
-        endTime: scenarioWithResult.result?.scenario_info?.end_time?.toString() || null,
-        error: scenarioWithResult.result?.status?.error || null,
-      }
-    },
-  )
+    return {
+      scenarioId,
+      profileId: scenarioWithResult.scenario.profile.id || scenarioId,
+      profileName,
+      status: scenarioWithResult.result?.status?.status_code || "pending",
+      startTime: scenarioWithResult.result?.scenario_info?.start_time?.toString() || "",
+      endTime: scenarioWithResult.result?.scenario_info?.end_time?.toString() || null,
+      error: scenarioWithResult.result?.status?.error || null,
+    }
+  })
 
   // Show loading overlay when slot is changing
   if (isSlotChanging) {
@@ -175,9 +169,7 @@ const ScenariosListInner = ({
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <div className="text-center">
               <h3 className="text-lg font-semibold">Switching Operator Slot</h3>
-              <p className="text-sm text-muted-foreground">
-                Loading scenarios for Operator Slot {operatorSlot}...
-              </p>
+              <p className="text-sm text-muted-foreground">Loading scenarios for Operator Slot {operatorSlot}...</p>
             </div>
           </div>
         </div>

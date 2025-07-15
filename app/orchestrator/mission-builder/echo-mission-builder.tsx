@@ -1,6 +1,5 @@
 "use client"
 
-import { Combobox } from "@/components/combobox"
 import { DateTimePicker } from "@/components/date-time-picker"
 import { MessageBuilder } from "@/components/message-builder"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -12,9 +11,7 @@ import { logger } from "@lib/logger"
 import { useContext, useEffect, useState } from "react"
 import { CategorySelector } from "./category-selector"
 import { MissionBuilderContext } from "./mission-builder-context"
-import { FieldWithLabel, InputWithLabel, ModeButtonSelector } from "./mission-builder-utils"
-
-export type EchoMissionMode = "message-plain" | "message-reference" | "scenario-id"
+import { FieldWithLabel, InputWithLabel } from "./mission-builder-utils"
 
 export function EchoMissionBuilder({
   scenarios,
@@ -26,20 +23,14 @@ export function EchoMissionBuilder({
   chats: ChatRead[]
 }) {
   const [maximumRetries, setMaximumRetries] = useState(0)
-  const [messagePlain, setMessagePlain] = useState<MessageWithMedia | null>(null)
-  const [mode, setMode] = useState<EchoMissionMode>("message-plain")
-  const [scenarioId, setScenarioId] = useState("")
+  const [messageLink, setMessageLink] = useState("")
+  const [messageLinkError, setMessageLinkError] = useState<string | null>(null)
+  const [messageContent, setMessageContent] = useState<MessageWithMedia | null>(null)
   const [chatId, setChatId] = useState("")
   const [chatCategories, setChatCategories] = useState<{ id: string; label: string }[]>([])
   const [profileCategories, setProfileCategories] = useState<{ id: string; label: string }[]>([])
   const [sendAtTriggerTime, setSendAtTriggerTime] = useState(false)
   const [triggerTime, setTriggerTime] = useState<Date | undefined>(undefined)
-  const [messageReferencePlatformChatId, setMessageReferencePlatformChatId] = useState<number | undefined>(undefined)
-  const [messageReferencePlatformChatName, setMessageReferencePlatformChatName] = useState<string | undefined>(
-    undefined,
-  )
-  const [messageReferenceTimestamp, setMessageReferenceTimestamp] = useState<string | undefined>(undefined)
-  const [messageReferenceMessageId, setMessageReferenceMessageId] = useState<number | undefined>(undefined)
   const { onChangeMissionPayload } = useContext(MissionBuilderContext)
 
   // TODO: filter by chats with avatars
@@ -48,6 +39,36 @@ export function EchoMissionBuilder({
   const activeProfileCategories = categories.filter(
     category => category.character_count && category.character_count > 0,
   )
+
+  const validateMessageLink = (link: string): boolean => {
+    if (!link.trim()) {
+      setMessageLinkError("Message link is required")
+      return false
+    }
+
+    // Pattern for private group/channel: https://t.me/c/[numbers]/[numbers]
+    const privateGroupPattern = /^https:\/\/t\.me\/c\/\d+\/\d+$/
+    
+    // Pattern for public channel: https://t.me/[username]/[numbers]
+    const publicChannelPattern = /^https:\/\/t\.me\/[a-zA-Z0-9_]+\/\d+$/
+
+    if (privateGroupPattern.test(link) || publicChannelPattern.test(link)) {
+      setMessageLinkError(null)
+      return true
+    } else {
+      setMessageLinkError("Invalid message link format. Expected formats: https://t.me/c/[group_id]/[message_id] or https://t.me/[username]/[message_id]")
+      return false
+    }
+  }
+
+  const handleMessageLinkChange = (value: string) => {
+    setMessageLink(value)
+    if (value.trim()) {
+      validateMessageLink(value)
+    } else {
+      setMessageLinkError(null)
+    }
+  }
 
   useEffect(() => {
     const payload: Partial<EchoMissionInput> = {}
@@ -67,71 +88,32 @@ export function EchoMissionBuilder({
     payload.chats_categories = chatCategories.length > 0 ? chatCategories.map(c => c.label) : []
     payload.characters_categories = profileCategories.length > 0 ? profileCategories.map(c => c.label) : []
 
-    if (mode === "message-plain") {
-      if (messagePlain) {
-        payload.message = {
-          message_content: {
-            text: messagePlain?.text,
-            attachments: messagePlain?.media
-              ? [
-                  {
-                    url: messagePlain.media.s3Uri,
-                    mime_type: messagePlain.media.mimeType,
-                    name: messagePlain.media.name,
-                  },
-                ]
-              : [],
-          },
-        }
-      }
-    } else if (mode === "message-reference") {
+    if (messageLink || messageContent) {
       payload.message = {
-        message_info: {
-          platform_chat_id: messageReferencePlatformChatId || undefined,
-          platform_chat_name: messageReferencePlatformChatName || undefined,
-          timestamp: messageReferenceTimestamp || undefined,
-          message_id: messageReferenceMessageId || undefined,
-        },
-        message_content: {
-          text: messagePlain?.text,
-          attachments: messagePlain?.media
-            ? [
-                {
-                  url: messagePlain.media.s3Uri,
-                  mime_type: messagePlain.media.mimeType,
-                  name: messagePlain.media.name,
-                },
-              ]
-            : [],
-        },
-      }
-    } else {
-      payload.message = undefined
-    }
-
-    if (mode === "scenario-id") {
-      if (scenarioId) {
-        payload.scenario_external_id = scenarioId
-      } else {
-        payload.scenario_external_id = undefined
+        message_link: messageLink || undefined,
+        message_content: messageContent ? {
+          text: messageContent.text,
+          attachments: messageContent.media ? [
+            {
+              url: messageContent.media.s3Uri,
+              mime_type: messageContent.media.mimeType,
+              name: messageContent.media.name,
+            },
+          ] : [],
+        } : undefined,
       }
     }
 
     onChangeMissionPayload(payload as MissionInput<EchoMissionInput>)
   }, [
-    messagePlain,
+    messageLink,
+    messageContent,
     maximumRetries,
-    scenarioId,
     chatId,
     chatCategories,
     profileCategories,
     triggerTime,
     sendAtTriggerTime,
-    messageReferencePlatformChatId,
-    messageReferencePlatformChatName,
-    messageReferenceTimestamp,
-    messageReferenceMessageId,
-    mode,
   ])
 
   const triggerTimeFromNow =
@@ -144,89 +126,30 @@ export function EchoMissionBuilder({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-row flex-wrap w-fit gap-8">
-        <ModeButtonSelector
-          active={mode === "message-plain"}
-          title="Plain Message"
-          subtitle="Enter the message you wish to echo"
-          onClick={() => setMode("message-plain")}
-        />
-        <ModeButtonSelector
-          active={mode === "message-reference"}
-          title="Message Reference"
-          subtitle="Select a message by reference"
-          onClick={() => setMode("message-reference")}
-        />
-        <ModeButtonSelector
-          active={mode === "scenario-id"}
-          unsupported={true}
-          title="External Scenario"
-          subtitle="Select a scenario from the list of scenarios"
-          onClick={() => setMode("scenario-id")}
-        />
-      </div>
       <div className="flex flex-col gap-8 p-2">
-        <FieldWithLabel required label="Select source chat">
-          <Combobox
-            options={activeChats
-              .map(chat => {
-                const value = chat.id
-                let label = chat.username?.toString() || chat.platform_id?.toString()
-                if (chat.title) {
-                  label = `${label} (${chat.title})`
-                }
-                return {
-                  value,
-                  label: label || value,
-                }
-              })
-              .filter(c => c.label)}
-            value={chatId}
-            onValueChange={value => setChatId(value)}
-          />
-        </FieldWithLabel>
-        {mode === "message-plain" ||
-          (mode === "message-reference" && (
-            <MessageBuilder singleMessage onUpdateMessages={messages => setMessagePlain(messages[0] ?? null)} />
-          ))}
-        {mode === "message-reference" && (
+        <FieldWithLabel required label="Message link">
           <div className="flex flex-col gap-2">
             <InputWithLabel
-              label="Platform chat ID"
-              type="number"
-              value={messageReferencePlatformChatId}
-              onChange={e => setMessageReferencePlatformChatId(e.target.value)}
+              placeholder="Enter the message link to echo (e.g., https://t.me/c/2066434601/182605)"
+              value={messageLink}
+              onChange={e => handleMessageLinkChange(e.target.value)}
+              className={messageLinkError ? "border-red-500" : ""}
             />
-            <InputWithLabel
-              label="Platform chat name"
-              value={messageReferencePlatformChatName}
-              onChange={e => setMessageReferencePlatformChatName(e.target.value)}
-            />
-            <InputWithLabel
-              label="Timestamp"
-              value={messageReferenceTimestamp}
-              onChange={e => setMessageReferenceTimestamp(e.target.value)}
-            />
-            <InputWithLabel
-              label="Message ID"
-              value={messageReferenceMessageId}
-              onChange={e => setMessageReferenceMessageId(e.target.value)}
-            />
+            {messageLinkError && (
+              <div className="text-red-500 text-sm">{messageLinkError}</div>
+            )}
+            <div className="text-gray-500 text-xs">
+              Supported formats:<br/>
+              • Private: https://t.me/c/[group_id]/[message_id]<br/>
+              • Public: https://t.me/[username]/[message_id]
+            </div>
           </div>
-        )}
-        {mode === "scenario-id" && (
-          <Combobox
-            options={scenarios
-              .filter(s => s.external_id)
-              .map(scenario => ({
-                value: scenario.external_id!,
-                label: scenario.external_id!,
-              }))}
-            label="Select external scenario"
-            value={scenarioId}
-            onValueChange={value => setScenarioId(value)}
-          />
-        )}
+        </FieldWithLabel>
+        
+        <FieldWithLabel label="Message content (optional)">
+          <MessageBuilder singleMessage onUpdateMessages={messages => setMessageContent(messages[0] ?? null)} />
+        </FieldWithLabel>
+
         <FieldWithLabel label="Trigger time">
           <div className="flex flex-col gap-3 w-full">
             <div className="flex flex-row gap-2">
@@ -249,6 +172,7 @@ export function EchoMissionBuilder({
             <div className="text-sm pl-2">{triggerTimeFromNow}</div>
           </div>
         </FieldWithLabel>
+
         {activeChatCategories.length > 0 && (
           <CategorySelector
             categories={activeChatCategories}
@@ -256,6 +180,7 @@ export function EchoMissionBuilder({
             onChangeValue={value => setChatCategories(value)}
           />
         )}
+
         {activeProfileCategories.length > 0 && (
           <CategorySelector
             categories={activeProfileCategories}
@@ -263,6 +188,7 @@ export function EchoMissionBuilder({
             onChangeValue={value => setProfileCategories(value)}
           />
         )}
+
         <FieldWithLabel label="Maximum retries">
           <Slider
             min={1}

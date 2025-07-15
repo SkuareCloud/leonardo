@@ -245,7 +245,23 @@ export function ActionsList({ scenario }: ActionsListProps) {
         const replyArgs = args as ReplyToMessageArgs
         return (
           <div className="space-y-2">
-            <ChatInfoDisplay chat={replyArgs.chat} />
+            {replyArgs.message_link ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                  📎 Message Link
+                </Badge>
+                <div className="text-sm text-gray-600 truncate max-w-xs" title={replyArgs.message_link}>
+                  {replyArgs.message_link}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                  💬 Chat Info
+                </Badge>
+                <ChatInfoDisplay chat={replyArgs.chat} />
+              </div>
+            )}
             <div className="text-sm text-gray-600">
               {replyArgs.input_message_content.text}
               {replyArgs.input_message_content.attachments &&
@@ -262,7 +278,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
                   </div>
                 )}
             </div>
-            {replyArgs.message_info.message_id && (
+            {replyArgs.message_info?.message_id && (
               <div className="text-xs text-gray-500">Reply to message: {replyArgs.message_info.message_id}</div>
             )}
           </div>
@@ -272,10 +288,21 @@ export function ActionsList({ scenario }: ActionsListProps) {
         const forwardArgs = args as ForwardMessageArgs
         return (
           <div className="space-y-2">
-            <div>
-              <div className="text-sm font-medium mb-1">From:</div>
-              <ChatInfoDisplay chat={forwardArgs.from_chat} />
-            </div>
+            {forwardArgs.message_link ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                  📎 Message Link
+                </Badge>
+                <div className="text-sm text-gray-600 truncate max-w-xs" title={forwardArgs.message_link}>
+                  {forwardArgs.message_link}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-medium mb-1">From:</div>
+                <ChatInfoDisplay chat={forwardArgs.from_chat} />
+              </div>
+            )}
             <div>
               <div className="text-sm font-medium mb-1">To:</div>
               <ChatInfoDisplay chat={forwardArgs.target_chat} />
@@ -297,7 +324,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
                 )}
               </div>
             )}
-            {forwardArgs.message_info.message_id && (
+            {forwardArgs.message_info?.message_id && (
               <div className="text-xs text-gray-500">Message ID: {forwardArgs.message_info.message_id}</div>
             )}
           </div>
@@ -430,11 +457,11 @@ export function ActionsList({ scenario }: ActionsListProps) {
             {/* Personal Details Sync Status */}
             {behaviouralContent.personal_details_synced !== undefined && (
               <div className="flex items-center gap-2">
-                <Badge variant={behaviouralContent.personal_details_synced ? "default" : "secondary"}>
-                  {behaviouralContent.personal_details_synced ? "✓" : "✗"} Personal Details
+                <Badge variant={Boolean(behaviouralContent.personal_details_synced) ? "default" : "secondary"}>
+                  {Boolean(behaviouralContent.personal_details_synced) ? "✓" : "✗"} Personal Details
                 </Badge>
                 <span className="text-sm text-gray-600">
-                  {behaviouralContent.personal_details_synced ? "Synced" : "Not synced"}
+                  {Boolean(behaviouralContent.personal_details_synced) ? "Synced" : "Not synced"}
                 </span>
               </div>
             )}
@@ -442,11 +469,11 @@ export function ActionsList({ scenario }: ActionsListProps) {
             {/* Auto Download Media Status */}
             {behaviouralContent.auto_download_media_disabled !== undefined && (
               <div className="flex items-center gap-2">
-                <Badge variant={behaviouralContent.auto_download_media_disabled ? "default" : "secondary"}>
-                  {behaviouralContent.auto_download_media_disabled ? "✓" : "✗"} Auto Download Media
+                <Badge variant={Boolean(behaviouralContent.auto_download_media_disabled) ? "default" : "secondary"}>
+                  {Boolean(behaviouralContent.auto_download_media_disabled) ? "✓" : "✗"} Auto Download Media
                 </Badge>
                 <span className="text-sm text-gray-600">
-                  {behaviouralContent.auto_download_media_disabled ? "Disabled" : "Enabled"}
+                  {Boolean(behaviouralContent.auto_download_media_disabled) ? "Disabled" : "Enabled"}
                 </span>
               </div>
             )}
@@ -454,11 +481,11 @@ export function ActionsList({ scenario }: ActionsListProps) {
             {/* Active Sessions Deletion Status */}
             {behaviouralContent.all_active_sessions_deleted !== undefined && (
               <div className="flex items-center gap-2">
-                <Badge variant={behaviouralContent.all_active_sessions_deleted ? "default" : "secondary"}>
-                  {behaviouralContent.all_active_sessions_deleted ? "✓" : "✗"} Active Sessions
+                <Badge variant={Boolean(behaviouralContent.all_active_sessions_deleted) ? "default" : "secondary"}>
+                  {Boolean(behaviouralContent.all_active_sessions_deleted) ? "✓" : "✗"} Active Sessions
                 </Badge>
                 <span className="text-sm text-gray-600">
-                  {behaviouralContent.all_active_sessions_deleted ? "Deleted" : "Not deleted"}
+                  {Boolean(behaviouralContent.all_active_sessions_deleted) ? "Deleted" : "Not deleted"}
                 </span>
               </div>
             )}

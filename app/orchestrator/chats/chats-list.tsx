@@ -118,14 +118,14 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     cell: ({ row }) => {
       const chat = row.original
       return (
-        <ul>
+        <div className="flex flex-wrap gap-1 max-w-[200px]">
           {chat.categories &&
             chat.categories.map(category => (
-              <li key={category}>
-                <Badge variant="outline">{category}</Badge>
-              </li>
+              <Badge key={category} variant="outline" className="text-xs">
+                {category}
+              </Badge>
             ))}
-        </ul>
+        </div>
       )
     },
   },
@@ -236,11 +236,29 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
                     className="max-w-sm"
                   />
                 </div>
+                <div>
+                  <Select
+                    value={(table.getColumn("chat_type")?.getFilterValue() as string) ?? ""}
+                    onValueChange={value => table.getColumn("chat_type")?.setFilterValue(value === "All" ? "" : value)}
+                  >
+                    <SelectTrigger className="max-w-sm">
+                      <SelectValue placeholder="Filter by Chat type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All</SelectItem>
+                      <SelectItem value="User">User</SelectItem>
+                      <SelectItem value="Group">Group</SelectItem>
+                      <SelectItem value="Channel">Channel</SelectItem>
+                      <SelectItem value="Bot">Bot</SelectItem>
+                      <SelectItem value="Unknown">Unknown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )
           }}
-          tableContainerClassName="max-h-[600px]"
-          rowClassName="max-h-[40px]"
+          tableContainerClassName="max-h-[800px]"
+          rowClassName="min-h-[40px]"
           onClickRow={row => {
             router.push(`/orchestrator/chats/${row.id}`)
           }}

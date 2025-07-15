@@ -132,10 +132,20 @@ export type ForwardMessageAction = {
 };
 
 export type ForwardMessageArgs = {
-    from_chat: ChatInfo;
-    message_info: MessageInfo;
+    /**
+     * The chat to forward from, if not provided, the message link will be used
+     */
+    from_chat?: ChatInfo | null;
+    /**
+     * The message to forward, if not provided, the message link will be used
+     */
+    message_info?: MessageInfo | null;
     target_chat: ChatInfo;
     message?: InputMessage;
+    /**
+     * The link to the message to forward, if not provided, the from chat and message info will be used
+     */
+    message_link?: string | null;
 };
 
 export type ForwardMessageResponseContent = {
@@ -234,9 +244,19 @@ export type ReplyToMessageAction = {
 };
 
 export type ReplyToMessageArgs = {
-    chat: ChatInfo;
-    message_info: MessageInfo;
+    /**
+     * The chat to reply to, if not provided, the message link will be used
+     */
+    chat?: ChatInfo | null;
+    /**
+     * The message to reply to, if not provided, the message link will be used
+     */
+    message_info?: MessageInfo | null;
     input_message_content: InputMessage;
+    /**
+     * The link to the message to reply to, if not provided, the chat and message info will be used
+     */
+    message_link?: string | null;
 };
 
 export type ReplyToMessageResponseContent = {

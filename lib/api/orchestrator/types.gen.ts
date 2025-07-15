@@ -682,6 +682,7 @@ export type Message = {
 export type MessageForwardRequest = {
     message_content?: InputMessage | null;
     message_info?: ModelsPlannerMessageInfo | string | null;
+    message_link?: string | null;
 };
 
 export type MessageInfoOutput = {

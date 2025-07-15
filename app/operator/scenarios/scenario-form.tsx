@@ -161,17 +161,39 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
         action.type === "send_bulk_messages" ||
         action.type === "join_group" ||
         action.type === "leave_group" ||
-        action.type === "reply_to_message" ||
         action.type === "read_messages"
       ) {
         if (action.args.chat && !action.args.chat?.id && !action.args.chat?.name) {
           toast.error("Please provide either Chat ID or Chat Name")
           return
         }
+      } else if (action.type === "reply_to_message") {
+        if (action.args.message_link === undefined) {
+          // Using chat info method
+          if (!action.args.chat?.id && !action.args.chat?.name) {
+            toast.error("Please provide either Chat ID or Chat Name")
+            return
+          }
+        } else {
+          // Using message link method
+          if (!action.args.message_link) {
+            toast.error("Please provide a message link")
+            return
+          }
+        }
       } else if (action.type === "forward_message") {
-        if (!action.args.from_chat?.id && !action.args.from_chat?.name) {
-          toast.error("Please provide either From Chat ID or From Chat Name")
-          return
+        if (action.args.message_link === undefined) {
+          // Using chat info method
+          if (!action.args.from_chat?.id && !action.args.from_chat?.name) {
+            toast.error("Please provide either From Chat ID or From Chat Name")
+            return
+          }
+        } else {
+          // Using message link method
+          if (!action.args.message_link) {
+            toast.error("Please provide a message link")
+            return
+          }
         }
         if (!action.args.target_chat?.id && !action.args.target_chat?.name) {
           toast.error("Please provide either Target Chat ID or Target Chat Name")
@@ -773,150 +795,221 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
               {action.type === "reply_to_message" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>
-                      Chat <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <Label>Reply Method</Label>
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id={`reply-method-chat-${index}`}
+                          name={`reply-method-${index}`}
+                          checked={action.args.message_link === undefined}
+                          onChange={() =>
+                            updateAction(index, {
+                              args: {
+                                ...action.args,
+                                message_link: undefined,
+                                chat: action.args.chat || {},
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor={`reply-method-chat-${index}`}>Chat Info</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id={`reply-method-link-${index}`}
+                          name={`reply-method-${index}`}
+                          checked={action.args.message_link !== undefined}
+                          onChange={() =>
+                            updateAction(index, {
+                              args: {
+                                ...action.args,
+                                chat: undefined,
+                                message_info: undefined,
+                                message_link: action.args.message_link || "",
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor={`reply-method-link-${index}`}>Message Link</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {action.args.message_link === undefined ? (
+                    <div className="flex flex-col gap-2">
+                      <Label>
+                        Chat <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="-?[0-9]*"
+                          value={action.args.chat?.id || ""}
+                          onChange={e => handleChatIdChange(index, e.target.value, "chat")}
+                          placeholder="Chat ID (number)"
+                          className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
+                        />
+                        <Input
+                          value={action.args.chat?.name || ""}
+                          onChange={e =>
+                            updateAction(index, {
+                              args: {
+                                ...action.args,
+                                chat: { ...action.args.chat, name: e.target.value },
+                              },
+                            })
+                          }
+                          placeholder="Chat Name"
+                          className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
+                        />
+                      </div>
+                      {!action.args.chat?.id && !action.args.chat?.name && (
+                        <p className="text-sm text-red-500">Please provide either Chat ID or Chat Name</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Label>
+                        Message Link <span className="text-red-500">*</span>
+                      </Label>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="-?[0-9]*"
-                        value={action.args.chat?.id || ""}
-                        onChange={e => handleChatIdChange(index, e.target.value, "chat")}
-                        placeholder="Chat ID (number)"
-                        className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
-                      />
-                      <Input
-                        value={action.args.chat?.name || ""}
+                        value={action.args.message_link || ""}
                         onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
-                              chat: { ...action.args.chat, name: e.target.value },
+                              message_link: e.target.value,
                             },
                           })
                         }
-                        placeholder="Chat Name"
-                        className={!action.args.chat?.id && !action.args.chat?.name ? "border-red-500" : ""}
+                        placeholder="Enter message link"
+                        className={!action.args.message_link ? "border-red-500" : ""}
                       />
+                      {!action.args.message_link && (
+                        <p className="text-sm text-red-500">Please provide a message link</p>
+                      )}
                     </div>
-                    {!action.args.chat?.id && !action.args.chat?.name && (
-                      <p className="text-sm text-red-500">Please provide either Chat ID or Chat Name</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <Label>Message ID</Label>
-                        <Input
-                          value={action.args.message_info?.message_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  message_id: e.target.value,
+                  )}
+
+                  {action.args.message_link === undefined && (
+                    <div className="flex flex-col gap-2">
+                      <Label>Message Info</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Label>Message ID</Label>
+                          <Input
+                            value={action.args.message_info?.message_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    message_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter message ID"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Timestamp</Label>
-                        <Input
-                          type="text"
-                          value={action.args.message_info?.timestamp || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  timestamp: e.target.value,
+                              })
+                            }
+                            placeholder="Enter message ID"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Timestamp</Label>
+                          <Input
+                            type="text"
+                            value={action.args.message_info?.timestamp || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    timestamp: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter timestamp"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Peer ID</Label>
-                        <Input
-                          value={action.args.message_info?.peer_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  peer_id: e.target.value,
+                              })
+                            }
+                            placeholder="Enter timestamp"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Peer ID</Label>
+                          <Input
+                            value={action.args.message_info?.peer_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    peer_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter peer ID"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>From ID</Label>
-                        <Input
-                          value={action.args.message_info?.from_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  from_id: e.target.value,
+                              })
+                            }
+                            placeholder="Enter peer ID"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>From ID</Label>
+                          <Input
+                            value={action.args.message_info?.from_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    from_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter from ID"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Text Hash</Label>
-                        <Input
-                          value={action.args.message_info?.text_hash || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  text_hash: e.target.value,
+                              })
+                            }
+                            placeholder="Enter from ID"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Text Hash</Label>
+                          <Input
+                            value={action.args.message_info?.text_hash || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    text_hash: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter text hash"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Viewer ID</Label>
-                        <Input
-                          value={action.args.message_info?.viewer_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  viewer_id: e.target.value,
+                              })
+                            }
+                            placeholder="Enter text hash"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Viewer ID</Label>
+                          <Input
+                            value={action.args.message_info?.viewer_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    viewer_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter viewer ID"
-                        />
+                              })
+                            }
+                            placeholder="Enter viewer ID"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex flex-col gap-2">
                     <Label>Reply Message</Label>
                     <Input
@@ -1032,154 +1125,224 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
               {action.type === "forward_message" && (
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2">
-                    <Label>
-                      From Chat <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <Label>Forward Method</Label>
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id={`forward-method-chat-${index}`}
+                          name={`forward-method-${index}`}
+                          checked={action.args.message_link === undefined}
+                          onChange={() =>
+                            updateAction(index, {
+                              args: {
+                                ...action.args,
+                                message_link: undefined,
+                                from_chat: action.args.from_chat || {},
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor={`forward-method-chat-${index}`}>Chat Info</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id={`forward-method-link-${index}`}
+                          name={`forward-method-${index}`}
+                          checked={action.args.message_link !== undefined}
+                          onChange={() =>
+                            updateAction(index, {
+                              args: {
+                                ...action.args,
+                                from_chat: undefined,
+                                message_info: undefined,
+                                message_link: action.args.message_link || "",
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor={`forward-method-link-${index}`}>Message Link</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {action.args.message_link === undefined ? (
+                    <div className="flex flex-col gap-2">
+                      <Label>
+                        From Chat <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="-?[0-9]*"
+                          value={action.args.from_chat?.id || ""}
+                          onChange={e => handleChatIdChange(index, e.target.value, "from_chat")}
+                          placeholder="Chat ID (number)"
+                          className={!action.args.from_chat?.id && !action.args.from_chat?.name ? "border-red-500" : ""}
+                        />
+                        <Input
+                          value={action.args.from_chat?.name || ""}
+                          onChange={e =>
+                            updateAction(index, {
+                              args: {
+                                ...action.args,
+                                from_chat: {
+                                  ...action.args.from_chat,
+                                  name: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          placeholder="Chat Name"
+                          className={!action.args.from_chat?.id && !action.args.from_chat?.name ? "border-red-500" : ""}
+                        />
+                      </div>
+                      {!action.args.from_chat?.id && !action.args.from_chat?.name && (
+                        <p className="text-sm text-red-500">Please provide either From Chat ID or From Chat Name</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Label>
+                        Message Link <span className="text-red-500">*</span>
+                      </Label>
                       <Input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="-?[0-9]*"
-                        value={action.args.from_chat?.id || ""}
-                        onChange={e => handleChatIdChange(index, e.target.value, "from_chat")}
-                        placeholder="Chat ID (number)"
-                        className={!action.args.from_chat?.id && !action.args.from_chat?.name ? "border-red-500" : ""}
-                      />
-                      <Input
-                        value={action.args.from_chat?.name || ""}
+                        value={action.args.message_link || ""}
                         onChange={e =>
                           updateAction(index, {
                             args: {
                               ...action.args,
-                              from_chat: {
-                                ...action.args.from_chat,
-                                name: e.target.value,
-                              },
+                              message_link: e.target.value,
                             },
                           })
                         }
-                        placeholder="Chat Name"
-                        className={!action.args.from_chat?.id && !action.args.from_chat?.name ? "border-red-500" : ""}
+                        placeholder="Enter message link"
+                        className={!action.args.message_link ? "border-red-500" : ""}
                       />
+                      {!action.args.message_link && (
+                        <p className="text-sm text-red-500">Please provide a message link</p>
+                      )}
                     </div>
-                    {!action.args.from_chat?.id && !action.args.from_chat?.name && (
-                      <p className="text-sm text-red-500">Please provide either From Chat ID or From Chat Name</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label>Message Info</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <Label>Message ID</Label>
-                        <Input
-                          value={action.args.message_info?.message_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  message_id: e.target.value,
+                  )}
+
+                  {action.args.message_link === undefined && (
+                    <div className="flex flex-col gap-2">
+                      <Label>Message Info</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2">
+                          <Label>Message ID</Label>
+                          <Input
+                            value={action.args.message_info?.message_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    message_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter message ID"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Timestamp</Label>
-                        <Input
-                          type="text"
-                          value={action.args.message_info?.timestamp || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  timestamp: e.target.value,
+                              })
+                            }
+                            placeholder="Enter message ID"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Timestamp</Label>
+                          <Input
+                            type="text"
+                            value={action.args.message_info?.timestamp || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    timestamp: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter timestamp"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Peer ID</Label>
-                        <Input
-                          value={action.args.message_info?.peer_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  peer_id: e.target.value,
+                              })
+                            }
+                            placeholder="Enter timestamp"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Peer ID</Label>
+                          <Input
+                            value={action.args.message_info?.peer_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    peer_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter peer ID"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>From ID</Label>
-                        <Input
-                          value={action.args.message_info?.from_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  from_id: e.target.value,
+                              })
+                            }
+                            placeholder="Enter peer ID"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>From ID</Label>
+                          <Input
+                            value={action.args.message_info?.from_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    from_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter from ID"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Text Hash</Label>
-                        <Input
-                          value={action.args.message_info?.text_hash || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  text_hash: e.target.value,
+                              })
+                            }
+                            placeholder="Enter from ID"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Text Hash</Label>
+                          <Input
+                            value={action.args.message_info?.text_hash || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    text_hash: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter text hash"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label>Viewer ID</Label>
-                        <Input
-                          value={action.args.message_info?.viewer_id || ""}
-                          onChange={e =>
-                            updateAction(index, {
-                              args: {
-                                ...action.args,
-                                message_info: {
-                                  ...action.args.message_info,
-                                  viewer_id: e.target.value,
+                              })
+                            }
+                            placeholder="Enter text hash"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Label>Viewer ID</Label>
+                          <Input
+                            value={action.args.message_info?.viewer_id || ""}
+                            onChange={e =>
+                              updateAction(index, {
+                                args: {
+                                  ...action.args,
+                                  message_info: {
+                                    ...action.args.message_info,
+                                    viewer_id: e.target.value,
+                                  },
                                 },
-                              },
-                            })
-                          }
-                          placeholder="Enter viewer ID"
-                        />
+                              })
+                            }
+                            placeholder="Enter viewer ID"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex flex-col gap-2">
                     <Label>
                       Target Chat <span className="text-red-500">*</span>

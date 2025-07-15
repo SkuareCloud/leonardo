@@ -34,9 +34,9 @@ const MissionMetadata: Record<
     icon: DicesIcon,
   },
   EchoMission: {
-    name: "Mass forward message",
+    name: "Echo message",
     description: "Forward a message oraganiclly accross open and closed groups",
-    supported: false,
+    supported: true,
     icon: PodcastIcon,
   },
   AllocateProfilesGroupsMission: {

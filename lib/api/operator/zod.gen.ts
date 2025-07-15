@@ -378,10 +378,20 @@ export const zInputMessage = z.object({
 });
 
 export const zForwardMessageArgs = z.object({
-    from_chat: zChatInfo,
-    message_info: zMessageInfo,
+    from_chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    message_info: z.union([
+        zMessageInfo,
+        z.null()
+    ]).optional(),
     target_chat: zChatInfo,
-    message: zInputMessage.optional()
+    message: zInputMessage.optional(),
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 export const zForwardMessageAction = z.object({
@@ -483,9 +493,19 @@ export const zPrefrences = z.object({
 });
 
 export const zReplyToMessageArgs = z.object({
-    chat: zChatInfo,
-    message_info: zMessageInfo,
-    input_message_content: zInputMessage
+    chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    message_info: z.union([
+        zMessageInfo,
+        z.null()
+    ]).optional(),
+    input_message_content: zInputMessage,
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 export const zReplyToMessageAction = z.object({

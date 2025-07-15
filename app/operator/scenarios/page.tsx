@@ -18,6 +18,8 @@ export default async function Page() {
           </div>
         </PageHeader>
       </div>
+
+
       <div className="mb-6 flex flex-row-reverse">
         <OperatorSlotDisplay />
       </div>

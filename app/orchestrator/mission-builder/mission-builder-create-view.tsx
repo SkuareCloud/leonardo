@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { MissionType } from "@lib/api/models"
 import { CategoryRead, ChatRead, MissionCreate, ScenarioRead } from "@lib/api/orchestrator"
 import { Editor } from "@monaco-editor/react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { AllocateProfilesGroupsMissionBuilder } from "./allocate-profiles-groups-mission-builder"
 import { EchoMissionBuilder } from "./echo-mission-builder"
 import { FluffMissionBuilder } from "./fluff-mission-builder"
@@ -33,12 +33,12 @@ export function MissionBuilderCreateView({
   // common properties
   const [description, setDescription] = useState("")
 
-  const onChangeMissionPayload = (payload: Partial<MissionCreate>) => {
+  const onChangeMissionPayload = useCallback((payload: Partial<MissionCreate>) => {
     const specificMissionPayload: Partial<MissionCreate> = {
       ...payload,
     }
     setSpecificMissionPayload(specificMissionPayload)
-  }
+  }, [])
 
   useEffect(() => {
     const missionCreateRequest: Partial<MissionCreate> = {}
