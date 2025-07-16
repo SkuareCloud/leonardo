@@ -534,7 +534,7 @@ export type ChatView = {
     title: string | null;
     chat_type: ChatType | null;
     linked_chat_username: string | null;
-    participants_count?: number;
+    participants_count: number | null;
     categories?: Array<string>;
     system_chat_members?: Array<string>;
 };
@@ -565,6 +565,7 @@ export type EchoMissionInput = {
 export type FirstPuppetShowMessage = {
     message: Message;
     reference_message_info?: ModelsPlannerMessageInfo | null;
+    message_link?: string | null;
     start_time?: string | null;
 };
 
@@ -594,8 +595,9 @@ export type ForwardMessageAction = {
 };
 
 export type ForwardMessageArgs = {
-    from_chat: ChatInfo;
-    message_info?: ModelsOperatorCommonMessageInfoMessageInfo | string | null;
+    from_chat?: ChatInfo | null;
+    message_info?: ModelsOperatorCommonMessageInfoMessageInfo | '${input.message_info}' | null;
+    message_link?: string | null;
     target_chat: ChatInfo;
     message?: InputMessage | null;
 };
@@ -681,8 +683,8 @@ export type Message = {
 
 export type MessageForwardRequest = {
     message_content?: InputMessage | null;
-    message_info?: ModelsPlannerMessageInfo | string | null;
     message_link?: string | null;
+    message_info?: ModelsPlannerMessageInfo | string | null;
 };
 
 export type MessageInfoOutput = {
@@ -739,7 +741,6 @@ export type MissionRead = {
     scenarios?: Array<ScenarioRead>;
     scenarios_count?: number;
     success_scenarios?: number;
-
 };
 
 export type MissionRunResult = {
@@ -788,6 +789,9 @@ export type PuppetShowInput = {
 export type RandomDistributionMissionInput = {
     characters_categories?: Array<string> | null;
     chat_categories?: Array<string> | null;
+    /**
+     * by username or platform id (negative int)
+     */
     additional_chats?: Array<string> | null;
     messages: Array<InputMessage>;
     messages_amount?: number;
@@ -810,6 +814,7 @@ export type ReplyToMessageAction = {
 export type ReplyToMessageArgs = {
     chat: ChatInfo;
     message_info?: ModelsOperatorCommonMessageInfoMessageInfo | string | null;
+    message_link?: string | null;
     input_message_content: InputMessage;
 };
 
@@ -1802,8 +1807,8 @@ export type CreateChatFromUsernameOrPlatformIdChatsFromUsernameOrPlatformIdPostD
     body?: never;
     path?: never;
     query?: {
-        username?: string;
-        platform_id?: number;
+        username?: string | null;
+        platform_id?: number | null;
     };
     url: '/chats/from_username_or_platform_id/';
 };
@@ -2073,6 +2078,38 @@ export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses = {
 
 export type GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses[keyof GetChatByPlatformIdChatsPlatformIdPlatformIdGetResponses];
 
+export type SearchChatsChatsSearchGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        q: string;
+        writable?: boolean;
+    };
+    url: '/chats/search/';
+};
+
+export type SearchChatsChatsSearchGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchChatsChatsSearchGetError = SearchChatsChatsSearchGetErrors[keyof SearchChatsChatsSearchGetErrors];
+
+export type SearchChatsChatsSearchGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ChatRead>;
+};
+
+export type SearchChatsChatsSearchGetResponse = SearchChatsChatsSearchGetResponses[keyof SearchChatsChatsSearchGetResponses];
+
 export type GetChatsViewChatsViewChatsGetData = {
     body?: never;
     path?: never;
@@ -2108,7 +2145,10 @@ export type GetChatsViewChatsViewChatsGetResponse = GetChatsViewChatsViewChatsGe
 export type GetAllWritableGroupsChatsCanSendMessageChatsGetData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        skip?: number;
+        limit?: number;
+    };
     url: '/chats/can_send_message_chats/';
 };
 
@@ -2117,7 +2157,13 @@ export type GetAllWritableGroupsChatsCanSendMessageChatsGetErrors = {
      * Not found
      */
     404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
 };
+
+export type GetAllWritableGroupsChatsCanSendMessageChatsGetError = GetAllWritableGroupsChatsCanSendMessageChatsGetErrors[keyof GetAllWritableGroupsChatsCanSendMessageChatsGetErrors];
 
 export type GetAllWritableGroupsChatsCanSendMessageChatsGetResponses = {
     /**
@@ -2590,11 +2636,13 @@ export type GetMissionMissionsMissionIdGetResponses = {
 export type GetMissionMissionsMissionIdGetResponse = GetMissionMissionsMissionIdGetResponses[keyof GetMissionMissionsMissionIdGetResponses];
 
 export type UpdateMissionMissionsMissionIdPutData = {
-    body: MissionCreate;
+    body: Array<string>;
     path: {
         mission_id: string;
     };
-    query?: never;
+    query: {
+        value: unknown;
+    };
     url: '/missions/{mission_id}';
 };
 

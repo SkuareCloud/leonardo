@@ -32,6 +32,7 @@ export function MissionBuilderCreateView({
 
   // common properties
   const [description, setDescription] = useState("")
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
 
   const onChangeMissionPayload = useCallback((payload: Partial<MissionCreate>) => {
     const specificMissionPayload: Partial<MissionCreate> = {
@@ -39,6 +40,24 @@ export function MissionBuilderCreateView({
     }
     setSpecificMissionPayload(specificMissionPayload)
   }, [])
+
+  const validateDescription = (desc: string): boolean => {
+    if (!desc.trim()) {
+      setDescriptionError("Description is required")
+      return false
+    }
+    setDescriptionError(null)
+    return true
+  }
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value)
+    if (value.trim()) {
+      validateDescription(value)
+    } else {
+      setDescriptionError("Description is required")
+    }
+  }
 
   useEffect(() => {
     const missionCreateRequest: Partial<MissionCreate> = {}
@@ -53,7 +72,7 @@ export function MissionBuilderCreateView({
     }
     setMissionCreateRequest(missionCreateRequest)
     onChangeRequest(missionCreateRequest)
-  }, [mission, description, specificMissionPayload])
+  }, [mission, description, specificMissionPayload, onChangeRequest])
 
   let missionName = ""
   if (mission === "EchoMission") {
@@ -74,7 +93,19 @@ export function MissionBuilderCreateView({
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel className="pr-8">
             <div className="flex flex-col gap-4">
-              <InputWithLabel label="Description" onChange={e => setDescription(e.target.value)}></InputWithLabel>
+              <div className="flex flex-col gap-2">
+                <InputWithLabel 
+                  label="Description" 
+                  required
+                  placeholder="Enter a description for this mission"
+                  value={description}
+                  onChange={e => handleDescriptionChange(e.target.value)}
+                  className={descriptionError ? "border-red-500" : ""}
+                />
+                {descriptionError && (
+                  <div className="text-red-500 text-sm">{descriptionError}</div>
+                )}
+              </div>
               <Separator orientation="horizontal" className="my-4" />
               {mission === "EchoMission" && (
                 <EchoMissionBuilder chats={chats} scenarios={scenarios || []} categories={categories || []} />

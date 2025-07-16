@@ -1,5 +1,6 @@
 "use client"
 
+import { CreateCategoryDialog } from "@/components/create-category-dialog"
 import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -7,9 +8,12 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { CategoryRead, ChatRead, ChatType, ChatView } from "@lib/api/orchestrator/types.gen"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
+import { CategorySelector } from "../mission-builder/category-selector"
 
 interface ChatRow {
   title: string
@@ -169,45 +173,177 @@ const chatColumns: ColumnDef<ChatRow>[] = [
 export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCategories: CategoryRead[] }) {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [chatData, setChatData] = useState<ChatView[]>(chats)
+  const [categories, setCategories] = useState<CategoryRead[]>(allCategories)
+
+  const handleCategoryCreated = (newCategory: CategoryRead) => {
+    setCategories(prev => [...prev, newCategory])
+    toast.success(`Created category: ${newCategory.name}`)
+  }
+
+  const handleCategoryDeleted = (categoryId: string) => {
+    setCategories(prev => prev.filter(cat => cat.id !== categoryId))
+    // If the deleted category was the active filter, clear it
+    if (activeCategory) {
+      const deletedCategory = categories.find(cat => cat.id === categoryId)
+      if (deletedCategory && deletedCategory.name === activeCategory) {
+        setActiveCategory(null)
+      }
+    }
+    toast.success(`Category deleted successfully`)
+  }
+
+  // Create columns with access to allCategories
+  const columnsWithCategorySelector: ColumnDef<ChatRow>[] = [
+    ...chatColumns.slice(0, 4), // Include first 4 columns (username, title, type, participants_count)
+    {
+      accessorKey: "categories",
+      header: "Categories",
+      size: 300,
+      sortingFn: (rowA, rowB) => {
+        const categoriesA = rowA.original.categories
+        const categoriesB = rowB.original.categories
+        if (!categoriesA && !categoriesB) {
+          return 0
+        }
+        if (!categoriesA) {
+          return 1
+        }
+        if (!categoriesB) {
+          return -1
+        }
+        return categoriesA.length - categoriesB.length
+      },
+      cell: ({ row }) => {
+        const chat = row.original
+        const chatCategories = categories.filter(cat => 
+          chat.categories?.some(chatCat => chatCat === cat.name || chatCat === cat.id)
+        )
+        
+        return (
+          <div 
+            className="py-2"
+            onClick={(e) => {
+              // Prevent row click when interacting with category selector
+              e.stopPropagation()
+            }}
+          >
+            <CategorySelector
+              existingCategories={chatCategories}
+              categories={categories}
+              onChangeValue={async (selectedCategories: { id: string; label: string }[]) => {
+                const newCategories = selectedCategories.filter((c: { id: string; label: string }) => 
+                  !chatCategories.some((cat: CategoryRead) => cat.id === c.id)
+                )
+                const removedCategories = chatCategories.filter((c: CategoryRead) => 
+                  !selectedCategories.some((cat: { id: string; label: string }) => cat.id === c.id)
+                )
+                
+                try {
+                  // Add new categories first
+                  for (const newCategory of newCategories) {
+                    try {
+                      await new ServiceBrowserClient().updateChatCategories(
+                        chat.id,
+                        [newCategory.id],
+                        [],
+                      )
+                    } catch (error) {
+                      console.error(`Failed to add category ${newCategory.id} to chat ${chat.id}:`, error)
+                      throw error
+                    }
+                  }
+                  
+                  // Remove categories - check if they exist using the category ID
+                  for (const removedCategory of removedCategories) {
+                    // Only remove if the category is actually associated with the chat
+                    if (chatCategories.some(cat => cat.id === removedCategory.id)) {
+                      try {
+                        await new ServiceBrowserClient().updateChatCategories(
+                          chat.id,
+                          [],
+                          [removedCategory.id],
+                        )
+                      } catch (error) {
+                        console.error(`Failed to remove category ${removedCategory.id} from chat ${chat.id}:`, error)
+                        // Don't throw here - continue with other operations
+                        toast.error(`Failed to remove category ${removedCategory.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                      }
+                    } else {
+                      console.log(`Skipping removal of category ${removedCategory.id} as it's not associated with chat ${chat.id}`)
+                    }
+                  }
+                  
+                  const updatedCategoryNames = selectedCategories.map((c: { id: string; label: string }) => c.label)
+                  
+                  // Update local state
+                  setChatData(prevChats => 
+                    prevChats.map(prevChat => 
+                      prevChat.id === chat.id 
+                        ? { ...prevChat, categories: updatedCategoryNames }
+                        : prevChat
+                    )
+                  )
+                  
+                  toast.success(
+                    `Updated categories for chat '${chat.title || chat.id}': ${updatedCategoryNames.join(", ")}`,
+                  )
+                } catch (error) {
+                  console.error('Category update error:', error)
+                  toast.error(`Failed to update categories: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                }
+              }}
+            />
+          </div>
+        )
+      },
+    },
+    ...chatColumns.slice(5), // Include remaining columns (system_chat_members, linked_chat_username, id)
+  ]
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-row">
-        {chats && (
-          <div className="flex flex-row gap-2">
-            <Label>Category</Label>
-            <Select
-              value={activeCategory ?? undefined}
-              onValueChange={value => {
-                const url = new URL(window.location.href)
-                url.searchParams.set("category", value)
-                if (value === "All") {
-                  setActiveCategory(null)
-                } else {
-                  setActiveCategory(value)
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All</SelectItem>
-                {allCategories.map(category => (
-                  <SelectItem key={category.name} value={category.name ?? ""}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+      <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-row gap-2">
+          <Label>Category</Label>
+          <Select
+            value={activeCategory ?? undefined}
+            onValueChange={value => {
+              const url = new URL(window.location.href)
+              url.searchParams.set("category", value)
+              if (value === "All") {
+                setActiveCategory(null)
+              } else {
+                setActiveCategory(value)
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category.name} value={category.name ?? ""}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <CreateCategoryDialog 
+            categories={categories}
+            onCategoryCreated={handleCategoryCreated}
+            onCategoryDeleted={handleCategoryDeleted}
+          />
+        </div>
       </div>
       <div className="flex flex-col gap-4">
         <DataTable
-          columns={chatColumns}
+          columns={columnsWithCategorySelector}
           data={
-            chats.filter(chat => {
+            chatData.filter(chat => {
               if (!activeCategory) {
                 return true
               }

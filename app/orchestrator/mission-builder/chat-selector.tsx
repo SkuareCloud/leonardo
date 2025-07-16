@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ChatRead } from "@lib/api/orchestrator"
-import { Loader2, PlusCircleIcon, XIcon } from "lucide-react"
+import { Loader2, PlusCircleIcon, Search, XIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { FieldWithLabel } from "./mission-builder-utils"
 
@@ -24,80 +24,50 @@ export function ChatSelector({
 }) {
   const [selected, setSelected] = useState<{ id: string; label: string }[]>([])
   const [isAdding, setIsAdding] = useState(false)
-  const [availableChats, setAvailableChats] = useState<ChatRead[]>([])
+  const [searchResults, setSearchResults] = useState<ChatRead[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
     onChangeValue?.(selected)
   }, [selected, onChangeValue])
 
-  const loadChats = async (page: number = 0, pageSize: number = 50, search: string = "", append: boolean = false) => {
-    setLoading(true)
-    
-    try {
-      const skip = page * pageSize
-      let url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}`
-      if (writable) {
-        url = `/api/orchestrator/chats/?skip=${skip}&limit=${pageSize}&writable=true`
-      }
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`Failed to load chats: ${response.statusText}`)
-      }
-      const chats: ChatRead[] = await response.json()
-      
-      // Filter chats based on search term
-      const filteredChats = chats.filter((chat: ChatRead) => {
-        const searchLower = search.toLowerCase()
-        return (
-          chat.username?.toLowerCase().includes(searchLower) ||
-          chat.title?.toLowerCase().includes(searchLower) ||
-          chat.platform_id?.toString().includes(searchLower)
-        )
-      })
+  const performSearch = async (term: string) => {
+    if (term.trim() === "") {
+      setSearchResults([])
+      return
+    }
 
-      if (append) {
-        setAvailableChats(prev => [...prev, ...filteredChats])
-      } else {
-        setAvailableChats(filteredChats)
+    setLoading(true)
+    try {
+      let url = `/api/orchestrator/chats/search/?q=${encodeURIComponent(term)}`
+      if (writable) {
+        url += "&writable=true"
       }
       
-      setHasMore(chats.length === pageSize)
-      setCurrentPage(page)
+      const response = await fetch(url)
+      if (response.ok) {
+        const results: ChatRead[] = await response.json()
+        setSearchResults(results)
+      } else {
+        console.error("Search failed:", response.status, response.statusText)
+        setSearchResults([])
+      }
     } catch (error) {
-      console.error("Failed to load chats:", error)
+      console.error("Search failed:", error)
+      setSearchResults([])
     } finally {
       setLoading(false)
     }
   }
 
-  const handleAddClick = async () => {
-    setIsAdding(true)
-    if (availableChats.length === 0) {
-      await loadChats(0, 50, searchTerm)
-    }
-  }
-
-  const handleSearch = async (value: string) => {
+  const handleSearch = (value: string) => {
     setSearchTerm(value)
-    setCurrentPage(0)
-    await loadChats(0, 0, value)
-  }
-
-  const handleLoadMore = async () => {
-    if (hasMore && !loading) {
-      await loadChats(currentPage + 1, 50, searchTerm, true)
-    }
+    performSearch(value)
   }
 
   const handleChatSelect = (chatId: string) => {
-    const chat = availableChats.find(c => {
-      const id = c.id
-      return id === chatId
-    })
+    const chat = searchResults.find(c => c.id === chatId)
     
     if (chat) {
       const chatIdentifier = chat.id
@@ -109,9 +79,11 @@ export function ChatSelector({
       ])
     }
     setIsAdding(false)
+    setSearchTerm("")
+    setSearchResults([])
   }
 
-  const availableChoices = availableChats
+  const availableChoices = searchResults
     .filter(chat => {
       const chatId = chat.id
       return !selected.some(s => s.id === chatId)
@@ -122,6 +94,7 @@ export function ChatSelector({
       return {
         value: chatId,
         label: displayName,
+        chat: chat
       }
     })
 
@@ -159,7 +132,7 @@ export function ChatSelector({
           {!isAdding && (
             <div
               className="flex items-center justify-center p-2 cursor-pointer hover:text-primary text-muted-foreground"
-              onClick={handleAddClick}
+              onClick={() => setIsAdding(true)}
             >
               <PlusCircleIcon className="h-4 w-4" />
             </div>
@@ -168,16 +141,23 @@ export function ChatSelector({
           {isAdding && (
             <div className="flex flex-col gap-2 w-full max-w-md">
               <div className="flex gap-2 items-center">
-                <Input
-                  placeholder="Search chats..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="flex-1"
-                />
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by username or platform ID..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setIsAdding(false)}
+                  onClick={() => {
+                    setIsAdding(false)
+                    setSearchTerm("")
+                    setSearchResults([])
+                  }}
                 >
                   Cancel
                 </Button>
@@ -186,11 +166,30 @@ export function ChatSelector({
               {loading && (
                 <div className="flex items-center justify-center p-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="ml-2">Loading chats...</span>
+                  <span className="ml-2">Searching...</span>
                 </div>
               )}
               
-              {!loading && availableChoices.length > 0 && (
+              {!loading && searchTerm.trim() !== "" && availableChoices.length === 0 && (
+                <div className="text-sm text-gray-500 italic p-4 text-center">
+                  No chats found for "{searchTerm}"
+                  <div className="text-xs mt-1">
+                    Try searching by username or platform ID
+                  </div>
+                </div>
+              )}
+              
+              {!loading && searchTerm.trim() === "" && (
+                <div className="text-sm text-gray-500 italic p-4 text-center">
+                  <Search className="h-4 w-4 mx-auto mb-2" />
+                  Start typing to search for chats
+                  <div className="text-xs mt-1">
+                    Search by username or platform ID
+                  </div>
+                </div>
+              )}
+              
+              {availableChoices.length > 0 && (
                 <div className="max-h-48 overflow-y-auto border rounded-md">
                   {availableChoices.map(choice => (
                     <div
@@ -198,36 +197,20 @@ export function ChatSelector({
                       className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
                       onClick={() => handleChatSelect(choice.value)}
                     >
-                      {choice.label}
+                      <div className="flex flex-col">
+                        <div className="font-medium">{choice.label}</div>
+                        <div className="text-xs text-gray-500">
+                          ID: {choice.chat.platform_id} | Username: {choice.chat.username || 'N/A'}
+                        </div>
+                      </div>
                     </div>
                   ))}
-                  
-                  {hasMore && (
-                    <div className="p-2 border-t">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLoadMore}
-                        disabled={loading}
-                        className="w-full"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Loading...
-                          </>
-                        ) : (
-                          "Load More"
-                        )}
-                      </Button>
-                    </div>
-                  )}
                 </div>
               )}
               
-              {!loading && availableChoices.length === 0 && availableChats.length === 0 && (
-                <div className="text-sm text-gray-500 italic p-4 text-center">
-                  No chats found. Try adjusting your search.
+              {availableChoices.length > 0 && (
+                <div className="text-xs text-gray-500 text-center p-1">
+                  {availableChoices.length} result{availableChoices.length !== 1 ? 's' : ''} found
                 </div>
               )}
             </div>

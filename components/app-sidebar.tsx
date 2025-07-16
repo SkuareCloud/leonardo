@@ -12,7 +12,7 @@ import {
   ScrollText,
   SpeechIcon,
   Users2Icon,
-  VenetianMask,
+  // VenetianMask,
   Waypoints
 } from "lucide-react"
 import * as React from "react"
@@ -52,11 +52,11 @@ const data = {
           url: "/orchestrator/missions",
           icon: Crosshair,
         },
-        {
-          title: "Characters",
-          url: "/orchestrator/characters",
-          icon: VenetianMask,
-        },
+        // {
+        //   title: "Characters",
+        //   url: "/orchestrator/characters",
+        //   icon: VenetianMask,
+        // },
         {
           title: "Chats",
           url: "/orchestrator/chats",

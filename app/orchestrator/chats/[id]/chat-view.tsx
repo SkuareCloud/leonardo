@@ -2,23 +2,21 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CategoryRead, CharacterRead, ChatRead } from "@lib/api/orchestrator"
-import { ServiceBrowserClient } from "@lib/service-browser-client"
+import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { CategoryRead, ChatRead } from "@lib/api/orchestrator"
 import { useState } from "react"
-import { toast } from "sonner"
-import { CharactersList } from "../../characters/characters-list"
-import { CategorySelector } from "../../mission-builder/category-selector"
+import { AvatarsList } from "../../../avatars/avatars/avatars-list"
 
 export function ChatView({
   chat,
   chatCategories,
   allCategories,
-  characters,
+  avatars,
 }: {
   chat: ChatRead
   allCategories: CategoryRead[]
   chatCategories: CategoryRead[]
-  characters: CharacterRead[]
+  avatars: AvatarModelWithProxy[]
 }) {
   const [categories, setCategories] = useState<CategoryRead[]>(chatCategories)
   return (
@@ -31,12 +29,20 @@ export function ChatView({
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
+              <label className="text-sm font-medium text-muted-foreground">Username</label>
+              <p className="text-sm">{chat.username || "N/A"}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Platform id</label>
+              <p className="text-sm">{chat.platform || "N/A"}</p>
+            </div>
+            <div>
               <label className="text-sm font-medium text-muted-foreground">Title</label>
               <p className="text-sm">{chat.title || "Untitled"}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Username</label>
-              <p className="text-sm">{chat.username || "N/A"}</p>
+              <label className="text-sm font-medium text-muted-foreground">About</label>
+              <p className="text-sm">{chat.about || "Untitled"}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Chat ID</label>
@@ -44,35 +50,20 @@ export function ChatView({
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Categories</label>
-              <div>
-                <CategorySelector
-                  existingCategories={categories || []}
-                  categories={allCategories}
-                  onChangeValue={async selectedCategories => {
-                    const newCategories = selectedCategories.filter(c => !categories.some(cat => cat.id === c.id))
-                    const removedCategories = categories.filter(c => !selectedCategories.some(cat => cat.id === c.id))
-                    console.log(
-                      `Updating categories for chat ${chat.id}: new categories - ${newCategories
-                        .map(c => c.id)
-                        .join(", ")}; removed categories - ${removedCategories.map(c => c.id).join(", ")}`,
-                    )
-                    await new ServiceBrowserClient().updateChatCategories(
-                      chat.id,
-                      newCategories.map(c => c.id),
-                      removedCategories.map(c => c.id),
-                    )
-                    const newSelectedCategories = allCategories.filter(cat =>
-                      selectedCategories.some(c => c.id === cat.id),
-                    )
-                    setCategories(newSelectedCategories)
-                    toast.success(
-                      `Updated categories for chat '${chat.id}': ${newSelectedCategories
-                        .map(c => c.name ?? c.description ?? c.id)
-                        .join(", ")}`,
-                    )
-                  }}
-                />
+              <div className="flex flex-wrap gap-1 mt-1">
+                {categories && categories.length > 0 ? (
+                  categories.map(category => (
+                    <Badge key={category.id} variant="outline" className="text-xs">
+                      {category.name || category.description || category.id}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">No categories assigned</span>
+                )}
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Categories can be managed from the chat list.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -90,17 +81,33 @@ export function ChatView({
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Platform</label>
-              <p className="text-sm">{chat.platform || "Unknown"}</p>
-            </div>
-            <div>
               <label className="text-sm font-medium text-muted-foreground">Participants</label>
               <p className="text-sm">{chat.participants_count || 0}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Messages last month</label>
+              <p className="text-sm">{chat.messages_count_last_month || 0}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Forwarded from this chat last month</label>
+              <p className="text-sm">{chat.forward_from_count_last_month || 0}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Forwarded to this chat last month</label>
+              <p className="text-sm">{chat.forward_to_count_last_month || 0}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Can Forward from</label>
+              <p className="text-sm">{chat.noforwards ? "No" : "Yes"}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Linked chat</label>
+              <p className="text-sm">{chat.linked_chat_username || "N/A"}</p>
             </div>
           </CardContent>
         </Card>
       </div>
-      <CharactersList characters={characters} />
+      <AvatarsList avatars={avatars} allCategories={allCategories} />
     </div>
   )
 }

@@ -106,6 +106,11 @@ export function MissionBuilderView({
                       setError("No payload found. Check the JSON.")
                       return
                     }
+                    if (!missionCreateRequest.description || !missionCreateRequest.description.trim()) {
+                      toast.error("Description is required")
+                      setError("Description is required")
+                      return
+                    }
                     logger.info("Validating mission request", missionCreateRequest)
                     const validatedMissionRequest = zMissionCreate.safeParse(missionCreateRequest)
                     logger.info("Validated mission request", validatedMissionRequest)

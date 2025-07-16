@@ -27,6 +27,40 @@ export function LabelSelector({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-4 select-none items-center">
+        {!isAdding && availableChoices.length > 0 && (
+          <div
+            className="flex items-center justify-center p-2 cursor-pointer hover:text-primary text-muted-foreground"
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsAdding(true)
+            }}
+          >
+            <PlusCircleIcon className="h-4 w-4" />
+          </div>
+        )}
+        {isAdding && availableChoices.length > 0 && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Combobox
+              options={availableChoices.map(choice => ({
+                value: choice.id,
+                label: choice.label,
+              }))}
+              open={availableChoices.length > 0}
+              onValueChange={value => {
+                if (value) {
+                  handleChangeSelected([
+                    ...selected,
+                    // Inefficient, but it's ok for now
+                    { id: value, label: availableChoices.find(c => c.id === value)?.label ?? "" },
+                  ])
+                }
+                setIsAdding(false)
+              }}
+              placeholder="Select a category..."
+              className="w-full max-w-36"
+            />
+          </div>
+        )}
         {selected.map(choice => (
           <TooltipProvider key={choice.id}>
             <Tooltip delayDuration={200}>
@@ -39,7 +73,8 @@ export function LabelSelector({
                   {choice.label}
                   <div
                     className="px-2 pr-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       handleChangeSelected(selected.filter(c => c.id !== choice.id))
                     }}
                   >
@@ -57,37 +92,6 @@ export function LabelSelector({
             </Tooltip>
           </TooltipProvider>
         ))}
-        {!isAdding && availableChoices.length > 0 && (
-          <div
-            className="flex items-center justify-center p-2 cursor-pointer hover:text-primary text-muted-foreground"
-            onClick={() => {
-              setIsAdding(true)
-            }}
-          >
-            <PlusCircleIcon className="h-4 w-4" />
-          </div>
-        )}
-        {isAdding && availableChoices.length > 0 && (
-          <Combobox
-            options={availableChoices.map(choice => ({
-              value: choice.id,
-              label: choice.label,
-            }))}
-            open={availableChoices.length > 0}
-            onValueChange={value => {
-              if (value) {
-                handleChangeSelected([
-                  ...selected,
-                  // Inefficient, but it's ok for now
-                  { id: value, label: availableChoices.find(c => c.id === value)?.label ?? "" },
-                ])
-              }
-              setIsAdding(false)
-            }}
-            placeholder="Select a category..."
-            className="w-full max-w-36"
-          />
-        )}
       </div>
     </div>
   )

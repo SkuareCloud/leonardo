@@ -2,11 +2,12 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { CategoryRead } from "@lib/api/orchestrator"
 import { ChartPieIcon, ListIcon } from "lucide-react"
 import { AvatarsList } from "./avatars-list"
 import { AvatarsStats } from "./avatars-stats"
 
-export function AvatarsView({ avatars }: { avatars: AvatarModelWithProxy[] }) {
+export function AvatarsView({ avatars, allCategories }: { avatars: AvatarModelWithProxy[]; allCategories: CategoryRead[] }) {
   return (
     <div className="flex flex-col gap-6 w-full">
       <Tabs defaultValue="list" className="">
@@ -21,7 +22,7 @@ export function AvatarsView({ avatars }: { avatars: AvatarModelWithProxy[] }) {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="list" className="pt-6">
-          <AvatarsList avatars={avatars} />
+          <AvatarsList avatars={avatars} allCategories={allCategories} />
         </TabsContent>
         <TabsContent value="stats" className="pt-6">
           <AvatarsStats avatars={avatars} />

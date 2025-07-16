@@ -52,8 +52,11 @@ import {
 } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
+  addCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPost,
   addChatToCategoryChatsChatIdCategoriesCategoryIdPost,
+  createCategoryCategoriesPost,
   createMissionMissionsPost,
+  deleteCategoryCategoriesCategoryIdDelete,
   deleteMissionMissionsMissionIdDelete,
   getAllCategoriesCategoriesGet,
   getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
@@ -61,6 +64,9 @@ import {
   getAllWritableGroupsChatsCanSendMessageChatsGet,
   getCategoryChatsCategoriesCategoryIdChatsGet,
   getCategoryDescendantsCategoriesCategoryIdDescendantsGet,
+  getCharacterCategoriesCharactersCharacterIdCategoriesGet,
+  getChatByPlatformIdChatsPlatformIdPlatformIdGet,
+  getChatByUsernameChatsUsernameUsernameGet,
   getChatCategoriesChatsChatIdCategoriesGet,
   getChatCharactersChatsChatIdCharactersGet,
   getChatChatsChatIdGet,
@@ -71,8 +77,10 @@ import {
   getMissionsStatisticsMissionsStatisticsGet,
   getRootCategoryCategoriesRootGet,
   planMissionMissionsPlanMissionMissionIdPost,
+  removeCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDelete,
   removeChatFromCategoryChatsChatIdCategoriesCategoryIdDelete,
   runMissionMissionsRunMissionMissionIdPost,
+  searchChatsChatsSearchGet,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { ServerSettings } from "@lib/server-settings"
@@ -276,31 +284,67 @@ export class ApiService {
     logger.info("Getting orchestrator characters")
     const response = await getAllCharactersCharactersGetOrchestrator({
       client: orchestratorClient,
+      query: { limit: 0 },
     })
     if (response.error) {
       throw new Error(`Failed to get orchestrator characters: ${JSON.stringify(response.error)}`)
     }
-    logger.info("Successfully got orchestrator characters")
+    logger.info(`Successfully got ${response.data?.length} orchestrator characters`)
     return response.data ?? []
+  }
+
+  async getCharacterCategories(characterId: string): Promise<CategoryRead[]> {
+    logger.info(`Getting character categories: ${characterId}`)
+    const response = await getCharacterCategoriesCharactersCharacterIdCategoriesGet({
+      client: orchestratorClient,
+      path: { character_id: characterId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get character categories: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got character categories: ${characterId}`)
+    return response.data ?? []
+  }
+
+  async addCharacterToCategory(characterId: string, categoryId: string) {
+    logger.info(`Adding character to category: ${characterId} -> ${categoryId}`)
+    const response = await addCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPost({
+      client: orchestratorClient,
+      path: { character_id: characterId, category_id: categoryId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to add character to category: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully added character to category: ${characterId} -> ${categoryId}`)
+    return response.data ?? null
+  }
+
+  async removeCharacterFromCategory(characterId: string, categoryId: string) {
+    logger.info(`Removing character from category: ${characterId} -> ${categoryId}`)
+    const response = await removeCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDelete({
+      client: orchestratorClient,
+      path: { character_id: characterId, category_id: categoryId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to remove character from category: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully removed character from category: ${characterId} -> ${categoryId}`)
+    return response.data ?? null
   }
 
   async getOrchestratorScenarios(): Promise<ScenarioRead[]> {
-    const limit = process.env.ORCHESTRATOR_SCENARIOS_LIMIT ? parseInt(process.env.ORCHESTRATOR_SCENARIOS_LIMIT) : 0
-    logger.info(`Getting orchestrator scenarios (limit: ${limit})`)
+    logger.info("Getting orchestrator scenarios")
     const response = await getAllOrchestratorScenariosGet({
       client: orchestratorClient,
-      query: {
-        limit,
-      },
     })
     if (response.error) {
-      throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
+      throw new Error(`Failed to get orchestrator scenarios: ${JSON.stringify(response.error)}`)
     }
-    logger.info("Successfully got orchestrator chats")
+    logger.info(`Successfully got ${response.data?.length} orchestrator scenarios`)
     return response.data ?? []
   }
 
-  async getOrchestratorChats(skip: number = 0, limit: number = 0, writable: boolean = false): Promise<ChatRead[]> {
+  async getOrchestratorChats(skip: number = 0, limit: number = 0, writable: boolean = false): Promise<any[]> {
     logger.info(`Getting orchestrator chats (limit: ${limit})`)
     let response
     if (writable) {
@@ -329,31 +373,86 @@ export class ApiService {
     return response.data ?? []
   }
 
+  async getOrchestratorChatsView(skip: number = 0, limit: number = 0): Promise<any[]> {
+    logger.info(`Getting orchestrator chats view (limit: ${limit})`)
+    const response = await getChatsViewChatsViewChatsGet({
+      client: orchestratorClient,
+      query: {
+        skip,
+        limit,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chats view: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got ${response.data?.length} orchestrator chats`)
+    return response.data ?? []
+  }
+
+  async getChatByUsername(username: string): Promise<ChatRead[]> {
+    logger.info(`Getting chat by username: ${username}`)
+    const response = await getChatByUsernameChatsUsernameUsernameGet({
+      client: orchestratorClient,
+      path: {
+        username,
+      },
+    })
+    if (response.error) {
+      // Handle 404 "not found" errors gracefully
+      if (response.error.detail === "Chat not found") {
+        logger.info(`No chat found for username: ${username}`)
+        return []
+      }
+      throw new Error(`Failed to get chat by username: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got ${response.data?.length} chats for username: ${username}`)
+    return response.data ?? []
+  }
+
+  async getChatByPlatformId(platformId: number): Promise<ChatRead> {
+    logger.info(`Getting chat by platform ID: ${platformId}`)
+    const response = await getChatByPlatformIdChatsPlatformIdPlatformIdGet({
+      client: orchestratorClient,
+      path: {
+        platform_id: platformId,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get chat by platform ID: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got chat for platform ID: ${platformId}`)
+    return response.data!
+  }
+
+  async searchChats(query: string, writable?: boolean): Promise<ChatRead[]> {
+    logger.info(`Searching chats with query: ${query}`)
+    const response = await searchChatsChatsSearchGet({
+      client: orchestratorClient,
+      query: {
+        q: query,
+        writable,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to search chats: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully searched chats with query: ${query}`)
+    return response.data ?? []
+  }
+
   async getOrchestratorChat(chatId: string): Promise<ChatRead> {
     logger.info(`Getting orchestrator chat: ${chatId}`)
-    const [chatResponse, categoryResponse] = await Promise.all([
-      getChatChatsChatIdGet({
-        client: orchestratorClient,
-        path: {
-          chat_id: chatId,
-        },
-      }),
-      getChatCategoriesChatsChatIdCategoriesGet({
-        client: orchestratorClient,
-        path: { chat_id: chatId },
-      }),
-    ])
-    if (chatResponse.error) {
-      throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(chatResponse.error)}`)
+    const response = await getChatChatsChatIdGet({
+      client: orchestratorClient,
+      path: {
+        chat_id: chatId,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator chat: ${JSON.stringify(response.error)}`)
     }
     logger.info(`Successfully got orchestrator chat: ${chatId}`)
-    if (!chatResponse.data) {
-      throw new Error(`Failed to get orchestrator chat: ${chatId}`)
-    }
-    return {
-      ...chatResponse.data,
-      categories: (categoryResponse.data || []).map(category => category.name ?? category.id),
-    } satisfies ChatRead
+    return response.data!
   }
 
   async getOrchestratorChatCategories(chatId: string): Promise<CategoryRead[]> {
@@ -478,6 +577,36 @@ export class ApiService {
     }
     logger.info(`Successfully removed chat from category: ${chatId}`)
     return response.data ?? null
+  }
+
+  async createOrchestratorCategory(name: string, description: string = "", parentId: string | null = null) {
+    logger.info(`Creating orchestrator category: ${name}`)
+    const response = await createCategoryCategoriesPost({
+      client: orchestratorClient,
+      body: {
+        name,
+        description,
+        parent_id: parentId,
+      },
+    })
+    if (response.error) {
+      throw new Error(`Failed to create orchestrator category: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully created orchestrator category: ${name}`)
+    return response.data
+  }
+
+  async deleteOrchestratorCategory(categoryId: string) {
+    logger.info(`Deleting orchestrator category: ${categoryId}`)
+    const response = await deleteCategoryCategoriesCategoryIdDelete({
+      client: orchestratorClient,
+      path: { category_id: categoryId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to delete orchestrator category: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully deleted orchestrator category: ${categoryId}`)
+    return response.data
   }
 
   async getOrchestratorRootCategory(): Promise<CategoryRead> {

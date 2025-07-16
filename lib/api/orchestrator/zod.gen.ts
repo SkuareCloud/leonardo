@@ -866,6 +866,10 @@ export const zChatView = z.object({
         z.string(),
         z.null()
     ]),
+    participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]),
     categories: z.array(z.string()).optional().default([]),
     system_chat_members: z.array(z.string().uuid()).optional().default([])
 });
@@ -958,6 +962,10 @@ export const zReplyToMessageArgs = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     input_message_content: zInputMessage
 });
 
@@ -997,9 +1005,16 @@ export const zSendMessageAction = z.object({
 });
 
 export const zForwardMessageArgs = z.object({
-    from_chat: zChatInfo,
+    from_chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
     message_info: z.union([
         zModelsOperatorCommonMessageInfoMessageInfo,
+        z.literal('${input.message_info}'),
+        z.null()
+    ]).optional(),
+    message_link: z.union([
         z.string(),
         z.null()
     ]).optional(),
@@ -1098,6 +1113,10 @@ export const zMessageForwardRequest = z.object({
         zInputMessage,
         z.null()
     ]).optional(),
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     message_info: z.union([
         zModelsPlannerMessageInfo,
         z.string(),
@@ -1113,7 +1132,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-07-13T11:43:54.596947Z'),
+    trigger_time: z.string().datetime().optional().default('2025-07-16T12:24:18.582342Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1143,6 +1162,10 @@ export const zFirstPuppetShowMessage: z.AnyZodObject = z.object({
     message: zMessage,
     reference_message_info: z.union([
         zModelsPlannerMessageInfo,
+        z.null()
+    ]).optional(),
+    message_link: z.union([
+        z.string(),
         z.null()
     ]).optional(),
     start_time: z.union([
@@ -1194,7 +1217,7 @@ export const zHttpValidationError = z.object({
 
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-07-13T11:43:53.961597Z'),
+    trigger_time: z.string().datetime().optional().default('2025-07-16T12:24:18.493415Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -1320,7 +1343,8 @@ export const zMissionRead = z.object({
         z.null()
     ]).optional(),
     scenarios: z.array(zScenarioRead).optional(),
-    scenarios_count: z.number().int().optional().default(0)
+    scenarios_count: z.number().int().optional().default(0),
+    success_scenarios: z.number().int().optional().default(0)
 });
 
 export const zMissionStatistics = z.object({
@@ -1377,7 +1401,7 @@ export const zRandomDistributionMissionInput = z.object({
         z.null()
     ]).optional(),
     additional_chats: z.union([
-        z.array(z.unknown()),
+        z.array(z.string().uuid()),
         z.null()
     ]).optional(),
     messages: z.array(zInputMessage),
@@ -1386,7 +1410,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-07-13T11:43:54.609532Z'),
+    start_time: z.string().datetime().optional().default('2025-07-16T12:24:18.586886Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
@@ -1534,6 +1558,8 @@ export const zUpdateChatChatsChatIdPutResponse = zChatRead;
 export const zGetChatByUsernameChatsUsernameUsernameGetResponse = z.array(zChatRead);
 
 export const zGetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = zChatRead;
+
+export const zSearchChatsChatsSearchGetResponse = z.array(zChatRead);
 
 export const zGetChatsViewChatsViewChatsGetResponse = z.array(zChatView);
 
