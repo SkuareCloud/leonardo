@@ -28,7 +28,7 @@ import {
   MissionWithExposureAndStats,
   MissionWithExposureStats
 } from "@lib/api/models"
-import { ActivationStatus, Scenario, ScenarioWithResult } from "@lib/api/operator"
+import { ActionRead, ActivationStatus, ScenarioWithResult } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
   activateActivationActivatePost,
@@ -48,6 +48,7 @@ import {
   MissionCreate,
   MissionExposure,
   MissionRead,
+  Scenario,
   ScenarioRead
 } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
@@ -71,6 +72,7 @@ import {
   getChatCharactersChatsChatIdCharactersGet,
   getChatChatsChatIdGet,
   getChatsViewChatsViewChatsGet,
+  getMissionFailureReasonsMissionsFailureReasonsMissionIdGet,
   getMissionMissionsMissionIdGet,
   getMissionPotentialExposureMissionsExposureMissionIdGet,
   getMissionsMissionsGet,
@@ -80,7 +82,7 @@ import {
   removeCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDelete,
   removeChatFromCategoryChatsChatIdCategoriesCategoryIdDelete,
   runMissionMissionsRunMissionMissionIdPost,
-  searchChatsChatsSearchGet,
+  searchChatsChatsSearchGet
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { ServerSettings } from "@lib/server-settings"
@@ -737,6 +739,19 @@ export class ApiService {
       throw new Error(`Failed to get orchestrator mission statistics: ${missionId}`)
     }
     return (response.data[0] as any as MissionStatistics) ?? null
+  }
+
+  async getOrchestratorMissionFailureReasons(missionId: string): Promise<ActionRead[]> {
+    logger.info(`Getting orchestrator mission failure reasons: ${missionId}`)
+    const response = await getMissionFailureReasonsMissionsFailureReasonsMissionIdGet({
+      client: orchestratorClient,
+      path: { mission_id: missionId },
+    })
+    if (response.error) {
+      throw new Error(`Failed to get orchestrator mission failure reasons: ${JSON.stringify(response.error)}`)
+    }
+    logger.info(`Successfully got orchestrator mission failure reasons: ${missionId}`)
+    return response.data ?? []
   }
 
   async getOrchestratorMission(missionId: string): Promise<MissionRead> {

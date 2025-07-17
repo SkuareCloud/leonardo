@@ -858,6 +858,10 @@ export const zChatView = z.object({
         z.string(),
         z.null()
     ]),
+    about: z.union([
+        z.string(),
+        z.null()
+    ]),
     chat_type: z.union([
         zChatType,
         z.null()
@@ -1132,7 +1136,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-07-16T12:24:18.582342Z'),
+    trigger_time: z.string().datetime().optional().default('2025-07-17T03:41:11.232352Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1217,7 +1221,7 @@ export const zHttpValidationError = z.object({
 
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-07-16T12:24:18.493415Z'),
+    trigger_time: z.string().datetime().optional().default('2025-07-17T03:41:11.142930Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -1410,7 +1414,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-07-16T12:24:18.586886Z'),
+    start_time: z.string().datetime().optional().default('2025-07-17T03:41:11.235093Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
@@ -1602,6 +1606,10 @@ export const zGetMissionPotentialExposureMissionsExposureMissionIdGetResponse = 
 export const zGetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetResponse = zMissionRead;
 
 export const zGetMissionRunResultMissionsRunResultMissionIdGetResponse = zMissionRunResult;
+
+export const zGetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponse = z.array(zChatRead);
+
+export const zGetMissionFailureReasonsMissionsFailureReasonsMissionIdGetResponse = z.array(zActionRead);
 
 export const zGetAllCategoriesCategoriesGetResponse = z.array(zCategoryRead);
 

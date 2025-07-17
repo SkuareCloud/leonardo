@@ -532,6 +532,7 @@ export type ChatView = {
     platform_id: number | null;
     username: string | null;
     title: string | null;
+    about: string | null;
     chat_type: ChatType | null;
     linked_chat_username: string | null;
     participants_count: number | null;
@@ -2951,6 +2952,68 @@ export type GetMissionRunResultMissionsRunResultMissionIdGetResponses = {
 };
 
 export type GetMissionRunResultMissionsRunResultMissionIdGetResponse = GetMissionRunResultMissionsRunResultMissionIdGetResponses[keyof GetMissionRunResultMissionsRunResultMissionIdGetResponses];
+
+export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetData = {
+    body?: never;
+    path: {
+        mission_id: string;
+    };
+    query?: never;
+    url: '/missions/successfull_chats/{mission_id}';
+};
+
+export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetError = GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetErrors[keyof GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetErrors];
+
+export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ChatRead>;
+};
+
+export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponse = GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponses[keyof GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponses];
+
+export type GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetData = {
+    body?: never;
+    path: {
+        mission_id: string;
+    };
+    query?: never;
+    url: '/missions/failure_reasons/{mission_id}';
+};
+
+export type GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetError = GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetErrors[keyof GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetErrors];
+
+export type GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ActionRead>;
+};
+
+export type GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetResponse = GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetResponses[keyof GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetResponses];
 
 export type GetAllCategoriesCategoriesGetData = {
     body?: never;

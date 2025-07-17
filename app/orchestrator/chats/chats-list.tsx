@@ -17,6 +17,7 @@ import { CategorySelector } from "../mission-builder/category-selector"
 
 interface ChatRow {
   title: string
+  about: string
   username?: string
   platform_id?: number
   type: ChatType
@@ -34,6 +35,15 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     accessorKey: "username",
     header: "Username",
     size: 200,
+    // Add custom filter function that checks both username and platform_id
+    filterFn: (row, columnId, filterValue) => {
+      const chat = row.original
+      const searchValue = filterValue.toLowerCase()
+      const username = chat.username?.toLowerCase() || ''
+      const platformId = chat.platform_id?.toString().toLowerCase() || ''
+      
+      return username.includes(searchValue) || platformId.includes(searchValue)
+    },
     cell: ({ row }) => {
       const chat = row.original
       return (
@@ -59,7 +69,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     },
   },
   {
-    accessorKey: "chat_type",
+    accessorKey: "type",
     header: "Type",
     size: 100,
     cell: ({ row }) => {
@@ -71,10 +81,10 @@ const chatColumns: ColumnDef<ChatRow>[] = [
         Bot: { bg: "bg-amber-50", text: "text-amber-800" },
         Unknown: { bg: "bg-gray-50", text: "text-gray-800" },
       }
-      const colors = typeColors[chat.chat_type || "Unknown"]
+      const colors = typeColors[chat.type || "Unknown"]
       return (
         <span>
-          <Badge className={cn(colors.bg, colors.text)}>{chat.chat_type || "Unknown"}</Badge>
+          <Badge className={cn(colors.bg, colors.text)}>{chat.type || "Unknown"}</Badge>
         </span>
       )
     },
@@ -92,15 +102,6 @@ const chatColumns: ColumnDef<ChatRow>[] = [
       )
     },
   },
-  // {
-  //   accessorKey: "platform",
-  //   header: "Platform",
-  //   size: 100,
-  //   cell: ({ row }) => {
-  //     const chat = row.original
-  //     return <span>{chat.platform || "Unknown"}</span>
-  //   },
-  // },
   {
     accessorKey: "categories",
     header: "Categories",
@@ -158,16 +159,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
         </div>
       )
     },
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    size: 200,
-    cell: ({ row }) => {
-      const chat = row.original
-      return <span className="font-mono text-sm">{chat.id}</span>
-    },
-  },
+  }
 ]
 
 export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCategories: CategoryRead[] }) {
@@ -192,6 +184,22 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
     }
     toast.success(`Category deleted successfully`)
   }
+
+  // Function to map ChatView to ChatRow
+  const mapChatViewToRow = (chat: ChatView): ChatRow => ({
+    title: chat.title || '',
+    about: chat.about || '',
+    username: chat.username || undefined,
+    platform_id: chat.platform_id || undefined,
+    type: chat.chat_type || 'Unknown',
+    platform: '', // ChatView doesn't have platform property
+    participants_count: chat.participants_count || undefined,
+    linked_chat_username: chat.linked_chat_username || undefined,
+    system_chat_members: chat.system_chat_members,
+    categories: chat.categories || [],
+    id: chat.id,
+    original: chat as any // Cast since ChatView doesn't have created_at/updated_at
+  })
 
   // Create columns with access to allCategories
   const columnsWithCategorySelector: ColumnDef<ChatRow>[] = [
@@ -240,7 +248,6 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
                 )
                 
                 try {
-                  // Add new categories first
                   for (const newCategory of newCategories) {
                     try {
                       await new ServiceBrowserClient().updateChatCategories(
@@ -351,14 +358,14 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
                 return false
               }
               return chat.categories.some(category => category === activeCategory)
-            }) satisfies ChatRow[]
+            }).map(mapChatViewToRow)
           }
           header={({ table }) => {
             return (
               <div className="flex flex-row gap-2">
                 <div>
                   <Input
-                    placeholder="Filter by username..."
+                    placeholder="Filter by username or platform ID..."
                     value={(table.getColumn("username")?.getFilterValue() as string) ?? ""}
                     onChange={event => table.getColumn("username")?.setFilterValue(event.target.value)}
                     className="max-w-sm"
@@ -366,16 +373,16 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
                 </div>
                 <div>
                   <Input
-                    placeholder="Filter by ID..."
-                    value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
-                    onChange={event => table.getColumn("id")?.setFilterValue(event.target.value)}
+                    placeholder="Search title: key words"
+                    value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+                    onChange={event => table.getColumn("title")?.setFilterValue(event.target.value)}
                     className="max-w-sm"
                   />
                 </div>
                 <div>
                   <Select
-                    value={(table.getColumn("chat_type")?.getFilterValue() as string) ?? ""}
-                    onValueChange={value => table.getColumn("chat_type")?.setFilterValue(value === "All" ? "" : value)}
+                    value={(table.getColumn("type")?.getFilterValue() as string) ?? ""}
+                    onValueChange={value => table.getColumn("type")?.setFilterValue(value === "All" ? "" : value)}
                   >
                     <SelectTrigger className="max-w-sm">
                       <SelectValue placeholder="Filter by Chat type..." />

@@ -9,6 +9,7 @@ import {
 } from "./api/models"
 import { ActivationStatus, ProfileWorkerView, ScenarioWithResult } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
+import { ActionRead, ChatRead } from "./api/orchestrator/types.gen"
 import { ClientEnv, read_client_env } from "./client-env"
 import { logger } from "./logger"
 import { Web1Account } from "./web1/web1-models"
@@ -174,6 +175,18 @@ export class ServiceBrowserClient {
   async getMissionStatistics(missionId: string): Promise<MissionStatistics> {
     const resp = await fetch(`/api/orchestrator/missions/statistics?mission_id=${missionId}`)
     const json = (await resp.json()) as MissionStatistics
+    return json
+  }
+
+  async getMissionFailureReasons(missionId: string): Promise<ActionRead[]> {
+    const resp = await fetch(`/api/orchestrator/missions/failure_reasons/${missionId}`)
+    const json = (await resp.json()) as ActionRead[]
+    return json
+  }
+
+  async getMissionSuccessfulChats(missionId: string): Promise<ChatRead[]> {
+    const resp = await fetch(`/api/orchestrator/missions/successfull_chats/${missionId}`)
+    const json = (await resp.json()) as ChatRead[]
     return json
   }
 
