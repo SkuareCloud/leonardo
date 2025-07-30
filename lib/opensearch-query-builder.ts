@@ -53,7 +53,7 @@ export const buildOpenSearchFilter = (
 }
 export const buildOpenSearchLink = ({
   filters,
-  columns = ["level", "thread", "logger", "msg"],
+  columns = ["level", "logger", "action_id", "msg"],
 }: {
   filters: {
     meta: {
@@ -109,11 +109,10 @@ export const buildOpenSearchOperatorProfileLogsLink = (profileId: string, scenar
     buildOpenSearchFilter("level", `DEBUG`, "Debug Logs", false, true),
     buildOpenSearchFilter("thread", `AsyncWorker-${profileId}`, `Avatar ${profileId}`),
     buildOpenSearchFilter("rsrq", false, `No RSRQ`, false, true),
+    buildOpenSearchFilter("metrics", false, `No Metrics`, false, true),
   ]
   if (scenarioId) {
-    baseFilters.push(
-      buildOpenSearchFilter("scenario_id", scenarioId, `Scenario ${scenarioId.split("-")[0]}...`),
-    )
+    baseFilters.push(buildOpenSearchFilter("scenario_id", scenarioId, `Scenario ${scenarioId.split("-")[0]}...`))
   }
   if (actionId) {
     baseFilters.push(buildOpenSearchFilter("action_id", actionId, `Action ${actionId.split("-")[0]}...`))

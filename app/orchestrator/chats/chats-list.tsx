@@ -192,8 +192,8 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
     username: chat.username || undefined,
     platform_id: chat.platform_id || undefined,
     type: chat.chat_type || 'Unknown',
-    platform: '', // ChatView doesn't have platform property
-    participants_count: chat.participants_count || undefined,
+    platform: '',
+    participants_count: chat.participants_count || 0,
     linked_chat_username: chat.linked_chat_username || undefined,
     system_chat_members: chat.system_chat_members,
     categories: chat.categories || [],
@@ -201,7 +201,6 @@ export function ChatsList({ chats, allCategories }: { chats: ChatView[]; allCate
     original: chat as any // Cast since ChatView doesn't have created_at/updated_at
   })
 
-  // Create columns with access to allCategories
   const columnsWithCategorySelector: ColumnDef<ChatRow>[] = [
     ...chatColumns.slice(0, 4), // Include first 4 columns (username, title, type, participants_count)
     {

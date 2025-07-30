@@ -18,8 +18,11 @@ import {
   ReadMessagesResponseContent,
   ReplyToMessageArgs,
   ReplyToMessageResponseContent,
+  ResolvePhoneArgs,
+  ResolvePhoneResponseContent,
   SendMessageArgs,
-  SendMessageResponseContent
+  SendMessageResponseContent,
+  UserInfo,
 } from "@lib/api/operator/types.gen"
 import { ColumnDef } from "@tanstack/react-table"
 import { ClockIcon, FlagIcon } from "lucide-react"
@@ -151,6 +154,11 @@ export function ActionsList({ scenario }: ActionsListProps) {
           label: "Read Messages",
           className: "bg-cyan-100 text-cyan-800",
         }
+      case "resolve_phone":
+        return {
+          label: "Resolve Phone",
+          className: "bg-pink-50 text-pink-800",
+        }
       default:
         return {
           label: type || "Unknown",
@@ -161,7 +169,14 @@ export function ActionsList({ scenario }: ActionsListProps) {
 
   const formatActionArgs = (
     type: string,
-    args: BehaviouralArgs | SendMessageArgs | JoinGroupArgs | LeaveGroupArgs | ReplyToMessageArgs | ForwardMessageArgs | ReadMessagesArgs,
+    args:
+      | BehaviouralArgs
+      | SendMessageArgs
+      | JoinGroupArgs
+      | LeaveGroupArgs
+      | ReplyToMessageArgs
+      | ForwardMessageArgs
+      | ReadMessagesArgs,
   ) => {
     const actionType = type.toLowerCase()
     if (!args) return "No arguments"
@@ -337,15 +352,19 @@ export function ActionsList({ scenario }: ActionsListProps) {
             <ChatInfoDisplay chat={readArgs.chat} />
             <div className="flex flex-col gap-1">
               {readArgs.amount_messages !== undefined && readArgs.amount_messages !== null && (
-                <div className="text-sm text-gray-600">
-                  Amount: {readArgs.amount_messages} messages
-                </div>
+                <div className="text-sm text-gray-600">Amount: {readArgs.amount_messages} messages</div>
               )}
-              {readArgs.read_all_in_end && (
-                <div className="text-sm text-gray-600">
-                  Read all messages in the end
-                </div>
-              )}
+              {readArgs.read_all_in_end && <div className="text-sm text-gray-600">Read all messages in the end</div>}
+            </div>
+          </div>
+        )
+      }
+      case "resolve_phone": {
+        const resolveArgs = args as ResolvePhoneArgs
+        return (
+          <div className="space-y-2">
+            <div className="text-sm text-gray-600">
+              <span className="font-medium">Phone Number:</span> {resolveArgs.phone_number}
             </div>
           </div>
         )
@@ -555,7 +574,9 @@ export function ActionsList({ scenario }: ActionsListProps) {
             {/* Unread Messages */}
             {behaviouralContent.unread_messages && behaviouralContent.unread_messages.length > 0 && (
               <div>
-                <div className="text-sm font-medium mb-2">Unread Messages ({behaviouralContent.unread_messages.length}):</div>
+                <div className="text-sm font-medium mb-2">
+                  Unread Messages ({behaviouralContent.unread_messages.length}):
+                </div>
                 <div className="border rounded-md">
                   <div className="max-h-48 overflow-y-auto">
                     <Table>
@@ -580,9 +601,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
                                 {chat.type || "Unknown"}
                               </Badge>
                             </TableCell>
-                            <TableCell className="py-2 text-xs text-gray-600">
-                              {chat.unread_count || 0}
-                            </TableCell>
+                            <TableCell className="py-2 text-xs text-gray-600">{chat.unread_count || 0}</TableCell>
                             <TableCell className="py-2 text-xs text-gray-600">
                               {chat.unread_mentions_count || 0}
                             </TableCell>
@@ -607,7 +626,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
                     {(() => {
                       try {
                         const context = behaviouralContent.current_context
-                        return typeof context === 'string' ? context : JSON.stringify(context, null, 2)
+                        return typeof context === "string" ? context : JSON.stringify(context, null, 2)
                       } catch {
                         return String(behaviouralContent.current_context)
                       }
@@ -627,12 +646,33 @@ export function ActionsList({ scenario }: ActionsListProps) {
               <Badge variant="default" className="bg-green-100 text-green-800">
                 ✓ Messages Read
               </Badge>
-              <span className="text-sm text-gray-600 font-semibold">
-                {readContent.messages_read} messages read
-              </span>
+              <span className="text-sm text-gray-600 font-semibold">{readContent.messages_read} messages read</span>
             </div>
           </div>
         )
+      }
+      case "resolve_phone": {
+        const resolveContent = content as ResolvePhoneResponseContent
+        if (resolveContent.error) {
+          return <div className="text-sm text-red-600 font-semibold">Error: {resolveContent.error}</div>
+        }
+        if (resolveContent.user_info) {
+          const user: UserInfo = resolveContent.user_info
+          return (
+            <div className="space-y-1 bg-gray-50 rounded-md p-3 border">
+              <div className="font-medium text-gray-800">User Info</div>
+              {user.id !== undefined && <div className="text-xs text-gray-600">ID: {user.id}</div>}
+              {user.name ? (
+                <div className="text-xs text-gray-600">Name: {user.name}</div>
+              ) : (
+                <div className="text-xs text-gray-600">Name: N/A</div>
+              )}
+              {user.title && <div className="text-xs text-gray-600">Title: {user.title}</div>}
+              {user.subtitle && <div className="text-xs text-gray-600">Subtitle: {user.subtitle}</div>}
+            </div>
+          )
+        }
+        return <div className="text-sm text-gray-600">No user info found.</div>
       }
       default:
         return <div className="text-sm text-gray-600">{JSON.stringify(content)}</div>
@@ -772,13 +812,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
     },
   ]
 
-  return (
-    <DataTable
-      columns={actionColumns}
-      data={actionsData}
-      pageSize={10}
-    />
-  )
+  return <DataTable columns={actionColumns} data={actionsData} pageSize={10} />
 }
 
 export default ActionsList

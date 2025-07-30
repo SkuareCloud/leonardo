@@ -246,6 +246,65 @@ export const zSendBulkMessagesResponseContent = z.object({
     message_infos: z.array(zMessageInfo)
 });
 
+export const zReadMessagesResponseContent = z.object({
+    messages_read: z.number().int()
+});
+
+export const zUserInfo = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: zChatType.optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    subtitle: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zResolvePhoneResponseContent = z.object({
+    user_info: z.union([
+        zUserInfo,
+        z.null()
+    ]).optional(),
+    error: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
 export const zActionResponse = z.object({
     id: z.string().optional(),
     status: zActionStatus,
@@ -256,7 +315,9 @@ export const zActionResponse = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]),
     content: z.union([
         zSendMessageResponseContent,
@@ -266,6 +327,8 @@ export const zActionResponse = z.object({
         zForwardMessageResponseContent,
         zBehaviouralResponseContent,
         zSendBulkMessagesResponseContent,
+        zReadMessagesResponseContent,
+        zResolvePhoneResponseContent,
         z.null()
     ]),
     start_time: z.string().datetime(),
@@ -359,7 +422,9 @@ export const zBehaviouralAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zBehaviouralArgs
@@ -403,7 +468,9 @@ export const zForwardMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zForwardMessageArgs
@@ -440,7 +507,9 @@ export const zJoinGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zJoinGroupArgs
@@ -459,7 +528,9 @@ export const zLeaveGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
@@ -517,7 +588,9 @@ export const zReplyToMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReplyToMessageArgs
@@ -537,7 +610,9 @@ export const zSendMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
@@ -558,10 +633,59 @@ export const zSendBulkMessagesAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendBulkMessagesArgs
+});
+
+export const zReadMessagesArgs = z.object({
+    chat: zChatInfo,
+    amount_messages: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_all_in_end: z.boolean().optional().default(false)
+});
+
+export const zReadMessagesAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zReadMessagesArgs
+});
+
+export const zResolvePhoneArgs = z.object({
+    phone_number: z.string()
+});
+
+export const zResolvePhoneAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zResolvePhoneArgs
 });
 
 export const zScenario = z.object({

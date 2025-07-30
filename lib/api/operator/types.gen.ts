@@ -8,8 +8,8 @@ export type ActionPrefrences = {
 export type ActionResponse = {
     id?: string;
     status: ActionStatus;
-    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    content: SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | ReadMessagesResponseContent | ResolvePhoneResponseContent | null;
     start_time: Date;
     end_time?: Date | null;
 };
@@ -67,7 +67,7 @@ export type AuthRequest = {
 
 export type BehaviouralAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: BehaviouralArgs;
 };
@@ -126,7 +126,7 @@ export type ChatType = 'User' | 'Group' | 'Channel' | 'Bot' | 'Unknown';
 
 export type ForwardMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: ForwardMessageArgs;
 };
@@ -178,7 +178,7 @@ export type InputMessage = {
 
 export type JoinGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: JoinGroupArgs;
 };
@@ -196,7 +196,7 @@ export type JoinGroupResponseContent = {
 
 export type LeaveGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: LeaveGroupArgs;
 };
@@ -236,9 +236,26 @@ export type ProfileWorkerView = {
     browser_port: number | null;
 };
 
+export type ReadMessagesAction = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    prefrences?: ActionPrefrences;
+    args: ReadMessagesArgs;
+};
+
+export type ReadMessagesArgs = {
+    chat: ChatInfo;
+    amount_messages?: number | null;
+    read_all_in_end?: boolean;
+};
+
+export type ReadMessagesResponseContent = {
+    messages_read: number;
+};
+
 export type ReplyToMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: ReplyToMessageArgs;
 };
@@ -263,11 +280,27 @@ export type ReplyToMessageResponseContent = {
     message_info: MessageInfo;
 };
 
+export type ResolvePhoneAction = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    prefrences?: ActionPrefrences;
+    args: ResolvePhoneArgs;
+};
+
+export type ResolvePhoneArgs = {
+    phone_number: string;
+};
+
+export type ResolvePhoneResponseContent = {
+    user_info?: UserInfo | null;
+    error?: string | null;
+};
+
 export type Scenario = {
     id?: string;
     profile: Character;
     prefrences?: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneAction>;
 };
 
 export type ScenarioInfo = {
@@ -296,7 +329,7 @@ export type ScenarioWithResult = {
 
 export type SendBulkMessagesAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: SendBulkMessagesArgs;
 };
@@ -313,7 +346,7 @@ export type SendBulkMessagesResponseContent = {
 
 export type SendMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: SendMessageArgs;
 };
@@ -337,6 +370,20 @@ export type SubmitCredentialsResponse = {
 export type TgAuthCredentialsResponse = {
     otp?: string | null;
     password?: string | null;
+};
+
+export type UserInfo = {
+    id?: number | null;
+    name?: string | null;
+    title?: string | null;
+    type?: ChatType;
+    description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
+    subtitle?: string | null;
 };
 
 export type ValidationError = {

@@ -57,7 +57,10 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
           subtitle={<ProfileIdLink profileId={scenario.scenario.profile.id || ""} avatars={avatars} />}
         ></PageHeader>
         <div className="flex gap-2">
-          <LogButtons scenarioId={scenario.scenario.id || ""} profileId={scenario.scenario.profile.id || ""} />
+          <LogButtons
+            profileId={scenario.scenario.profile.id || ""}
+            scenarioId={scenario.scenario.id || ""}
+          />
           <ViewJsonButton
             content={scenario}
             title="Scenario JSON"

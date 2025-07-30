@@ -34,7 +34,7 @@ export function ChatView({
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Platform id</label>
-              <p className="text-sm">{chat.platform || "N/A"}</p>
+              <p className="text-sm">{chat.platform_id || "N/A"}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Title</label>

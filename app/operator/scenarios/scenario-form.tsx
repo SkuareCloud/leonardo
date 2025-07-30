@@ -23,6 +23,7 @@ type ActionType =
   | "forward_message"
   | "behavioural"
   | "read_messages"
+  | "resolve_phone"
 
 interface ActionFormData {
   type: ActionType
@@ -416,6 +417,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                     <SelectItem value="forward_message">Forward Message</SelectItem>
                     <SelectItem value="behavioural">Behavioural</SelectItem>
                     <SelectItem value="read_messages">Read Messages</SelectItem>
+                    <SelectItem value="resolve_phone">Resolve Phone</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1605,6 +1607,33 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                       }
                     />
                     <Label htmlFor={`get-unread-messages-${index}`}>Get Unread Messages</Label>
+                  </div>
+                </div>
+              )}
+
+              {action.type === "resolve_phone" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <Label>
+                      Phone Number <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      value={action.args.phone_number || ""}
+                      onChange={e =>
+                        updateAction(index, {
+                          args: {
+                            ...action.args,
+                            phone_number: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Enter phone number"
+                      className={!action.args.phone_number ? "border-red-500" : ""}
+                    />
+                    {!action.args.phone_number && (
+                      <p className="text-sm text-red-500">Please provide a phone number</p>
+                    )}
                   </div>
                 </div>
               )}
