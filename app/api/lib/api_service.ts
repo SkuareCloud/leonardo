@@ -647,7 +647,8 @@ export class ApiService {
       "RandomDistributionMission",
       "PuppetShowMission",
       "AllocateProfilesGroupsMission",
-      "FluffMission"
+      "FluffMission",
+      "MassDmMission"
     ]
     const relevantMissions = missions.filter(mission =>
       missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),
@@ -681,7 +682,8 @@ export class ApiService {
       "RandomDistributionMission",
       "PuppetShowMission",
       "AllocateProfilesGroupsMission",
-      "FluffMission"
+      "FluffMission",
+      "MassDmMission"
     ]
     const relevantMissions = missions.filter(mission =>
       missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),

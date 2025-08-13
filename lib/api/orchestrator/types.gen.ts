@@ -11,6 +11,7 @@ export type ActionCreate = {
 
 export type ActionPrefrences = {
     fail_fast?: boolean | null;
+    timeout?: number | null;
 };
 
 export type ActionRead = {
@@ -32,20 +33,22 @@ export type ActionRead = {
 export type ActionResponseInput = {
     id?: string;
     status: ModelsOperatorActivityActionsActionStatusActionStatus;
-    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContentInput | SendBulkMessagesResponseContentInput | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContentInput | SendBulkMessagesResponseContentInput | ReadMessagesResponseContent | ResolvePhoneResponseContentInput | null;
     start_time: string;
+    end_time?: string | null;
 };
 
 export type ActionResponseOutput = {
     id?: string;
     status: ModelsOperatorActivityActionsActionStatusActionStatus;
-    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
-    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContentOutput | SendBulkMessagesResponseContentOutput | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContentOutput | SendBulkMessagesResponseContentOutput | ReadMessagesResponseContent | ResolvePhoneResponseContentOutput | null;
     start_time: string;
+    end_time?: string | null;
 };
 
-export type ActionStatusCode = 'success' | 'failed' | 'cancelled';
+export type ActionStatusCode = 'success' | 'failed' | 'cancelled' | 'fail_fast' | 'running' | 'pending';
 
 export type ActionStatusUpdate = {
     status_code: ModelsActionsActionStatus;
@@ -88,7 +91,7 @@ export type Attachment = {
 
 export type BehaviouralAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: BehaviouralArgs;
 };
@@ -122,6 +125,10 @@ export type BodyCreateChatsFromCsvChatsFromCsvPost = {
     file: Blob | File;
 };
 
+export type BodyCreateResolvePhoneMissionMissionsResolvePhoneResultsPost = {
+    csv_file: Blob | File;
+};
+
 export type CategoryCreate = {
     name?: string;
     description?: string;
@@ -150,6 +157,7 @@ export type CategoryRead = {
 export type ChannelInfo = {
     id?: number | null;
     name?: string | null;
+    phone_number?: string | null;
     title?: string | null;
     type?: ChatType;
     description?: string | null;
@@ -352,6 +360,7 @@ export type ChatCreate = {
 export type ChatInfo = {
     id?: number | null;
     name?: string | null;
+    phone_number?: string | null;
     title?: string | null;
     type?: ChatType | null;
     description?: string | null;
@@ -540,13 +549,22 @@ export type ChatView = {
     system_chat_members?: Array<string>;
 };
 
-export type DependentScenario = {
-    scenario: Scenario;
+export type DependentScenarioReadable = {
+    scenario: ScenarioReadable;
     /**
      * Raletive seconds from father scenario
      */
     relative_seconds_delay?: number;
-    dependent_scenarios?: Array<DependentScenario>;
+    dependent_scenarios?: Array<DependentScenarioReadable>;
+};
+
+export type DependentScenarioWritable = {
+    scenario: ScenarioWritable;
+    /**
+     * Raletive seconds from father scenario
+     */
+    relative_seconds_delay?: number;
+    dependent_scenarios?: Array<DependentScenarioWritable>;
 };
 
 export type EchoMissionInput = {
@@ -563,11 +581,24 @@ export type EchoMissionInput = {
     scenario_external_id?: string | null;
 };
 
-export type FirstPuppetShowMessage = {
-    message: Message;
-    reference_message_info?: ModelsPlannerMessageInfo | null;
-    message_link?: string | null;
-    start_time?: string | null;
+export type FindUsersByPhoneMissionInputReadable = {
+    phone_numbers: Array<string>;
+    characters_categories?: Array<string> | null;
+    max_phones_per_scenario?: number;
+    time_between_scenarios?: number;
+    batch_size?: number;
+    batch_interval?: number;
+    start_time?: string;
+};
+
+export type FindUsersByPhoneMissionInputWritable = {
+    phone_numbers: Array<string>;
+    characters_categories?: Array<string> | null;
+    max_phones_per_scenario?: number;
+    time_between_scenarios?: number;
+    batch_size?: number;
+    batch_interval?: number;
+    start_time?: string;
 };
 
 export type FluffMissionInput = {
@@ -590,17 +621,26 @@ export type FluffMissionInput = {
 
 export type ForwardMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: ForwardMessageArgs;
 };
 
 export type ForwardMessageArgs = {
+    /**
+     * The chat to forward from, if not provided, the message link will be used
+     */
     from_chat?: ChatInfo | null;
+    /**
+     * The message to forward, if not provided, the message link will be used
+     */
     message_info?: ModelsOperatorCommonMessageInfoMessageInfo | '${input.message_info}' | null;
-    message_link?: string | null;
     target_chat: ChatInfo;
-    message?: InputMessage | null;
+    message?: InputMessage;
+    /**
+     * The link to the message to forward, if not provided, the from chat and message info will be used
+     */
+    message_link?: string | null;
 };
 
 export type ForwardMessageResponseContentInput = {
@@ -614,6 +654,7 @@ export type ForwardMessageResponseContentOutput = {
 export type GroupInfo = {
     id?: number | null;
     name?: string | null;
+    phone_number?: string | null;
     title?: string | null;
     type?: ChatType;
     description?: string | null;
@@ -636,7 +677,7 @@ export type InputMessage = {
 
 export type JoinGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: JoinGroupArgs;
 };
@@ -659,7 +700,7 @@ export type JoinGroupResponseContentOutput = {
 
 export type LeaveGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: LeaveGroupArgs;
 };
@@ -672,14 +713,34 @@ export type LeaveGroupResponseContent = {
     [key: string]: unknown;
 };
 
-export type ManualMissionInput = {
-    scenarios: Array<SeedScenario>;
+export type ManualMissionInputReadable = {
+    scenarios: Array<SeedScenarioReadable>;
 };
 
-export type Message = {
-    message_content: InputMessage;
-    metadata?: MessageMetadata | null;
-    replies?: Array<Message>;
+export type ManualMissionInputWritable = {
+    scenarios: Array<SeedScenarioWritable>;
+};
+
+export type MassDmMissionInput = {
+    characters_categories?: Array<string> | null;
+    /**
+     * List of contacts to send the message to - username, phone_number, platform_ids
+     */
+    contacts?: Array<string>;
+    /**
+     * Number of contacts to send by each character
+     */
+    contacts_per_character?: number;
+    /**
+     * Number of dms to send in each session
+     */
+    contacts_per_session?: number;
+    batch_size?: number;
+    /**
+     * in minutes
+     */
+    batch_interval?: number;
+    message: InputMessage;
 };
 
 export type MessageForwardRequest = {
@@ -695,12 +756,6 @@ export type MessageInfoOutput = {
     text_hash?: string | null;
     message_id?: string | null;
     viewer_id?: string | null;
-};
-
-export type MessageMetadata = {
-    chat_id: string;
-    character_id: string;
-    relative_seconds?: number;
 };
 
 export type MissionCreate = {
@@ -780,10 +835,20 @@ export type Prefrences = {
     should_login_telegram?: boolean | null;
     verify_proxy_working?: boolean | null;
     fail_fast?: boolean | null;
+    hide_content?: boolean | null;
 };
 
 export type PuppetShowInput = {
-    first_messages: Array<FirstPuppetShowMessage>;
+    participants?: number;
+    max_depth?: number;
+    max_messages?: number;
+    chat_id: string;
+    narrative?: string;
+    tone?: string;
+    reference_message_info?: ModelsPlannerMessageInfo | null;
+    message_link?: string | null;
+    linked_message_content?: string | null;
+    start_time?: string | null;
     max_retries?: number | null;
 };
 
@@ -805,18 +870,44 @@ export type RandomDistributionMissionInput = {
     random_choice?: boolean;
 };
 
+export type ReadMessagesAction = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    prefrences?: ActionPrefrences;
+    args: ReadMessagesArgs;
+};
+
+export type ReadMessagesArgs = {
+    chat: ChatInfo;
+    amount_messages?: number | null;
+    read_all_in_end?: boolean;
+};
+
+export type ReadMessagesResponseContent = {
+    messages_read: number;
+};
+
 export type ReplyToMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: ReplyToMessageArgs;
 };
 
 export type ReplyToMessageArgs = {
-    chat: ChatInfo;
+    /**
+     * The chat to reply to, if not provided, the message link will be used
+     */
+    chat?: ChatInfo | null;
+    /**
+     * The message to reply to, if not provided, the message link will be used
+     */
     message_info?: ModelsOperatorCommonMessageInfoMessageInfo | string | null;
-    message_link?: string | null;
     input_message_content: InputMessage;
+    /**
+     * The link to the message to reply to, if not provided, the chat and message info will be used
+     */
+    message_link?: string | null;
 };
 
 export type ReplyToMessageResponseContentInput = {
@@ -827,11 +918,45 @@ export type ReplyToMessageResponseContentOutput = {
     message_info: MessageInfoOutput;
 };
 
-export type Scenario = {
+export type ResolvePhoneActionReadable = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    prefrences?: ActionPrefrences;
+};
+
+export type ResolvePhoneActionWritable = {
+    id?: string;
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    prefrences?: ActionPrefrences;
+    args: ResolvePhoneArgs;
+};
+
+export type ResolvePhoneArgs = {
+    phone_number: string;
+};
+
+export type ResolvePhoneResponseContentInput = {
+    user_info?: UserInfo | null;
+    error?: string | null;
+};
+
+export type ResolvePhoneResponseContentOutput = {
+    user_info?: UserInfo | null;
+    error?: string | null;
+};
+
+export type ScenarioReadable = {
     id?: string;
     profile: Character;
     prefrences?: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneActionReadable>;
+};
+
+export type ScenarioWritable = {
+    id?: string;
+    profile: Character;
+    prefrences?: Prefrences;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneActionWritable>;
 };
 
 export type ScenarioCreate = {
@@ -847,7 +972,7 @@ export type ScenarioCreate = {
 };
 
 export type ScenarioInfo = {
-    start_time: string;
+    start_time?: string;
     end_time?: string | null;
 };
 
@@ -873,19 +998,19 @@ export type ScenarioRead = {
 
 export type ScenarioResultInput = {
     id?: string;
-    status: ModelsOperatorActivityScenarioScenarioStatus;
-    scenario_info: ScenarioInfo;
-    actions_responses: Array<ActionResponseInput>;
+    status?: ModelsOperatorActivityScenarioScenarioStatus;
+    scenario_info?: ScenarioInfo;
+    actions_responses?: Array<ActionResponseInput>;
 };
 
 export type ScenarioResultOutput = {
     id?: string;
-    status: ModelsOperatorActivityScenarioScenarioStatus;
-    scenario_info: ScenarioInfo;
-    actions_responses: Array<ActionResponseOutput>;
+    status?: ModelsOperatorActivityScenarioScenarioStatus;
+    scenario_info?: ScenarioInfo;
+    actions_responses?: Array<ActionResponseOutput>;
 };
 
-export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished';
+export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished' | 'proxy_error' | 'browser_error' | 'telegram_error' | 'profile_not_logged_in' | 'profile_already_running' | 'profile_failed_to_start' | 'profile_startup_timeout' | 'profile_proxy_not_configured';
 
 export type ScenarioUpdate = {
     status_code?: ModelsScenariosScenarioStatus;
@@ -895,15 +1020,21 @@ export type ScenarioUpdate = {
     retries?: number;
 };
 
-export type SeedScenario = {
-    scenario: Scenario;
+export type SeedScenarioReadable = {
+    scenario: ScenarioReadable;
     trigger_time?: string;
-    dependent_scenarios?: Array<DependentScenario>;
+    dependent_scenarios?: Array<DependentScenarioReadable>;
+};
+
+export type SeedScenarioWritable = {
+    scenario: ScenarioWritable;
+    trigger_time?: string;
+    dependent_scenarios?: Array<DependentScenarioWritable>;
 };
 
 export type SendBulkMessagesAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: SendBulkMessagesArgs;
 };
@@ -924,7 +1055,7 @@ export type SendBulkMessagesResponseContentOutput = {
 
 export type SendMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
     prefrences?: ActionPrefrences;
     args: SendMessageArgs;
 };
@@ -947,6 +1078,16 @@ export type TreeNodeCategoryNodePayload = {
     children: Array<TreeNodeCategoryNodePayload> | null;
 };
 
+export type UserInfo = {
+    id?: number | null;
+    name?: string | null;
+    phone_number?: string | null;
+    title?: string | null;
+    type?: ChatType;
+    description?: string | null;
+    subtitle?: string | null;
+};
+
 export type ValidationError = {
     loc: Array<string | number>;
     msg: string;
@@ -958,10 +1099,11 @@ export type ModelsActionsActionStatus = 'scheduled' | 'in_process' | 'running' |
 export type ModelsOperatorActivityActionsActionStatusActionStatus = {
     status_code: ActionStatusCode;
     error?: string | null;
+    error_code?: string | null;
 };
 
 export type ModelsOperatorActivityScenarioScenarioStatus = {
-    status_code: ScenarioResultStatus;
+    status_code?: ScenarioResultStatus;
     error?: string | null;
 };
 
@@ -2421,7 +2563,7 @@ export type GetScenarioScenarioScenarioIdGetOperatorScenarioScenarioIdGetRespons
 export type GetScenarioScenarioScenarioIdGetOperatorScenarioScenarioIdGetResponse = GetScenarioScenarioScenarioIdGetOperatorScenarioScenarioIdGetResponses[keyof GetScenarioScenarioScenarioIdGetOperatorScenarioScenarioIdGetResponses];
 
 export type SendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostData = {
-    body: Scenario;
+    body: ScenarioWritable;
     path: {
         slot: number;
     };
@@ -2454,7 +2596,7 @@ export type SendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostResp
 export type SendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostResponse = SendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostResponses[keyof SendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostResponses];
 
 export type SendScenarioOperatorMockPostWithoutSlotOperatorMockScenarioPostData = {
-    body: Scenario;
+    body: ScenarioWritable;
     path?: never;
     query?: never;
     url: '/operator_mock/scenario';
@@ -2544,6 +2686,44 @@ export type CreateMissionMissionsPostResponses = {
 };
 
 export type CreateMissionMissionsPostResponse = CreateMissionMissionsPostResponses[keyof CreateMissionMissionsPostResponses];
+
+export type CreateResolvePhoneMissionMissionsResolvePhoneResultsPostData = {
+    body: BodyCreateResolvePhoneMissionMissionsResolvePhoneResultsPost;
+    headers?: {
+        'X-Hide-Request-Body'?: boolean;
+    };
+    path?: never;
+    query?: {
+        max_phones_per_scenario?: number;
+        characters_categories?: Array<string>;
+        time_between_scenarios?: number;
+        batch_size?: number;
+        batch_interval?: number;
+    };
+    url: '/missions/resolve_phone_results/';
+};
+
+export type CreateResolvePhoneMissionMissionsResolvePhoneResultsPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateResolvePhoneMissionMissionsResolvePhoneResultsPostError = CreateResolvePhoneMissionMissionsResolvePhoneResultsPostErrors[keyof CreateResolvePhoneMissionMissionsResolvePhoneResultsPostErrors];
+
+export type CreateResolvePhoneMissionMissionsResolvePhoneResultsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: Array<ScenarioRead>;
+};
+
+export type CreateResolvePhoneMissionMissionsResolvePhoneResultsPostResponse = CreateResolvePhoneMissionMissionsResolvePhoneResultsPostResponses[keyof CreateResolvePhoneMissionMissionsResolvePhoneResultsPostResponses];
 
 export type GetMissionsByTypeMissionsTypeMissionTypeGetData = {
     body?: never;
@@ -2792,7 +2972,7 @@ export type CancelMissionMissionsCancelMissionMissionIdPostResponses = {
 export type CancelMissionMissionsCancelMissionMissionIdPostResponse = CancelMissionMissionsCancelMissionMissionIdPostResponses[keyof CancelMissionMissionsCancelMissionMissionIdPostResponses];
 
 export type CreateMission2MissionsCreateMission2PostData = {
-    body: FluffMissionInput | AllocateProfilesGroupsMissionInput | EchoMissionInput | PuppetShowInput | RandomDistributionMissionInput | ManualMissionInput;
+    body: FluffMissionInput | AllocateProfilesGroupsMissionInput | EchoMissionInput | PuppetShowInput | RandomDistributionMissionInput | ManualMissionInputWritable | FindUsersByPhoneMissionInputWritable | MassDmMissionInput;
     path?: never;
     query?: never;
     url: '/missions/create_mission2/';

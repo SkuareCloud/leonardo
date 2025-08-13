@@ -26,7 +26,7 @@ function MessagePreview({
       <ChatBubble className="max-w-[280px] w-fit">
         <div className="flex flex-col gap-3">
           <div className="flex flex-row items-start justify-between gap-3 min-w-0">
-            <div className="text-sm leading-relaxed break-words flex-1">{message.text}</div>
+            <div className="text-sm leading-relaxed break-words flex-1 whitespace-pre-wrap">{message.text}</div>
             <XIcon
               className="w-8 h-8 text-gray-500 hover:text-gray-700 flex-shrink-0 p-2 cursor-pointer hover:bg-gray-200 hover:scale-110 scale-100 active:scale-90 rounded-full transition-colors duration-200"
               onClick={() => onRemove()}

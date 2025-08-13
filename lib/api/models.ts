@@ -9,6 +9,7 @@ export const MissionTypes = [
   "PuppetShowMission",
   "FluffMission",
   "RandomDistributionMission",
+  "MassDmMission",
 ] as const
 
 export type MissionType = (typeof MissionTypes)[number]

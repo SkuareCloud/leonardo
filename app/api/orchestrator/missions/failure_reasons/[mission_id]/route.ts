@@ -4,19 +4,20 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest, { params }: { params: { mission_id: string } }) {
   try {
+    const { mission_id } = await params
     const response = await getMissionFailureReasonsMissionsFailureReasonsMissionIdGet({
       client: orchestratorClient,
-      path: { mission_id: params.mission_id },
+      path: { mission_id },
     })
-    
+
     if (response.error) {
       console.error("Failed to get mission failure reasons:", response.error)
       return NextResponse.json({ error: "Failed to get mission failure reasons" }, { status: 500 })
     }
-    
+
     return NextResponse.json(response.data ?? [])
   } catch (error) {
     console.error("Failed to get mission failure reasons:", error)
     return NextResponse.json({ error: "Failed to get mission failure reasons" }, { status: 500 })
   }
-} 
+}

@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest, { params }: { params: { mission_id: string } }) {
   try {
+    const {mission_id} = await params;
     const response = await getMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGet({
       client: orchestratorClient,
-      path: { mission_id: params.mission_id },
+      path: { mission_id },
     })
     
     if (response.error) {

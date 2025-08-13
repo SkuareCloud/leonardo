@@ -30,6 +30,10 @@ export const zActionPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
         z.null()
+    ]).optional(),
+    timeout: z.union([
+        z.number().int(),
+        z.null()
     ]).optional()
 });
 
@@ -57,12 +61,19 @@ export const zActionRead = z.object({
 export const zActionStatusCode = z.enum([
     'success',
     'failed',
-    'cancelled'
+    'cancelled',
+    'fail_fast',
+    'running',
+    'pending'
 ]);
 
 export const zModelsOperatorActivityActionsActionStatusActionStatus = z.object({
     status_code: zActionStatusCode,
     error: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    error_code: z.union([
         z.string(),
         z.null()
     ]).optional()
@@ -119,6 +130,10 @@ export const zChannelInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     title: z.union([
         z.string(),
         z.null()
@@ -140,6 +155,10 @@ export const zGroupInfo = z.object({
         z.null()
     ]).optional(),
     name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
         z.string(),
         z.null()
     ]).optional(),
@@ -197,6 +216,49 @@ export const zSendBulkMessagesResponseContentInput = z.object({
     message_infos: z.array(zModelsOperatorCommonMessageInfoMessageInfo)
 });
 
+export const zReadMessagesResponseContent = z.object({
+    messages_read: z.number().int()
+});
+
+export const zUserInfo = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: zChatType.optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    subtitle: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zResolvePhoneResponseContentInput = z.object({
+    user_info: z.union([
+        zUserInfo,
+        z.null()
+    ]).optional(),
+    error: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
 export const zActionResponseInput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityActionsActionStatusActionStatus,
@@ -207,7 +269,9 @@ export const zActionResponseInput = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]),
     content: z.union([
         zSendMessageResponseContentInput,
@@ -217,9 +281,15 @@ export const zActionResponseInput = z.object({
         zForwardMessageResponseContentInput,
         zBehaviouralResponseContentInput,
         zSendBulkMessagesResponseContentInput,
+        zReadMessagesResponseContent,
+        zResolvePhoneResponseContentInput,
         z.null()
     ]),
-    start_time: z.string().datetime()
+    start_time: z.string().datetime(),
+    end_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional()
 });
 
 export const zMessageInfoOutput = z.object({
@@ -289,6 +359,17 @@ export const zSendBulkMessagesResponseContentOutput = z.object({
     message_infos: z.array(zMessageInfoOutput)
 });
 
+export const zResolvePhoneResponseContentOutput = z.object({
+    user_info: z.union([
+        zUserInfo,
+        z.null()
+    ]).optional(),
+    error: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
 export const zActionResponseOutput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityActionsActionStatusActionStatus,
@@ -299,7 +380,9 @@ export const zActionResponseOutput = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]),
     content: z.union([
         zSendMessageResponseContentOutput,
@@ -309,9 +392,15 @@ export const zActionResponseOutput = z.object({
         zForwardMessageResponseContentOutput,
         zBehaviouralResponseContentOutput,
         zSendBulkMessagesResponseContentOutput,
+        zReadMessagesResponseContent,
+        zResolvePhoneResponseContentOutput,
         z.null()
     ]),
-    start_time: z.string().datetime()
+    start_time: z.string().datetime(),
+    end_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional()
 });
 
 export const zActionStatusUpdate = z.object({
@@ -399,7 +488,9 @@ export const zBehaviouralAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zBehaviouralArgs
@@ -407,6 +498,10 @@ export const zBehaviouralAction = z.object({
 
 export const zBodyCreateChatsFromCsvChatsFromCsvPost = z.object({
     file: z.string()
+});
+
+export const zBodyCreateResolvePhoneMissionMissionsResolvePhoneResultsPost = z.object({
+    csv_file: z.string()
 });
 
 export const zCategoryCreate = z.object({
@@ -658,6 +753,10 @@ export const zChatInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     title: z.union([
         z.string(),
         z.null()
@@ -902,6 +1001,10 @@ export const zPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
         z.null()
+    ]).optional(),
+    hide_content: z.union([
+        z.boolean(),
+        z.null()
     ]).optional()
 });
 
@@ -926,7 +1029,9 @@ export const zJoinGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zJoinGroupArgs
@@ -945,7 +1050,9 @@ export const zLeaveGroupAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
@@ -960,17 +1067,20 @@ export const zInputMessage = z.object({
 });
 
 export const zReplyToMessageArgs = z.object({
-    chat: zChatInfo,
+    chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
     message_info: z.union([
         zModelsOperatorCommonMessageInfoMessageInfo,
         z.string(),
         z.null()
     ]).optional(),
+    input_message_content: zInputMessage,
     message_link: z.union([
         z.string(),
         z.null()
-    ]).optional(),
-    input_message_content: zInputMessage
+    ]).optional()
 });
 
 export const zReplyToMessageAction = z.object({
@@ -982,7 +1092,9 @@ export const zReplyToMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReplyToMessageArgs
@@ -1002,7 +1114,9 @@ export const zSendMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
@@ -1018,13 +1132,10 @@ export const zForwardMessageArgs = z.object({
         z.literal('${input.message_info}'),
         z.null()
     ]).optional(),
+    target_chat: zChatInfo,
+    message: zInputMessage.optional(),
     message_link: z.union([
         z.string(),
-        z.null()
-    ]).optional(),
-    target_chat: zChatInfo,
-    message: z.union([
-        zInputMessage,
         z.null()
     ]).optional()
 });
@@ -1038,7 +1149,9 @@ export const zForwardMessageAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zForwardMessageArgs
@@ -1059,10 +1172,59 @@ export const zSendBulkMessagesAction = z.object({
         'leave_group',
         'reply_to_message',
         'forward_message',
-        'behavioural'
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendBulkMessagesArgs
+});
+
+export const zReadMessagesArgs = z.object({
+    chat: zChatInfo,
+    amount_messages: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_all_in_end: z.boolean().optional().default(false)
+});
+
+export const zReadMessagesAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zReadMessagesArgs
+});
+
+export const zResolvePhoneArgs = z.object({
+    phone_number: z.string()
+});
+
+export const zResolvePhoneAction = z.object({
+    id: z.string().optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages',
+        'resolve_phone'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zResolvePhoneArgs
 });
 
 export const zScenario = z.object({
@@ -1136,7 +1298,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-07-17T03:41:11.232352Z'),
+    trigger_time: z.string().datetime().optional().default('2025-08-12T10:05:49.613812Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1145,37 +1307,17 @@ export const zEchoMissionInput = z.object({
     ]).optional()
 });
 
-export const zMessageMetadata = z.object({
-    chat_id: z.string(),
-    character_id: z.string(),
-    relative_seconds: z.number().optional().default(0)
-});
-
-export const zMessage: z.AnyZodObject = z.object({
-    message_content: zInputMessage,
-    metadata: z.union([
-        zMessageMetadata,
+export const zFindUsersByPhoneMissionInput = z.object({
+    phone_numbers: z.array(z.string()),
+    characters_categories: z.union([
+        z.array(z.string()),
         z.null()
     ]).optional(),
-    replies: z.array(z.lazy(() => {
-        return zMessage;
-    })).optional()
-});
-
-export const zFirstPuppetShowMessage: z.AnyZodObject = z.object({
-    message: zMessage,
-    reference_message_info: z.union([
-        zModelsPlannerMessageInfo,
-        z.null()
-    ]).optional(),
-    message_link: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    start_time: z.union([
-        z.string().datetime(),
-        z.null()
-    ]).optional()
+    max_phones_per_scenario: z.number().int().optional().default(100),
+    time_between_scenarios: z.number().int().optional().default(10),
+    batch_size: z.number().int().optional().default(10),
+    batch_interval: z.number().int().optional().default(5),
+    start_time: z.string().datetime().optional().default('2025-08-12T10:05:49.545572Z')
 });
 
 export const zFluffMissionInput = z.object({
@@ -1221,12 +1363,25 @@ export const zHttpValidationError = z.object({
 
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-07-17T03:41:11.142930Z'),
+    trigger_time: z.string().datetime().optional().default('2025-08-12T10:05:49.546080Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
 export const zManualMissionInput = z.object({
     scenarios: z.array(zSeedScenario)
+});
+
+export const zMassDmMissionInput = z.object({
+    characters_categories: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional(),
+    contacts: z.array(z.string()).optional().default([]),
+    contacts_per_character: z.number().int().optional().default(100),
+    contacts_per_session: z.number().int().optional().default(100),
+    batch_size: z.number().int().optional().default(20),
+    batch_interval: z.number().int().optional().default(10),
+    message: zInputMessage
 });
 
 export const zMissionStatus = z.enum([
@@ -1388,7 +1543,28 @@ export const zMissionRunResult = z.object({
 });
 
 export const zPuppetShowInput = z.object({
-    first_messages: z.array(zFirstPuppetShowMessage),
+    participants: z.number().int().optional().default(2),
+    max_depth: z.number().int().optional().default(10),
+    max_messages: z.number().int().optional().default(50),
+    chat_id: z.string().uuid(),
+    narrative: z.string().optional().default(''),
+    tone: z.string().optional().default(''),
+    reference_message_info: z.union([
+        zModelsPlannerMessageInfo,
+        z.null()
+    ]).optional(),
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    linked_message_content: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    start_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional(),
     max_retries: z.union([
         z.number().int(),
         z.null()
@@ -1414,7 +1590,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-07-17T03:41:11.235093Z'),
+    start_time: z.string().datetime().optional().default('2025-08-12T10:05:49.615892Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
@@ -1441,7 +1617,7 @@ export const zScenarioCreate = z.object({
 });
 
 export const zScenarioInfo = z.object({
-    start_time: z.string().datetime(),
+    start_time: z.string().datetime().optional(),
     end_time: z.union([
         z.string().datetime(),
         z.null()
@@ -1452,11 +1628,19 @@ export const zScenarioResultStatus = z.enum([
     'success',
     'failed',
     'pending',
-    'finished'
+    'finished',
+    'proxy_error',
+    'browser_error',
+    'telegram_error',
+    'profile_not_logged_in',
+    'profile_already_running',
+    'profile_failed_to_start',
+    'profile_startup_timeout',
+    'profile_proxy_not_configured'
 ]);
 
 export const zModelsOperatorActivityScenarioScenarioStatus = z.object({
-    status_code: zScenarioResultStatus,
+    status_code: zScenarioResultStatus.optional(),
     error: z.union([
         z.string(),
         z.null()
@@ -1465,16 +1649,16 @@ export const zModelsOperatorActivityScenarioScenarioStatus = z.object({
 
 export const zScenarioResultInput = z.object({
     id: z.string().optional(),
-    status: zModelsOperatorActivityScenarioScenarioStatus,
-    scenario_info: zScenarioInfo,
-    actions_responses: z.array(zActionResponseInput)
+    status: zModelsOperatorActivityScenarioScenarioStatus.optional(),
+    scenario_info: zScenarioInfo.optional(),
+    actions_responses: z.array(zActionResponseInput).optional()
 });
 
 export const zScenarioResultOutput = z.object({
     id: z.string().optional(),
-    status: zModelsOperatorActivityScenarioScenarioStatus,
-    scenario_info: zScenarioInfo,
-    actions_responses: z.array(zActionResponseOutput)
+    status: zModelsOperatorActivityScenarioScenarioStatus.optional(),
+    scenario_info: zScenarioInfo.optional(),
+    actions_responses: z.array(zActionResponseOutput).optional()
 });
 
 export const zScenarioUpdate = z.object({
@@ -1584,6 +1768,8 @@ export const zSendScenarioOperatorMockPostWithoutSlotOperatorMockScenarioPostRes
 export const zGetMissionsMissionsGetResponse = z.array(zMissionRead);
 
 export const zCreateMissionMissionsPostResponse = zMissionRead;
+
+export const zCreateResolvePhoneMissionMissionsResolvePhoneResultsPostResponse = z.array(zScenarioRead);
 
 export const zGetMissionsByTypeMissionsTypeMissionTypeGetResponse = z.array(zMissionRead);
 

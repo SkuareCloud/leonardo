@@ -2,6 +2,32 @@
 
 import { z } from 'zod';
 
+export const zAccess = z.object({
+    view: z.number().int(),
+    update: z.number().int(),
+    delete: z.number().int(),
+    share: z.number().int(),
+    usage: z.number().int()
+});
+
+export const zActionErrorCode = z.enum([
+    'chat_not_found',
+    'general_error',
+    'account_muted',
+    'send_message_error',
+    'message_deleted',
+    'sending_attachment_error',
+    'did_not_find_message_after_sending',
+    'username_not_valid',
+    'failed_to_download_attachment',
+    'join_group_chat_type_user',
+    'account_in_slow_mode',
+    'timeout',
+    'tweet_does_not_exist',
+    'tweet_is_unavailable',
+    'tweet_page_load_failed'
+]);
+
 export const zActionPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
@@ -26,6 +52,10 @@ export const zActionStatus = z.object({
     status_code: zActionStatusCode,
     error: z.union([
         z.string(),
+        z.null()
+    ]).optional(),
+    error_code: z.union([
+        zActionErrorCode,
         z.null()
     ]).optional()
 });
@@ -81,6 +111,10 @@ export const zChannelInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     title: z.union([
         z.string(),
         z.null()
@@ -122,6 +156,10 @@ export const zGroupInfo = z.object({
         z.null()
     ]).optional(),
     name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
         z.string(),
         z.null()
     ]).optional(),
@@ -187,6 +225,10 @@ export const zChatInfo = z.object({
         z.null()
     ]).optional(),
     name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
         z.string(),
         z.null()
     ]).optional(),
@@ -259,6 +301,10 @@ export const zUserInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     title: z.union([
         z.string(),
         z.null()
@@ -305,6 +351,47 @@ export const zResolvePhoneResponseContent = z.object({
     ]).optional()
 });
 
+export const zTweetInteractionStatus = z.enum([
+    'success',
+    'failed',
+    'already_done'
+]);
+
+export const zTweetInteractionResult = z.object({
+    like: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    retweet: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    bookmark: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    reply: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    reply_tweet_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    quote: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    quote_tweet_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
+export const zInteractWithTweetResponseContent = z.object({
+    interaction_result: zTweetInteractionResult
+});
+
 export const zActionResponse = z.object({
     id: z.string().optional(),
     status: zActionStatus,
@@ -317,7 +404,8 @@ export const zActionResponse = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]),
     content: z.union([
         zSendMessageResponseContent,
@@ -329,6 +417,7 @@ export const zActionResponse = z.object({
         zSendBulkMessagesResponseContent,
         zReadMessagesResponseContent,
         zResolvePhoneResponseContent,
+        zInteractWithTweetResponseContent,
         z.null()
     ]),
     start_time: z.string().datetime(),
@@ -369,6 +458,91 @@ export const zActivationResponse = z.object({
     status: zActivationStatus
 });
 
+export const zCharacterProvider = z.enum([
+    'avatar',
+    'dolphin',
+    'adspower'
+]);
+
+export const zAdspowerProfileData = z.object({
+    profile_id: z.string(),
+    profile_no: z.string(),
+    name: z.string().optional().default(''),
+    created_time: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    ip: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    ip_country: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    password: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    fbcc_proxy_acc_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    ipchecker: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    fakey: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    group_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    group_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    remark: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    last_open_time: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    platform: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    category_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    id: z.string(),
+    provider: zCharacterProvider.optional()
+});
+
+export const zAdspowerProfileIdentifier = z.object({
+    profile_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    profile_no: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    profile_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
 export const zAsyncWorkerState = z.enum([
     'init',
     'starting',
@@ -391,6 +565,10 @@ export const zAttachment = z.object({
     ]).optional()
 });
 
+export const zAudio = z.object({
+    mode: z.string()
+});
+
 export const zAuthRequest = z.object({
     profile_id: z.string(),
     otp: z.union([
@@ -403,11 +581,75 @@ export const zAuthRequest = z.object({
     ]).optional()
 });
 
+export const zProxyConfig = z.object({
+    fqdn: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    ip_address: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    port: z.number().int(),
+    username: z.string(),
+    password: z.string(),
+    status: z.string(),
+    id: z.string()
+});
+
+export const zAvatarProfileData = z.object({
+    id: z.string(),
+    data_dir_path: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    proxy_config: z.union([
+        zProxyConfig,
+        z.null()
+    ]).optional(),
+    user_agent: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    bio: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    provider: zCharacterProvider.optional()
+});
+
+export const zBaseProfileData = z.object({
+    id: z.string(),
+    provider: zCharacterProvider.optional()
+});
+
+export const zSyncPersonalDetailsArgs = z.object({
+    first_name: z.string().optional().default(''),
+    last_name: z.string().optional().default(''),
+    bio: z.string().optional().default(''),
+    username: z.string().optional().default('')
+});
+
 export const zBehaviouralArgs = z.object({
     wait_time: z.number().int().optional().default(0),
     sync_context: z.boolean().optional().default(false),
     get_chats: z.boolean().optional().default(false),
-    sync_personal_details: z.boolean().optional().default(false),
+    sync_personal_details: z.union([
+        zSyncPersonalDetailsArgs,
+        z.null()
+    ]).optional(),
     disable_auto_download_media: z.boolean().optional().default(false),
     delete_all_active_sessions: z.boolean().optional().default(false),
     get_unread_messages: z.boolean().optional().default(false)
@@ -415,6 +657,10 @@ export const zBehaviouralArgs = z.object({
 
 export const zBehaviouralAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -424,14 +670,513 @@ export const zBehaviouralAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zBehaviouralArgs
 });
 
+export const zCpu = z.object({
+    mode: z.string(),
+    value: z.number().int()
+});
+
+export const zCanvas = z.object({
+    mode: z.string()
+});
+
 export const zCharacter = z.object({
-    id: z.string().optional()
+    id: z.string().optional(),
+    provider: zCharacterProvider.optional()
+});
+
+export const zClientRect = z.object({
+    mode: z.string()
+});
+
+export const zConnection = z.object({
+    downlink: z.number(),
+    effectiveType: z.string(),
+    rtt: z.number().int(),
+    saveData: z.boolean()
+});
+
+export const zDeviceName = z.object({
+    mode: z.string(),
+    value: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zProfileStatus = z.object({
+    id: z.number().int().optional().default(0),
+    name: z.string().optional().default(''),
+    color: z.string().optional().default('')
+});
+
+export const zDolphinBrowserProfileView = z.object({
+    id: z.string(),
+    name: z.string(),
+    tags: z.array(z.string()).optional().default([]),
+    status: z.union([
+        zProfileStatus,
+        z.null()
+    ]).optional()
+});
+
+export const zUserAgent = z.object({
+    mode: z.string(),
+    value: z.string()
+});
+
+export const zWebRtc = z.object({
+    mode: z.string(),
+    ipAddress: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zWebGl = z.object({
+    mode: z.string()
+});
+
+export const zWebGlInfo = z.object({
+    mode: z.string(),
+    vendor: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    renderer: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    webgl2Maximum: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zNotes = z.object({
+    content: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    color: z.string().optional().default('blue'),
+    style: z.string().optional().default('text'),
+    icon: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zTimezone = z.object({
+    mode: z.string(),
+    value: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zLocale = z.object({
+    mode: z.string(),
+    value: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zProxy = z.object({
+    id: z.number().int(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    host: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    port: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    login: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    password: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    savedByUser: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    cryptoKeyId: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    changeIpUrl: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    provider: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    lastCheck: z.union([
+        z.object({}),
+        z.null()
+    ]).optional()
+});
+
+export const zPorts = z.object({
+    mode: z.string(),
+    blacklist: z.string()
+});
+
+export const zGeolocation = z.object({
+    mode: z.string(),
+    latitude: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    longitude: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    accuracy: z.union([
+        z.number(),
+        z.null()
+    ]).optional()
+});
+
+export const zMemory = z.object({
+    mode: z.string(),
+    value: z.number().int()
+});
+
+export const zScreen = z.object({
+    width: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    height: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    mode: z.string(),
+    resolution: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zExtension = z.object({
+    url: z.string(),
+    type: z.string(),
+    hash: z.string()
+});
+
+export const zHomepagePivot = z.object({
+    profileId: z.number().int(),
+    homepageId: z.number().int()
+});
+
+export const zHomepage = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    url: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    order: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    pivot: z.union([
+        zHomepagePivot,
+        z.null()
+    ]).optional()
+});
+
+export const zWebGpu = z.object({
+    mode: z.string(),
+    value: z.string()
+});
+
+export const zMacAddress = z.object({
+    mode: z.string(),
+    value: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zProfileAutomationData = z.object({
+    port: z.number().int(),
+    wsEndpoint: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+export const zDolphinProfileData = z.object({
+    id: z.string(),
+    teamId: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    userId: z.number().int(),
+    name: z.string(),
+    tags: z.array(z.string()).optional().default([]),
+    platform: z.string(),
+    browserType: z.string(),
+    mainWebsite: z.string().optional().default(''),
+    useragent: zUserAgent,
+    webrtc: zWebRtc,
+    canvas: zCanvas,
+    webgl: zWebGl,
+    webglInfo: zWebGlInfo,
+    clientRect: zClientRect,
+    notes: zNotes,
+    timezone: zTimezone,
+    locale: zLocale,
+    tabs: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional(),
+    proxyId: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    proxy: z.union([
+        zProxy,
+        z.null()
+    ]).optional(),
+    ports: zPorts,
+    access: zAccess,
+    status: z.union([
+        zProfileStatus,
+        z.null()
+    ]).optional(),
+    running: z.number().int().optional().default(0),
+    lastRunningTime: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    lastRunnedByUserId: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    lastRunUuid: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    lastStartTime: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    geolocation: zGeolocation,
+    cpu: zCpu,
+    memory: zMemory,
+    platformName: z.string(),
+    cpuArchitecture: z.string(),
+    osVersion: z.union([
+        z.string(),
+        z.number().int()
+    ]),
+    platformVersion: z.string(),
+    screen: zScreen,
+    screenWidth: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    screenHeight: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    connection: z.union([
+        zConnection,
+        z.null()
+    ]).optional(),
+    connectionDownlink: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    connectionEffectiveType: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    connectionRtt: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    connectionSaveData: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    vendorSub: z.string().optional().default(''),
+    productSub: z.union([
+        z.string(),
+        z.number().int()
+    ]),
+    vendor: z.string(),
+    product: z.string(),
+    doNotTrack: z.boolean().optional().default(false),
+    args: z.array(z.string()).optional().default([]),
+    appCodeName: z.string(),
+    userFields: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    login: z.string().optional().default(''),
+    password: z.string().optional().default(''),
+    storagePath: z.string().optional().default(''),
+    datadirHash: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    cookiesHash: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    extensions: z.array(zExtension).optional().default([]),
+    bookmarks: z.array(z.string()).optional().default([]),
+    homepages: z.array(zHomepage).optional().default([]),
+    extensionsNewNaming: z.union([
+        z.boolean(),
+        z.number().int()
+    ]),
+    archived: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    transfer: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    webgpu: z.union([
+        zWebGpu,
+        z.null()
+    ]).optional(),
+    recoverCount: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    cloudSyncDisabled: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    cloudSyncDisabledOnMachineId: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    sortingName: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    addedSortingName: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    sorting_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    macAddress: z.union([
+        zMacAddress,
+        z.null()
+    ]).optional(),
+    deviceName: z.union([
+        zDeviceName,
+        z.null()
+    ]).optional(),
+    fontsMode: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    isHiddenProfileName: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    enableArgIsChromeIcon: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    disableLoadWebCameraAndCookies: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    audio: z.union([
+        zAudio,
+        z.null()
+    ]).optional(),
+    pinned: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    folder: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    requirePassword: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    transferToEmail: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    transferStatus: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    transferHandleDate: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    transferWithProxy: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    created_at: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    updated_at: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    deleted_at: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    totalSessionDuration: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    uaFullVersion: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    automation: z.union([
+        zProfileAutomationData,
+        z.null()
+    ]).optional(),
+    provider: zCharacterProvider.optional()
 });
 
 export const zInputMessage = z.object({
@@ -461,6 +1206,10 @@ export const zForwardMessageArgs = z.object({
 
 export const zForwardMessageAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -470,7 +1219,8 @@ export const zForwardMessageAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zForwardMessageArgs
@@ -484,6 +1234,55 @@ export const zValidationError = z.object({
 
 export const zHttpValidationError = z.object({
     detail: z.array(zValidationError).optional()
+});
+
+export const zTweetContent = z.object({
+    text: z.string(),
+    media: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional()
+});
+
+export const zTweetInteraction = z.object({
+    like: z.boolean().optional().default(false),
+    retweet: z.boolean().optional().default(false),
+    bookmark: z.boolean().optional().default(false),
+    reply: z.union([
+        zTweetContent,
+        z.null()
+    ]).optional(),
+    quote: z.union([
+        zTweetContent,
+        z.null()
+    ]).optional()
+});
+
+export const zInteractWithTweetArgs = z.object({
+    url: z.string(),
+    interaction: zTweetInteraction
+});
+
+export const zInteractWithTweetAction = z.object({
+    id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages',
+        'resolve_phone',
+        'interact_with_tweet'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zInteractWithTweetArgs
 });
 
 export const zJoinGroupArgs = z.object({
@@ -500,6 +1299,10 @@ export const zJoinGroupArgs = z.object({
 
 export const zJoinGroupAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -509,7 +1312,8 @@ export const zJoinGroupAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zJoinGroupArgs
@@ -521,6 +1325,10 @@ export const zLeaveGroupArgs = z.object({
 
 export const zLeaveGroupAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -530,7 +1338,8 @@ export const zLeaveGroupAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
@@ -560,6 +1369,10 @@ export const zPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
         z.null()
+    ]).optional(),
+    hide_content: z.union([
+        z.boolean(),
+        z.null()
     ]).optional()
 });
 
@@ -581,6 +1394,10 @@ export const zReplyToMessageArgs = z.object({
 
 export const zReplyToMessageAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -590,7 +1407,8 @@ export const zReplyToMessageAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReplyToMessageArgs
@@ -603,6 +1421,10 @@ export const zSendMessageArgs = z.object({
 
 export const zSendMessageAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -612,7 +1434,8 @@ export const zSendMessageAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
@@ -626,6 +1449,10 @@ export const zSendBulkMessagesArgs = z.object({
 
 export const zSendBulkMessagesAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -635,7 +1462,8 @@ export const zSendBulkMessagesAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendBulkMessagesArgs
@@ -652,6 +1480,10 @@ export const zReadMessagesArgs = z.object({
 
 export const zReadMessagesAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -661,7 +1493,8 @@ export const zReadMessagesAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReadMessagesArgs
@@ -673,6 +1506,10 @@ export const zResolvePhoneArgs = z.object({
 
 export const zResolvePhoneAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -682,7 +1519,8 @@ export const zResolvePhoneAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zResolvePhoneArgs
@@ -784,6 +1622,8 @@ export const zGetScenarioByIdScenarioScenarioScenarioIdGetResponse = z.union([
 
 export const zGetAllCharactersCharactersGetResponse = z.array(zProfileWorkerView);
 
+export const zGetAllProfilesCharactersAllGetResponse = z.array(z.unknown());
+
 export const zCredentialsAuthCredentialsGetResponse = zTgAuthCredentialsResponse;
 
 export const zSubmitCredentialsAuthPostResponse = zSubmitCredentialsResponse;
@@ -793,3 +1633,9 @@ export const zActivateActivationActivatePostResponse = zActivationResponse;
 export const zActivateWithSessionDataActivationActivateWithSessionDataPostResponse = zActivationResponse;
 
 export const zGetStatusActivationStatusGetResponse = zActivationResponse;
+
+export const zGetAdspowerProfileScrapeAdspowerScrapeGetResponse = z.string();
+
+export const zGetAllStatusesDolphinStatusesGetResponse = z.array(zProfileStatus);
+
+export const zGetAllProfilesDolphinProfilesGetResponse = z.array(zDolphinBrowserProfileView);
