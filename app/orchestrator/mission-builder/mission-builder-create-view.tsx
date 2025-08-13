@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react"
 import { AllocateProfilesGroupsMissionBuilder } from "./allocate-profiles-groups-mission-builder"
 import { EchoMissionBuilder } from "./echo-mission-builder"
 import { FluffMissionBuilder } from "./fluff-mission-builder"
+import { MassMessageMissionBuilder } from "./mass-message-mission"
 import { MissionBuilderContext } from "./mission-builder-context"
 import { InputWithLabel } from "./mission-builder-utils"
 import { PuppetShowMissionBuilder } from "./puppet-show-mission-builder"
@@ -85,6 +86,8 @@ export function MissionBuilderCreateView({
     missionName = "Fluff Mission"
   } else if (mission === "RandomDistributionMission") {
     missionName = "Random Distribution Mission"
+  } else if (mission === "MassDmMission") {
+    missionName = "Mass DM Mission"
   }
 
   return (
@@ -121,6 +124,9 @@ export function MissionBuilderCreateView({
               )}
               {mission === "RandomDistributionMission" && (
                 <RandomDistributionMissionBuilder chats={chats} categories={categories || []} />
+              )}
+              {mission === "MassDmMission" && (
+                <MassMessageMissionBuilder categories={categories || []} />
               )}
             </div>
           </ResizablePanel>

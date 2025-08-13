@@ -1,16 +1,9 @@
 "use client"
 
-import { LabelList, Pie, PieChart } from "recharts"
+import { Pie, PieChart } from "recharts"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
+import { ChartConfig, ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart"
 import { MissionStatistics as MissionStatisticsType } from "@lib/api/models"
 import { ActionRead, ChatRead, MissionRead } from "@lib/api/orchestrator/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
@@ -48,6 +41,105 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// Custom tooltip for mission statistics
+function MissionStatisticsTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) {
+    return null
+  }
+
+  const data = payload[0]
+  const total = data.payload.total || 0
+  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : "0.0"
+
+  return (
+    <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+      <div className="font-medium text-sm">
+        {chartConfig[data.name as keyof typeof chartConfig]?.label || data.name}
+      </div>
+      <div className="text-xs text-muted-foreground mt-1">
+        Count: {data.value} ({percentage}%)
+      </div>
+    </div>
+  )
+}
+
+// Custom tooltip for failure reasons
+function FailureReasonsTooltip({ active, payload, label }: any) {
+  if (!active || !payload || !payload.length) {
+    return null
+  }
+
+  const data = payload[0]
+  const total = data.payload.total || 0
+  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : "0.0"
+
+  return (
+    <div className="bg-background border border-border rounded-lg p-3 shadow-lg max-w-xs">
+      <div className="font-medium text-sm break-words">{data.name}</div>
+      <div className="text-xs text-muted-foreground mt-1">
+        Count: {data.value} ({percentage}%)
+      </div>
+    </div>
+  )
+}
+
+// Custom legend for mission statistics
+function MissionStatisticsLegend({ payload }: any) {
+  if (!payload || !payload.length) return null
+
+  const total = payload.reduce((sum: number, item: any) => sum + (item.payload?.count || 0), 0)
+
+  return (
+    <div className="flex flex-wrap gap-3 justify-center mt-6">
+      {payload.map((entry: any, index: number) => {
+        const count = entry.payload?.count || 0
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0"
+        const displayName = chartConfig[entry.value as keyof typeof chartConfig]?.label || entry.value
+        const truncatedName = displayName.length > 30 ? displayName.substring(0, 30) + "..." : displayName
+        return (
+          <div key={index} className="flex items-center gap-2 text-xs bg-muted/50 px-3 py-2 rounded-lg w-[200px]">
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-medium truncate" title={displayName}>
+                {truncatedName}
+              </span>
+              <span className="text-muted-foreground">{percentage}%</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Custom legend for failure reasons
+function FailureReasonsLegend({ payload }: any) {
+  if (!payload || !payload.length) return null
+
+  const total = payload.reduce((sum: number, item: any) => sum + (item.payload?.count || 0), 0)
+
+  return (
+    <div className="flex flex-wrap gap-3 justify-center mt-6">
+      {payload.map((entry: any, index: number) => {
+        const count = entry.payload?.count || 0
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0"
+        const displayName = entry.value.length > 30 ? entry.value.substring(0, 30) + "..." : entry.value
+        return (
+          <div key={index} className="flex items-center gap-2 text-xs bg-muted/50 px-3 py-2 rounded-lg w-[200px]">
+            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-medium truncate" title={entry.value}>
+                {displayName}
+              </span>
+              <span className="text-muted-foreground">{percentage}%</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function MissionsScenarioStatistics({
   statistics,
   refreshing,
@@ -73,6 +165,12 @@ function MissionsScenarioStatistics({
       fill: chartConfig[source as keyof typeof chartConfig]?.color || "var(--chart-1)",
     }))
 
+  const total = chartData.reduce((sum, item) => sum + item.count, 0)
+  const chartDataWithTotal = chartData.map(item => ({
+    ...item,
+    total,
+  }))
+
   return (
     <Card className="flex flex-col w-[500px] -0">
       <CardHeader className="items-center pb-0">
@@ -88,22 +186,21 @@ function MissionsScenarioStatistics({
         )}
         <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[450px]">
           <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-
-            <Pie data={chartData} dataKey="count" nameKey="source" fill="fill">
-              <LabelList
-                dataKey="source"
-                className="fill-background text-xs"
-                stroke="none"
-                fontSize={10}
-                formatter={(value: keyof typeof chartConfig) =>
-                  chartConfig[value]?.label + " (" + chartData.find(d => d.source === value)?.count + ")"
-                }
-              />
-            </Pie>
+            <ChartTooltip cursor={false} content={<MissionStatisticsTooltip />} />
+            <Pie
+              data={chartDataWithTotal}
+              dataKey="count"
+              nameKey="source"
+              fill="fill"
+              innerRadius={60}
+              outerRadius={120}
+              paddingAngle={2}
+              stroke="var(--background)"
+              strokeWidth={2}
+            />
             <ChartLegend
-              content={<ChartLegendContent nameKey="source" />}
-              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
+              content={<MissionStatisticsLegend payload={chartDataWithTotal} />}
+              className="mt-6 flex-wrap gap-3 justify-center"
             />
           </PieChart>
         </ChartContainer>
@@ -120,22 +217,22 @@ function MissionFailureReasonsChart({
   failureReasons: ActionRead[]
   refreshing: boolean
 }) {
-  // Group failure reasons by action_type and count them
+  // Group failure reasons by error_code (with fallback to error) and count them
   const failureReasonCounts = failureReasons.reduce((acc, action) => {
-    const actionError = action.error || "unknown"
+    const actionError = action.error_code || action.error || "unknown"
     acc[actionError] = (acc[actionError] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 
   // Generate dynamic colors based on error string
   const stringToColor = (str: string) => {
-    let hash = 0;
+    let hash = 0
     for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      hash = str.charCodeAt(i) + ((hash << 5) - hash)
     }
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 70%, 60%)`;
-  };
+    const hue = Math.abs(hash) % 360
+    return `hsl(${hue}, 70%, 60%)`
+  }
 
   const chartData = Object.entries(failureReasonCounts)
     .filter(([_, count]) => count > 0)
@@ -145,16 +242,25 @@ function MissionFailureReasonsChart({
       fill: stringToColor(actionError),
     }))
 
-  if (chartData.length === 0) {
+  const total = chartData.reduce((sum, item) => sum + item.count, 0)
+  const chartDataWithTotal = chartData.map(item => ({
+    ...item,
+    total,
+  }))
+
+  // Check if we have any failure data to display
+  if (chartDataWithTotal.length === 0) {
     return (
       <Card className="flex flex-col w-[500px]">
         <CardHeader className="items-center pb-0">
           <CardTitle>Failure Reasons</CardTitle>
-          <CardDescription>No failures found</CardDescription>
+          <CardDescription>
+            {safeFailureReasons.length === 0 ? "No failures found" : "No failure data available"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-            No failure data available
+            {safeFailureReasons.length === 0 ? "No failure data available" : "Processing failure data..."}
           </div>
         </CardContent>
       </Card>
@@ -174,23 +280,23 @@ function MissionFailureReasonsChart({
             <span>Refreshing...</span>
           </div>
         )}
-        <ChartContainer config={{}} className="mx-auto aspect-square max-h-[450px]">
+        <ChartContainer config={{}} className="mx-auto aspect-square max-h-[750px]">
           <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie data={chartData} dataKey="count" nameKey="actionError" fill="fill">
-              <LabelList
-                dataKey="actionError"
-                className="fill-background text-xs"
-                stroke="none"
-                fontSize={10}
-                formatter={(value: string) =>
-                  value + " (" + chartData.find(d => d.actionError === value)?.count + ")"
-                }
-              />
-            </Pie>
+            <ChartTooltip cursor={false} content={<FailureReasonsTooltip />} />
+            <Pie
+              data={chartDataWithTotal}
+              dataKey="count"
+              nameKey="actionError"
+              fill="fill"
+              innerRadius={60}
+              outerRadius={120}
+              paddingAngle={2}
+              stroke="var(--background)"
+              strokeWidth={2}
+            />
             <ChartLegend
-              content={<ChartLegendContent nameKey="actionError" />}
-              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
+              content={<FailureReasonsLegend payload={chartDataWithTotal} />}
+              className="mt-6 flex-wrap gap-3 justify-center"
             />
           </PieChart>
         </ChartContainer>
@@ -200,13 +306,7 @@ function MissionFailureReasonsChart({
   )
 }
 
-function MissionSuccessfulChats({
-  successfulChats,
-  refreshing,
-}: {
-  successfulChats: ChatRead[]
-  refreshing: boolean
-}) {
+function MissionSuccessfulChats({ successfulChats, refreshing }: { successfulChats: ChatRead[]; refreshing: boolean }) {
   if (successfulChats.length === 0) {
     return (
       <Card className="flex flex-col w-[500px]">
@@ -244,10 +344,7 @@ function MissionSuccessfulChats({
         )}
         <div className="max-h-[400px] overflow-y-auto space-y-2">
           {successfulChats.map((chat, index) => (
-            <div
-              key={chat.id || index}
-              className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-            >
+            <div key={chat.id || index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-muted-foreground" />
@@ -302,9 +399,7 @@ export function MissionStatistics({ mission }: { mission: MissionRead }) {
   return (
     <div className="flex flex-col w-full gap-6">
       <div className="flex flex-wrap gap-6">
-        {missionStatistics && (
-          <MissionsScenarioStatistics statistics={missionStatistics} refreshing={isPending} />
-        )}
+        {missionStatistics && <MissionsScenarioStatistics statistics={missionStatistics} refreshing={isPending} />}
         {failureReasons && (
           <MissionFailureReasonsChart failureReasons={failureReasons} refreshing={isFailureReasonsPending} />
         )}

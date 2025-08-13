@@ -8,11 +8,11 @@ import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MissionType } from "@lib/api/models"
 import { CategoryRead, ChatRead, MissionCreate, ScenarioRead } from "@lib/api/orchestrator"
-import { zAllocateProfilesGroupsMissionInput, zEchoMissionInput, zFluffMissionInput, zMissionCreate, zPuppetShowInput, zRandomDistributionMissionInput } from "@lib/api/orchestrator/zod.gen"
+import { zAllocateProfilesGroupsMissionInput, zEchoMissionInput, zFluffMissionInput, zMassDmMissionInput, zMissionCreate, zPuppetShowInput, zRandomDistributionMissionInput } from "@lib/api/orchestrator/zod.gen"
 import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
-import { DicesIcon, DramaIcon, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
+import { DicesIcon, DramaIcon, Mail, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React from "react"
 import { toast } from "sonner"
@@ -56,6 +56,12 @@ const MissionMetadata: Record<
     description: "Sync a group of characters with their platform feed and preferences",
     supported: true,
     icon: RabbitIcon,
+  },
+  MassDmMission: {
+    name: "Mass DM",
+    description: "Send direct messages to a contact list using many profiles",
+    supported: true,
+    icon: Mail,
   },
 }
 
@@ -154,6 +160,21 @@ export function MissionBuilderView({
                       if (validatedPayload.error) {
                         toast.error("Invalid payload: " + validatedPayload.error.message)
                         setError(validatedPayload.error.message)
+                        return
+                      }
+                    } else if (selectedMissionType === "MassDmMission") {
+                      const validatedPayload = zMassDmMissionInput.safeParse(missionCreateRequest.payload)
+                      if (validatedPayload.error) {
+                        toast.error("Invalid payload: " + validatedPayload.error.message)
+                        setError(validatedPayload.error.message)
+                        return
+                      }
+                      const payloadAny = missionCreateRequest.payload as any
+                      const hasText = payloadAny?.message?.text && payloadAny.message.text.trim().length > 0
+                      const hasAttachments = Array.isArray(payloadAny?.message?.attachments) && payloadAny.message.attachments.length > 0
+                      if (!hasText && !hasAttachments) {
+                        toast.error("Message content is required")
+                        setError("Message content is required")
                         return
                       }
                     }

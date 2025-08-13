@@ -4,7 +4,9 @@ import { CopyableTrimmedId } from "@/components/copyable-trimmed-id"
 import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TooltipContent, Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
+  ActionErrorCode,
   ActionResponse,
   BehaviouralArgs,
   BehaviouralResponseContent,
@@ -91,6 +93,7 @@ interface ActionDataRow {
   actionArgs: any
   status: string
   error?: string | null
+  error_code?: ActionErrorCode | null
   startTime?: Date | null
   endTime?: Date | null
   duration?: number | null
@@ -121,6 +124,35 @@ export function ActionsList({ scenario }: ActionsListProps) {
         return "bg-orange-100 text-orange-800"
       case "failed":
         return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const getErrorCodeColor = (errorCode: ActionErrorCode) => {
+    switch (errorCode) {
+      case "chat_not_found":
+        return "bg-red-200 text-black-800"
+      case "general_error":
+        return "bg-yellow-200 text-black-800"
+      case "account_muted":
+        return "bg-blue-200 text-black-800"
+      case "send_message_error":
+        return "bg-purple-200 text-black-800"
+      case "message_deleted":
+        return "bg-indigo-200 text-black-800"
+      case "sending_attachment_error":
+        return "bg-gray-200 text-black-800"
+      case "did_not_find_message_after_sending":
+        return "bg-orange-200 text-black-800"
+      case "username_not_valid":
+        return "bg-red-200 text-black-800"
+      case "failed_to_download_attachment":
+        return "bg-red-200 text-black-800"
+      case "join_group_chat_type_user":
+        return "bg-red-200 text-black-800"
+      case "account_in_slow_mode":
+        return "bg-red-200 text-black-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -707,6 +739,7 @@ export function ActionsList({ scenario }: ActionsListProps) {
       actionArgs: action.args,
       status: actionResponse?.status?.status_code || "pending",
       error: actionResponse?.status?.error || null,
+      error_code: actionResponse?.status?.error_code || null,
       startTime,
       endTime,
       duration,
@@ -755,12 +788,42 @@ export function ActionsList({ scenario }: ActionsListProps) {
       size: 120,
       cell: ({ row }) => {
         const action = row.original
-        return (
-          <div>
+        const displayError = action.error_code || action.error
+        return action.error ? (
+          <TooltipProvider key={action.actionId}>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1">
+                  <Badge className={getStatusColor(action.status)}>{action.status}</Badge>
+                  {action.error_code && (
+                    <Badge className={getErrorCodeColor(action.error_code)}>{action.error_code}</Badge>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={10}
+                className="z-20 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-red-100 max-w-[300px]"
+              >
+                {action.error && (
+                  <div className="text-xs text-red-600 font-medium break-words whitespace-pre-wrap">{action.error}</div>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <div className="flex items-center gap-1">
             <Badge className={getStatusColor(action.status)}>{action.status}</Badge>
-            {action.error && <div className="mt-1 text-xs text-red-600">{action.error}</div>}
+            {action.error_code && <Badge className={getErrorCodeColor(action.error_code)}>{action.error_code}</Badge>}
           </div>
         )
+        // <div className="flex flex-col gap-1">
+        //   <div className="flex items-center gap-1">
+        //     <Badge className={getStatusColor(action.status)}>{action.status}</Badge>
+        //     {action.error_code && <Badge className={getErrorCodeColor(action.error_code)}>{action.error_code}</Badge>}
+        //   </div>
+
+        // </div>
       },
     },
     {

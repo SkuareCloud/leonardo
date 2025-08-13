@@ -6,11 +6,12 @@ import { notFound } from "next/navigation"
 import { MissionView } from "./mission-view"
 
 export default async function Page({ params }: { params: { id: string } }) {
+  const { id } = await params
   const apiService = new ApiService()
   let mission: MissionRead
   let avatars: AvatarModelWithProxy[]
   try {
-    ;[mission, avatars] = await Promise.all([apiService.getOrchestratorMission(params.id), apiService.getAvatars()])
+    ;[mission, avatars] = await Promise.all([apiService.getOrchestratorMission(id), apiService.getAvatars()])
   } catch (error) {
     return notFound()
   }
