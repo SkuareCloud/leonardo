@@ -1,5 +1,6 @@
 "use client"
 
+import { DateTimePicker } from "@/components/date-time-picker"
 import { Dropzone } from "@/components/dropzone"
 import { MessageBuilder } from "@/components/message-builder"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -26,6 +27,12 @@ export function MassMessageMissionBuilder({
   const [contactsPerSession, setContactsPerSession] = useState<number | string>(100)
   const [batchSize, setBatchSize] = useState<number | string>(20)
   const [batchInterval, setBatchInterval] = useState<number | string>(10)
+  const [startTime, setStartTime] = useState<Date | undefined>(() => {
+    const now = new Date()
+    const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000)
+    utcNow.setMilliseconds(0)
+    return utcNow
+  })
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
   const { onChangeMissionPayload } = useContext(MissionBuilderContext)
 
@@ -82,48 +89,53 @@ export function MassMessageMissionBuilder({
     payload.contacts_per_session = typeof contactsPerSession === "string" ? Number(contactsPerSession) || 100 : contactsPerSession
     payload.batch_size = typeof batchSize === "string" ? Number(batchSize) || 20 : batchSize
     payload.batch_interval = typeof batchInterval === "string" ? Number(batchInterval) || 10 : batchInterval
+    payload.start_time = startTime
+      ? new Date(startTime.getTime() - startTime.getTimezoneOffset() * 60000).toISOString()
+      : new Date().toISOString()
 
     onChangeMissionPayload(payload as MissionInput<MassDmMissionInput>)
-  }, [charactersCategories, contactsRaw, message, contactsPerCharacter, contactsPerSession, batchSize, batchInterval])
+  }, [charactersCategories, contactsRaw, message, contactsPerCharacter, contactsPerSession, batchSize, batchInterval, startTime])
 
   return (
     <div className="flex flex-col gap-6 p-2">
-      <div className="flex flex-col gap-6">
-        <FieldWithLabel label="Upload CSV" required>
-          <div className="w-64">
-            <Dropzone onUpload={onUploadCsv} accept={{ "text/csv": [".csv"] }} size="tiny" />
-          </div>
-          <div className="text-xs text-gray-500 mt-2">
-            CSV must contain contacts (username, phone number, or platform id).
-          </div>
-        </FieldWithLabel>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6 max-w-lg">
+          <FieldWithLabel label="Upload CSV" required>
+            <div className="w-64">
+              <Dropzone onUpload={onUploadCsv} accept={{ "text/csv": [".csv"] }} size="tiny" />
+            </div>
+            <div className="text-xs text-gray-500 mt-2">
+              CSV must contain contacts (username / phone number / platform id).
+            </div>
+          </FieldWithLabel>
 
-        <FieldWithLabel label="Contacts (one per line or comma-separated)">
-          <textarea
-            className="w-full h-40 bg-white border rounded p-2 text-sm"
-            placeholder="username, phone_number or platform_id per line"
-            value={contactsRaw}
-            onChange={e => setContactsRaw(e.target.value)}
-          />
-          <div className="text-xs text-gray-500 mt-1">
-            Uploading a CSV will merge and de-duplicate with the list above.
-          </div>
-        </FieldWithLabel>
+          <FieldWithLabel label="Contacts (one per line or comma-separated)">
+            <textarea
+              className="w-full h-40 bg-white border rounded p-2 text-sm"
+              placeholder="username / phone_number / platform_id per line"
+              value={contactsRaw}
+              onChange={e => setContactsRaw(e.target.value)}
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              Uploading a CSV will merge and de-duplicate with the list above.
+            </div>
+          </FieldWithLabel>
+        </div>
 
-        <FieldWithLabel label="Message content" required>
-          <MessageBuilder singleMessage onUpdateMessages={messages => setMessage(messages[0] ?? null)} />
-          {!message && (
-            <div className="text-red-500 text-sm mt-1">Message content is required (text or attachment)</div>
-          )}
-        </FieldWithLabel>
+        <div className="flex flex-col gap-6 max-w-lg">
+          <FieldWithLabel label="Message content" required>
+            <MessageBuilder singleMessage onUpdateMessages={messages => setMessage(messages[0] ?? null)} />
+          </FieldWithLabel>
 
-        <FieldWithLabel label="Characters categories" required>
-          <CategorySelector
-            categories={activeCharacterCategories}
-            label=""
-            onChangeValue={value => setCharactersCategories(value)}
-          />
-        </FieldWithLabel>
+          <FieldWithLabel label="Characters categories" required>
+            <CategorySelector
+              categories={activeCharacterCategories}
+              label=""
+              onChangeValue={value => setCharactersCategories(value)}
+            />
+          </FieldWithLabel>
+        </div>
+      </div>
         <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
           <CollapsibleTrigger className="flex items-center gap-2 cursor-pointer hover:opacity-80">
             <Label className="text-base font-semibold">Advanced Settings</Label>
@@ -179,10 +191,24 @@ export function MassMessageMissionBuilder({
                 onChange={e => setBatchInterval(e.target.value)}
                 className="w-32"
               />
+              <div className="col-span-2">
+                <FieldWithLabel label="Start time" required>
+                  <div className="flex flex-col gap-3 w-full">
+                    <div className="flex flex-row gap-2 items-center">
+                      <DateTimePicker
+                        resetable
+                        onSelectDate={value => {
+                          value.setMilliseconds(0)
+                          setStartTime(value)
+                        }}
+                      />
+                    </div>
+                  </div>
+                </FieldWithLabel>
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
-      </div>
     </div>
   )
 }

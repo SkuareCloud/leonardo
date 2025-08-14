@@ -741,6 +741,10 @@ export type MassDmMissionInput = {
      */
     batch_interval?: number;
     message: InputMessage;
+    /**
+     * Start time of the mission
+     */
+    start_time?: string;
 };
 
 export type MessageForwardRequest = {
@@ -969,6 +973,7 @@ export type ScenarioCreate = {
     mission_id: string;
     expiration_time?: string | null;
     max_retries?: number;
+    prefrences?: Prefrences;
 };
 
 export type ScenarioInfo = {
@@ -992,6 +997,7 @@ export type ScenarioRead = {
     expiration_time?: string | null;
     retries?: number;
     max_retries?: number;
+    prefrences?: Prefrences;
     actions?: Array<ActionRead>;
     mission_id: string;
 };
