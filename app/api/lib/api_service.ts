@@ -28,7 +28,7 @@ import {
   MissionWithExposureAndStats,
   MissionWithExposureStats
 } from "@lib/api/models"
-import { ActionRead, ActivationStatus, ScenarioWithResult } from "@lib/api/operator"
+import { ActivationStatus } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
   activateActivationActivatePost,
@@ -41,16 +41,7 @@ import {
   submitCredentialsAuthPost,
   submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
-import {
-  CategoryRead,
-  CharacterRead,
-  ChatRead,
-  MissionCreate,
-  MissionExposure,
-  MissionRead,
-  Scenario,
-  ScenarioRead
-} from "@lib/api/orchestrator"
+import { ActionRead, CategoryRead, CharacterRead, ChatRead, MissionCreate, MissionExposure, MissionRead, ScenarioRead } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
   addCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPost,
@@ -648,7 +639,8 @@ export class ApiService {
       "PuppetShowMission",
       "AllocateProfilesGroupsMission",
       "FluffMission",
-      "MassDmMission"
+      "MassDmMission",
+      "ResolvePhoneMission",
     ]
     const relevantMissions = missions.filter(mission =>
       missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),
@@ -683,10 +675,39 @@ export class ApiService {
       "PuppetShowMission",
       "AllocateProfilesGroupsMission",
       "FluffMission",
-      "MassDmMission"
+      "MassDmMission",
+      "ResolvePhoneMission",
     ]
-    const relevantMissions = missions.filter(mission =>
-      missionTypesRelevantForExposure.includes(mission.mission_type as MissionType),
+    const relevantMissions = await Promise.all(
+      missions
+        .filter(mission => missionTypesRelevantForExposure.includes(mission.mission_type as MissionType))
+        .map(async mission => {
+          if ((mission.mission_type as MissionType) !== "ResolvePhoneMission") return mission
+          // For ResolvePhoneMission, derive status only from scenarios
+          try {
+            const detailed = await this.getOrchestratorMission(mission.id)
+            const scenarios = detailed.scenarios || []
+            const scenariosCount = detailed.scenarios_count ?? scenarios.length
+            const successCount = detailed.success_scenarios ?? scenarios.filter(s => s.status_code === "success").length
+            let derivedStatus = mission.status_code
+            if (scenariosCount > 0) {
+              const anyRunning = scenarios.some(s =>
+                ["running", "in_process", "pending", "scheduled", "planned"].includes((s.status_code || "").toString()),
+              )
+              const allFinished = scenarios.every(s =>
+                ["success", "failed", "cancelled"].includes((s.status_code || "").toString()),
+              )
+              if (anyRunning) {
+                derivedStatus = "running"
+              } else if (allFinished || successCount === scenariosCount) {
+                derivedStatus = "completed"
+              }
+            }
+            return { ...mission, status_code: derivedStatus }
+          } catch {
+            return mission
+          }
+        }),
     )
     
     const filteredMissions = relevantMissions.filter(mission => {

@@ -13,7 +13,7 @@ import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 const missionColumns: ColumnDef<MissionWithExposureAndStats>[] = [
@@ -193,7 +193,43 @@ export function MissionsList({ data }: { data: MissionWithExposureAndStats[] }) 
   const refreshMissions = async () => {
     const missions = await new ServiceBrowserClient().getOrchestratorMissionsWithExposureAndStats()
     setMissions(missions)
+    await deriveResolvePhoneStatuses(missions)
   }
+
+  const deriveResolvePhoneStatuses = async (missionsList: MissionWithExposureAndStats[]) => {
+    const client = new ServiceBrowserClient()
+    const updated: MissionWithExposureAndStats[] = await Promise.all(
+      missionsList.map(async m => {
+        if (m.mission.mission_type !== "ResolvePhoneMission") return m
+        try {
+          const detailed = await client.getOrchestratorMission(m.mission.id)
+          const scenarios = detailed.scenarios || []
+          const scenariosCount = detailed.scenarios_count ?? scenarios.length
+          const successCount = detailed.success_scenarios ?? scenarios.filter(s => s.status_code === "success").length
+          let derivedStatus = m.mission.status_code
+          if (scenariosCount > 0) {
+            const anyRunning = scenarios.some(s =>
+              ["running", "in_process", "pending", "scheduled", "planned"].includes((s.status_code || "").toString()),
+            )
+            const allFinished = scenarios.every(s =>
+              ["success", "failed", "cancelled"].includes((s.status_code || "").toString()),
+            )
+            if (anyRunning) derivedStatus = "running"
+            else if (allFinished || successCount === scenariosCount) derivedStatus = "completed"
+          }
+          return { ...m, mission: { ...m.mission, status_code: derivedStatus } }
+        } catch {
+          return m
+        }
+      }),
+    )
+    setMissions(updated)
+  }
+
+  useEffect(() => {
+    deriveResolvePhoneStatuses(missions)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="flex flex-col w-full">

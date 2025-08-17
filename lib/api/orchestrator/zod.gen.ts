@@ -1298,7 +1298,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-08-14T06:41:30.988457Z'),
+    trigger_time: z.string().datetime().optional().default('2025-08-17T07:09:03.202094Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1317,7 +1317,7 @@ export const zFindUsersByPhoneMissionInput = z.object({
     time_between_scenarios: z.number().int().optional().default(10),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-08-14T06:41:30.858635Z')
+    start_time: z.string().datetime().optional().default('2025-08-17T07:09:03.050189Z')
 });
 
 export const zFluffMissionInput = z.object({
@@ -1363,7 +1363,7 @@ export const zHttpValidationError = z.object({
 
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-08-14T06:41:30.859176Z'),
+    trigger_time: z.string().datetime().optional().default('2025-08-17T07:09:03.050847Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -1382,7 +1382,7 @@ export const zMassDmMissionInput = z.object({
     batch_size: z.number().int().optional().default(20),
     batch_interval: z.number().int().optional().default(10),
     message: zInputMessage,
-    start_time: z.string().datetime().optional().default('2025-08-14T06:41:30.858012Z')
+    start_time: z.string().datetime().optional().default('2025-08-17T07:09:03.049392Z')
 });
 
 export const zMissionStatus = z.enum([
@@ -1480,7 +1480,10 @@ export const zScenarioRead = z.object({
     ]).optional(),
     retries: z.number().int().optional().default(0),
     max_retries: z.number().int().optional().default(0),
-    prefrences: zPrefrences.optional(),
+    prefrences: z.union([
+        zPrefrences,
+        z.null()
+    ]).optional(),
     actions: z.array(zActionRead).optional(),
     mission_id: z.string().uuid()
 });
@@ -1592,7 +1595,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-08-14T06:41:30.991113Z'),
+    start_time: z.string().datetime().optional().default('2025-08-17T07:09:03.205101Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });

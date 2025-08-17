@@ -14,6 +14,7 @@ import { MissionBuilderContext } from "./mission-builder-context"
 import { InputWithLabel } from "./mission-builder-utils"
 import { PuppetShowMissionBuilder } from "./puppet-show-mission-builder"
 import { RandomDistributionMissionBuilder } from "./random-distribution-mission-builder"
+import { ResolvePhoneMissionBuilder } from "./resolve-phone-mission"
 
 export function MissionBuilderCreateView({
   mission,
@@ -127,6 +128,9 @@ export function MissionBuilderCreateView({
               )}
               {mission === "MassDmMission" && (
                 <MassMessageMissionBuilder categories={categories || []} />
+              )}
+              {mission === "ResolvePhoneMission" && (
+                <ResolvePhoneMissionBuilder categories={categories || []} />
               )}
             </div>
           </ResizablePanel>

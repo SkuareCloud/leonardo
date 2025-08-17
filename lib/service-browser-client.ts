@@ -7,7 +7,7 @@ import {
   MissionWithExposureAndStats,
   MissionWithExposureStats,
 } from "./api/models"
-import { ActivationStatus, ProfileWorkerView, ScenarioWithResult } from "./api/operator"
+import { ActivationStatus } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
 import { ActionRead, ChatRead } from "./api/orchestrator/types.gen"
 import { ClientEnv, read_client_env } from "./client-env"
@@ -98,17 +98,17 @@ export class ServiceBrowserClient {
     }
   }
 
-  async getOperatorScenarios(operatorSlot?: number): Promise<{ [key: string]: ScenarioWithResult }> {
+  async getOperatorScenarios(operatorSlot?: number): Promise<{ [key: string]: any }> {
     const endpoint = operatorSlot ? `/api/operator/${operatorSlot}/scenario` : "/api/operator/scenario"
     const resp = await fetch(endpoint)
-    const json = (await resp.json()) as { [key: string]: ScenarioWithResult }
+    const json = (await resp.json()) as { [key: string]: any }
     return json
   }
 
-  async getOperatorCharacters(operatorSlot?: number): Promise<ProfileWorkerView[]> {
+  async getOperatorCharacters(operatorSlot?: number): Promise<any[]> {
     const endpoint = operatorSlot ? `/api/operator/${operatorSlot}/characters` : "/api/operator/characters"
     const resp = await fetch(endpoint)
-    const json = (await resp.json()) as ProfileWorkerView[]
+    const json = (await resp.json()) as any[]
     return json
   }
 
@@ -159,6 +159,61 @@ export class ServiceBrowserClient {
       throw new Error(`Failed to submit mission: ${json.status_code}`)
     }
     return json
+  }
+
+  async submitResolvePhoneMission(payload: {
+    csv_file: File
+    characters_categories?: string[]
+    max_phones_per_scenario?: number
+    time_between_scenarios?: number
+    batch_size?: number
+    batch_interval?: number
+  }): Promise<any> {
+    const form = new FormData()
+    form.append("csv_file", payload.csv_file)
+    if (payload.characters_categories && payload.characters_categories.length > 0) {
+      form.append("characters_categories", JSON.stringify(payload.characters_categories))
+    }
+    if (typeof payload.max_phones_per_scenario === "number") form.append("max_phones_per_scenario", String(payload.max_phones_per_scenario))
+    if (typeof payload.time_between_scenarios === "number") form.append("time_between_scenarios", String(payload.time_between_scenarios))
+    if (typeof payload.batch_size === "number") form.append("batch_size", String(payload.batch_size))
+    if (typeof payload.batch_interval === "number") form.append("batch_interval", String(payload.batch_interval))
+
+    const resp = await fetch("/api/orchestrator/missions/resolve_phone_results", { method: "POST", body: form })
+    if (!resp.ok) {
+      throw new Error(`Failed to submit resolve phone mission: ${resp.statusText}`)
+    }
+    const scenarios = await resp.json()
+    // If description was set on the builder, attach it to mission afterwards
+    return scenarios
+  }
+
+  async updateMissionDescription(missionId: string, description: string) {
+    const resp = await fetch("/api/orchestrator/mission/description", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mission_id: missionId, description }),
+    })
+    if (!resp.ok) {
+      throw new Error(`Failed to update mission description: ${resp.statusText}`)
+    }
+    return resp.json()
+  }
+
+  async getOrchestratorCategories() {
+    const resp = await fetch("/api/orchestrator/categories")
+    if (!resp.ok) {
+      throw new Error(`Failed to get orchestrator categories: ${resp.statusText}`)
+    }
+    return resp.json()
+  }
+
+  async getOrchestratorChatCategories(chatId: string) {
+    const resp = await fetch(`/api/orchestrator/chats/${chatId}/categories`)
+    if (!resp.ok) {
+      throw new Error(`Failed to get chat categories: ${resp.statusText}`)
+    }
+    return resp.json()
   }
 
   async planMission(missionId: string): Promise<ScenarioRead[]> {

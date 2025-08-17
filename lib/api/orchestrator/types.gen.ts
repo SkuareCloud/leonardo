@@ -997,7 +997,7 @@ export type ScenarioRead = {
     expiration_time?: string | null;
     retries?: number;
     max_retries?: number;
-    prefrences?: Prefrences;
+    prefrences?: Prefrences | null;
     actions?: Array<ActionRead>;
     mission_id: string;
 };

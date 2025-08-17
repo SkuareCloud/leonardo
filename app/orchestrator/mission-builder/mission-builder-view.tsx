@@ -12,7 +12,7 @@ import { zAllocateProfilesGroupsMissionInput, zEchoMissionInput, zFluffMissionIn
 import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
-import { DicesIcon, DramaIcon, Mail, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
+import { DicesIcon, DramaIcon, Mail, Phone, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React from "react"
 import { toast } from "sonner"
@@ -63,6 +63,12 @@ const MissionMetadata: Record<
     supported: true,
     icon: Mail,
   },
+  ResolvePhoneMission: {
+    name: "Resolve Phone",
+    description: "Resolve phone numbers to usernames and collect results",
+    supported: true,
+    icon: Phone,
+  },
 }
 
 export function MissionBuilderView({
@@ -102,6 +108,40 @@ export function MissionBuilderView({
                   className="uppercase font-bold cursor-pointer scale-100 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={async () => {
                     if (!selectedMissionType) return
+
+                    if (selectedMissionType === "ResolvePhoneMission") {
+                      const payloadAny = missionCreateRequest?.payload as any
+                      const csvFile: File | undefined = payloadAny?.csv_file
+                      if (!csvFile) {
+                        toast.error("CSV file is required")
+                        setError("CSV file is required")
+                        return
+                      }
+                      try {
+                        const scenarios = await new ServiceBrowserClient().submitResolvePhoneMission({
+                          csv_file: csvFile,
+                          characters_categories: payloadAny?.characters_categories,
+                          max_phones_per_scenario: payloadAny?.max_phones_per_scenario,
+                          time_between_scenarios: payloadAny?.time_between_scenarios,
+                          batch_size: payloadAny?.batch_size,
+                          batch_interval: payloadAny?.batch_interval,
+                        })
+                        toast.success("Resolve phone mission submitted")
+                        const missionId = Array.isArray(scenarios) && scenarios.length > 0 ? scenarios[0]?.mission_id : undefined
+                        // Update description if provided
+                        const desc = missionCreateRequest?.description?.trim()
+                        if (missionId && desc) {
+                          try { await new ServiceBrowserClient().updateMissionDescription(missionId, desc) } catch {}
+                        }
+                        if (missionId) {
+                          router.push(`/orchestrator/missions/${missionId}`)
+                        }
+                      } catch (error) {
+                        toast.error("Failed to submit mission: " + error)
+                        setError(error instanceof Error ? error.message : "Unknown error")
+                      }
+                      return
+                    }
 
                     if (!missionCreateRequest) {
                       toast.error("No request found. Check the JSON.")

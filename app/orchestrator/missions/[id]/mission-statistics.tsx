@@ -2,13 +2,18 @@
 
 import { Pie, PieChart } from "recharts"
 
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartConfig, ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart"
 import { MissionStatistics as MissionStatisticsType } from "@lib/api/models"
-import { ActionRead, ChatRead, MissionRead } from "@lib/api/orchestrator/types.gen"
+import { ActionRead, CategoryRead, ChatRead, MissionRead } from "@lib/api/orchestrator/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, MessageCircle, Users } from "lucide-react"
+import { Loader2, MessageCircle, Settings, Users, X } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
+import { CategorySelector } from "../../mission-builder/category-selector"
 
 const chartConfig = {
   SCHEDULED: {
@@ -217,9 +222,9 @@ function MissionFailureReasonsChart({
   failureReasons: ActionRead[]
   refreshing: boolean
 }) {
-  // Group failure reasons by error_code (with fallback to error) and count them
+  // Group failure reasons by error and count them
   const failureReasonCounts = failureReasons.reduce((acc, action) => {
-    const actionError = action.error_code || action.error || "unknown"
+    const actionError = action.error || "unknown"
     acc[actionError] = (acc[actionError] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -255,12 +260,12 @@ function MissionFailureReasonsChart({
         <CardHeader className="items-center pb-0">
           <CardTitle>Failure Reasons</CardTitle>
           <CardDescription>
-            {safeFailureReasons.length === 0 ? "No failures found" : "No failure data available"}
+            {failureReasons.length === 0 ? "No failures found" : "No failure data available"}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-            {safeFailureReasons.length === 0 ? "No failure data available" : "Processing failure data..."}
+            {failureReasons.length === 0 ? "No failure data available" : "Processing failure data..."}
           </div>
         </CardContent>
       </Card>
@@ -306,8 +311,70 @@ function MissionFailureReasonsChart({
   )
 }
 
-function MissionSuccessfulChats({ successfulChats, refreshing }: { successfulChats: ChatRead[]; refreshing: boolean }) {
-  if (successfulChats.length === 0) {
+function MissionSuccessfulChats({ 
+  successfulChats, 
+  refreshing, 
+  allCategories 
+}: { 
+  successfulChats: ChatRead[]
+  refreshing: boolean
+  allCategories?: CategoryRead[]
+}) {
+  const [managingCategories, setManagingCategories] = useState<string | null>(null)
+  const [chatCategories, setChatCategories] = useState<Record<string, CategoryRead[]>>({})
+
+  // Fetch categories for a specific chat
+  const fetchChatCategories = async (chatId: string) => {
+    try {
+      const categories = await new ServiceBrowserClient().getOrchestratorChatCategories(chatId)
+      setChatCategories(prev => ({ ...prev, [chatId]: categories }))
+      return categories
+    } catch (error) {
+      console.error(`Failed to fetch categories for chat ${chatId}:`, error)
+      return []
+    }
+  }
+
+  // Convert category names to CategoryRead objects for display
+  const getCategoryObjects = (chat: ChatRead): CategoryRead[] => {
+    if (chatCategories[chat.id]) {
+      return chatCategories[chat.id]
+    }
+    
+    // Fallback to chat.categories if available and we have allCategories to map names to objects
+    if (chat.categories && allCategories) {
+      return chat.categories
+        .map(categoryName => allCategories.find(cat => cat.name === categoryName))
+        .filter(Boolean) as CategoryRead[]
+    }
+    
+    return []
+  }
+
+  const handleCategoryChange = async (chatId: string, selectedCategories: { id: string; label: string }[]) => {
+    try {
+      const currentCategories = chatCategories[chatId] || []
+      const currentCategoryIds = currentCategories.map(c => c.id)
+      const selectedCategoryIds = selectedCategories.map(c => c.id)
+      
+      const newCategoryIds = selectedCategoryIds.filter(id => !currentCategoryIds.includes(id))
+      const removedCategoryIds = currentCategoryIds.filter(id => !selectedCategoryIds.includes(id))
+
+      // Update categories
+      if (newCategoryIds.length > 0 || removedCategoryIds.length > 0) {
+        await new ServiceBrowserClient().updateChatCategories(chatId, newCategoryIds, removedCategoryIds)
+        
+        // Refresh categories for this chat
+        await fetchChatCategories(chatId)
+        toast.success("Chat categories updated successfully")
+      }
+    } catch (error) {
+      console.error("Failed to update chat categories:", error)
+      toast.error("Failed to update chat categories")
+    }
+  }
+
+  if (!successfulChats || !Array.isArray(successfulChats) || successfulChats.length === 0) {
     return (
       <Card className="flex flex-col w-[500px]">
         <CardHeader className="items-center pb-0">
@@ -331,9 +398,8 @@ function MissionSuccessfulChats({ successfulChats, refreshing }: { successfulCha
       <CardHeader className="items-center pb-0">
         <CardTitle className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5" />
-          Successful Chats ({successfulChats.length})
+          Successful Chats ({(successfulChats || []).length})
         </CardTitle>
-        <CardDescription>Target chats that received a message</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         {refreshing && (
@@ -343,19 +409,78 @@ function MissionSuccessfulChats({ successfulChats, refreshing }: { successfulCha
           </div>
         )}
         <div className="max-h-[400px] overflow-y-auto space-y-2">
-          {successfulChats.map((chat, index) => (
-            <div key={chat.id || index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-3">
+          {(successfulChats || []).map((chat, index) => (
+            <div key={chat.id || index} className="p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium truncate max-w-[200px]">
+                      {chat.username || chat.platform_id || chat.id}
+                    </span>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-medium truncate max-w-[200px]">
-                    {chat.username || chat.platform_id || chat.id}
-                  </span>
+                  <div className="text-xs text-muted-foreground">
+                    {chat.participants_count && `${chat.participants_count} participants`}
+                  </div>
+                  {allCategories && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        if (managingCategories === chat.id) {
+                          setManagingCategories(null)
+                        } else {
+                          setManagingCategories(chat.id)
+                          if (!chatCategories[chat.id]) {
+                            await fetchChatCategories(chat.id)
+                          }
+                        }
+                      }}
+                    >
+                      <Settings className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground">
-                {chat.participants_count && `${chat.participants_count} participants`}
-              </div>
+              
+              {/* Show current categories */}
+              {(() => {
+                const currentCategories = getCategoryObjects(chat)
+                return currentCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {currentCategories.map(category => (
+                      <Badge key={category.id} variant="outline" className="text-xs">
+                        {category.name}
+                      </Badge>
+                    ))}
+                  </div>
+                )
+              })()}
+              
+              {/* Category management */}
+              {managingCategories === chat.id && allCategories && (
+                <div className="mt-2 p-2 border rounded-lg bg-background">
+                  <div className="mb-2 text-sm font-medium">Manage Categories</div>
+                  <CategorySelector
+                    categories={allCategories}
+                    label=""
+                    existingCategories={getCategoryObjects(chat)}
+                    onChangeValue={(selected) => handleCategoryChange(chat.id, selected)}
+                  />
+                  <div className="flex justify-end mt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setManagingCategories(null)}
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -396,6 +521,16 @@ export function MissionStatistics({ mission }: { mission: MissionRead }) {
     refetchInterval: 10000, // poll every 10 seconds
   })
 
+  const {
+    isPending: isCategoriesPending,
+    error: categoriesError,
+    data: allCategories,
+  } = useQuery({
+    queryKey: ["orchestrator-categories"],
+    queryFn: () => new ServiceBrowserClient().getOrchestratorCategories(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
   return (
     <div className="flex flex-col w-full gap-6">
       <div className="flex flex-wrap gap-6">
@@ -404,7 +539,11 @@ export function MissionStatistics({ mission }: { mission: MissionRead }) {
           <MissionFailureReasonsChart failureReasons={failureReasons} refreshing={isFailureReasonsPending} />
         )}
         {successfulChats && (
-          <MissionSuccessfulChats successfulChats={successfulChats} refreshing={isSuccessfulChatsPending} />
+          <MissionSuccessfulChats 
+            successfulChats={successfulChats} 
+            refreshing={isSuccessfulChatsPending}
+            allCategories={allCategories}
+          />
         )}
       </div>
     </div>
