@@ -9,6 +9,8 @@ export type ActionCreate = {
     } | null;
 };
 
+export type ActionErrorCode = 'chat_not_found' | 'general_error' | 'account_muted' | 'send_message_error' | 'message_deleted' | 'sending_attachment_error' | 'did_not_find_message_after_sending' | 'username_not_valid' | 'failed_to_download_attachment' | 'join_group_chat_type_user' | 'account_in_slow_mode' | 'timeout' | 'can_not_resolve_phone_number' | 'tweet_does_not_exist' | 'tweet_is_unavailable' | 'tweet_page_load_failed';
+
 export type ActionPrefrences = {
     fail_fast?: boolean | null;
     timeout?: number | null;
@@ -33,8 +35,8 @@ export type ActionRead = {
 export type ActionResponseInput = {
     id?: string;
     status: ModelsOperatorActivityActionsActionStatusActionStatus;
-    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
-    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContentInput | SendBulkMessagesResponseContentInput | ReadMessagesResponseContent | ResolvePhoneResponseContentInput | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
+    content: SendMessageResponseContentInput | ReplyToMessageResponseContentInput | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContentInput | BehaviouralResponseContentInput | SendBulkMessagesResponseContentInput | ReadMessagesResponseContent | ResolvePhoneResponseContentInput | InteractWithTweetResponseContentInput | null;
     start_time: string;
     end_time?: string | null;
 };
@@ -42,8 +44,8 @@ export type ActionResponseInput = {
 export type ActionResponseOutput = {
     id?: string;
     status: ModelsOperatorActivityActionsActionStatusActionStatus;
-    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
-    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContentOutput | SendBulkMessagesResponseContentOutput | ReadMessagesResponseContent | ResolvePhoneResponseContentOutput | null;
+    type: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
+    content: SendMessageResponseContentOutput | ReplyToMessageResponseContentOutput | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContentOutput | BehaviouralResponseContentOutput | SendBulkMessagesResponseContentOutput | ReadMessagesResponseContent | ResolvePhoneResponseContentOutput | InteractWithTweetResponseContentOutput | null;
     start_time: string;
     end_time?: string | null;
 };
@@ -91,7 +93,8 @@ export type Attachment = {
 
 export type BehaviouralAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: BehaviouralArgs;
 };
@@ -100,9 +103,10 @@ export type BehaviouralArgs = {
     wait_time?: number;
     sync_context?: boolean;
     get_chats?: boolean;
-    sync_personal_details?: boolean;
+    sync_personal_details?: SyncPersonalDetailsArgs | null;
     disable_auto_download_media?: boolean;
     delete_all_active_sessions?: boolean;
+    get_unread_messages?: boolean;
 };
 
 export type BehaviouralResponseContentInput = {
@@ -111,6 +115,7 @@ export type BehaviouralResponseContentInput = {
     personal_details_synced?: boolean;
     auto_download_media_disabled?: boolean;
     all_active_sessions_deleted?: boolean;
+    unread_messages?: Array<ChatInfo> | null;
 };
 
 export type BehaviouralResponseContentOutput = {
@@ -119,6 +124,7 @@ export type BehaviouralResponseContentOutput = {
     personal_details_synced?: boolean;
     auto_download_media_disabled?: boolean;
     all_active_sessions_deleted?: boolean;
+    unread_messages?: Array<ChatInfo> | null;
 };
 
 export type BodyCreateChatsFromCsvChatsFromCsvPost = {
@@ -161,11 +167,20 @@ export type ChannelInfo = {
     title?: string | null;
     type?: ChatType;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
     subscribers?: number | null;
 };
 
 export type Character = {
     id?: string;
+    /**
+     * The provider of the character
+     */
+    provider?: CharacterProvider;
 };
 
 export type CharacterCreate = {
@@ -179,6 +194,8 @@ export type CharacterCreate = {
     telegram_id?: string;
     id: string;
 };
+
+export type CharacterProvider = 'avatar' | 'dolphin' | 'adspower';
 
 export type CharacterRead = {
     id: string;
@@ -364,6 +381,11 @@ export type ChatInfo = {
     title?: string | null;
     type?: ChatType | null;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
 };
 
 export type ChatRead = {
@@ -614,14 +636,16 @@ export type FluffMissionInput = {
      */
     batch_interval?: number;
     get_chats?: boolean;
-    sync_personal_details?: boolean;
+    sync_personal_details?: SyncPersonalDetailsArgs | boolean | null;
     disable_auto_download_media?: boolean;
     delete_all_active_sessions?: boolean;
+    get_unread_messages?: boolean;
 };
 
 export type ForwardMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: ForwardMessageArgs;
 };
@@ -634,7 +658,9 @@ export type ForwardMessageArgs = {
     /**
      * The message to forward, if not provided, the message link will be used
      */
-    message_info?: ModelsOperatorCommonMessageInfoMessageInfo | '${input.message_info}' | null;
+    message_info?: ModelsOperatorCommonMessageInfoMessageInfo | {
+        [key: string]: unknown;
+    } | '${input.message_info}' | null;
     target_chat: ChatInfo;
     message?: InputMessage;
     /**
@@ -658,6 +684,11 @@ export type GroupInfo = {
     title?: string | null;
     type?: ChatType;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
     members?: number | null;
     online?: number | null;
 };
@@ -675,9 +706,31 @@ export type InputMessage = {
     attachments?: Array<Attachment>;
 };
 
+export type InteractWithTweetAction = {
+    id?: string;
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
+    prefrences?: ActionPrefrences;
+    args: InteractWithTweetArgs;
+};
+
+export type InteractWithTweetArgs = {
+    url: string;
+    interaction: TweetInteraction;
+};
+
+export type InteractWithTweetResponseContentInput = {
+    interaction_result: TweetInteractionResult;
+};
+
+export type InteractWithTweetResponseContentOutput = {
+    interaction_result: TweetInteractionResult;
+};
+
 export type JoinGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: JoinGroupArgs;
 };
@@ -700,7 +753,8 @@ export type JoinGroupResponseContentOutput = {
 
 export type LeaveGroupAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: LeaveGroupArgs;
 };
@@ -876,7 +930,8 @@ export type RandomDistributionMissionInput = {
 
 export type ReadMessagesAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: ReadMessagesArgs;
 };
@@ -893,7 +948,8 @@ export type ReadMessagesResponseContent = {
 
 export type ReplyToMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: ReplyToMessageArgs;
 };
@@ -906,7 +962,9 @@ export type ReplyToMessageArgs = {
     /**
      * The message to reply to, if not provided, the message link will be used
      */
-    message_info?: ModelsOperatorCommonMessageInfoMessageInfo | string | null;
+    message_info?: ModelsOperatorCommonMessageInfoMessageInfo | {
+        [key: string]: unknown;
+    } | '${input.message_info}' | null;
     input_message_content: InputMessage;
     /**
      * The link to the message to reply to, if not provided, the chat and message info will be used
@@ -924,13 +982,15 @@ export type ReplyToMessageResponseContentOutput = {
 
 export type ResolvePhoneActionReadable = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
 };
 
 export type ResolvePhoneActionWritable = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: ResolvePhoneArgs;
 };
@@ -953,14 +1013,14 @@ export type ScenarioReadable = {
     id?: string;
     profile: Character;
     prefrences?: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneActionReadable>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneActionReadable | InteractWithTweetAction>;
 };
 
 export type ScenarioWritable = {
     id?: string;
     profile: Character;
     prefrences?: Prefrences;
-    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneActionWritable>;
+    actions: Array<JoinGroupAction | LeaveGroupAction | ReplyToMessageAction | SendMessageAction | ForwardMessageAction | BehaviouralAction | SendBulkMessagesAction | ReadMessagesAction | ResolvePhoneActionWritable | InteractWithTweetAction>;
 };
 
 export type ScenarioCreate = {
@@ -1016,7 +1076,7 @@ export type ScenarioResultOutput = {
     actions_responses?: Array<ActionResponseOutput>;
 };
 
-export type ScenarioResultStatus = 'success' | 'failed' | 'pending' | 'finished' | 'proxy_error' | 'browser_error' | 'telegram_error' | 'profile_not_logged_in' | 'profile_already_running' | 'profile_failed_to_start' | 'profile_startup_timeout' | 'profile_proxy_not_configured';
+export type ScenarioResultStatus = 'scheduled' | 'pending' | 'running' | 'cancelled' | 'in_process' | 'planned' | 'success' | 'failed' | 'finished' | 'proxy_error' | 'browser_error' | 'telegram_error' | 'profile_not_logged_in' | 'profile_already_running' | 'profile_failed_to_start' | 'profile_startup_timeout' | 'profile_proxy_not_configured';
 
 export type ScenarioUpdate = {
     status_code?: ModelsScenariosScenarioStatus;
@@ -1040,7 +1100,8 @@ export type SeedScenarioWritable = {
 
 export type SendBulkMessagesAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: SendBulkMessagesArgs;
 };
@@ -1061,7 +1122,8 @@ export type SendBulkMessagesResponseContentOutput = {
 
 export type SendMessageAction = {
     id?: string;
-    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone';
+    platform?: 'telegram' | 'twitter';
+    type?: 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet';
     prefrences?: ActionPrefrences;
     args: SendMessageArgs;
 };
@@ -1079,10 +1141,42 @@ export type SendMessageResponseContentOutput = {
     message_info: MessageInfoOutput;
 };
 
+export type SyncPersonalDetailsArgs = {
+    first_name?: string;
+    last_name?: string;
+    bio?: string;
+    username?: string;
+};
+
 export type TreeNodeCategoryNodePayload = {
     payload: CategoryNodePayload;
     children: Array<TreeNodeCategoryNodePayload> | null;
 };
+
+export type TweetContent = {
+    text: string;
+    media?: Array<string> | null;
+};
+
+export type TweetInteraction = {
+    like?: boolean;
+    retweet?: boolean;
+    bookmark?: boolean;
+    reply?: TweetContent | null;
+    quote?: TweetContent | null;
+};
+
+export type TweetInteractionResult = {
+    like?: TweetInteractionStatus | null;
+    retweet?: TweetInteractionStatus | null;
+    bookmark?: TweetInteractionStatus | null;
+    reply?: TweetInteractionStatus | null;
+    reply_tweet_id?: number | null;
+    quote?: TweetInteractionStatus | null;
+    quote_tweet_id?: number | null;
+};
+
+export type TweetInteractionStatus = 'success' | 'failed' | 'already_done';
 
 export type UserInfo = {
     id?: number | null;
@@ -1091,6 +1185,11 @@ export type UserInfo = {
     title?: string | null;
     type?: ChatType;
     description?: string | null;
+    read_inbox_max_id?: number | null;
+    read_outbox_max_id?: number | null;
+    unread_count?: number | null;
+    unread_mentions_count?: number | null;
+    unread_reactions_count?: number | null;
     subtitle?: string | null;
 };
 
@@ -1105,7 +1204,7 @@ export type ModelsActionsActionStatus = 'scheduled' | 'in_process' | 'running' |
 export type ModelsOperatorActivityActionsActionStatusActionStatus = {
     status_code: ActionStatusCode;
     error?: string | null;
-    error_code?: string | null;
+    error_code?: ActionErrorCode | null;
 };
 
 export type ModelsOperatorActivityScenarioScenarioStatus = {

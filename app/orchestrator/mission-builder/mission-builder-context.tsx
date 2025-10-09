@@ -5,9 +5,9 @@ import { createContext } from "react"
 export type OnChangeMissionPayloadCallback = (payload: Partial<MissionCreate>) => void
 
 export const MissionBuilderContext = createContext<{
-  missionType: MissionType
-  onChangeMissionPayload: OnChangeMissionPayloadCallback
+    missionType: MissionType
+    onChangeMissionPayload: OnChangeMissionPayloadCallback
 }>({
-  missionType: "RandomDistributionMission",
-  onChangeMissionPayload: () => {},
+    missionType: "RandomDistributionMission",
+    onChangeMissionPayload: () => {},
 })

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Accept": "application/json",
+            Accept: "application/json",
         },
         body: JSON.stringify({ profile_id: profileId, otp }),
     })

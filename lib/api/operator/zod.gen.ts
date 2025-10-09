@@ -23,6 +23,7 @@ export const zActionErrorCode = z.enum([
     'join_group_chat_type_user',
     'account_in_slow_mode',
     'timeout',
+    'can_not_resolve_phone_number',
     'tweet_does_not_exist',
     'tweet_is_unavailable',
     'tweet_page_load_failed'

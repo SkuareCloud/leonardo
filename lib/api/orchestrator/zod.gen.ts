@@ -26,6 +26,25 @@ export const zActionCreate = z.object({
     ]).optional()
 });
 
+export const zActionErrorCode = z.enum([
+    'chat_not_found',
+    'general_error',
+    'account_muted',
+    'send_message_error',
+    'message_deleted',
+    'sending_attachment_error',
+    'did_not_find_message_after_sending',
+    'username_not_valid',
+    'failed_to_download_attachment',
+    'join_group_chat_type_user',
+    'account_in_slow_mode',
+    'timeout',
+    'can_not_resolve_phone_number',
+    'tweet_does_not_exist',
+    'tweet_is_unavailable',
+    'tweet_page_load_failed'
+]);
+
 export const zActionPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
@@ -74,7 +93,7 @@ export const zModelsOperatorActivityActionsActionStatusActionStatus = z.object({
         z.null()
     ]).optional(),
     error_code: z.union([
-        z.string(),
+        zActionErrorCode,
         z.null()
     ]).optional()
 });
@@ -143,6 +162,26 @@ export const zChannelInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     subscribers: z.union([
         z.number().int(),
         z.null()
@@ -169,6 +208,26 @@ export const zGroupInfo = z.object({
     type: zChatType.optional(),
     description: z.union([
         z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
         z.null()
     ]).optional(),
     members: z.union([
@@ -198,6 +257,53 @@ export const zForwardMessageResponseContentInput = z.object({
     message_info: zModelsOperatorCommonMessageInfoMessageInfo
 });
 
+export const zChatInfo = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
 export const zBehaviouralResponseContentInput = z.object({
     current_context: z.union([
         z.unknown(),
@@ -209,7 +315,11 @@ export const zBehaviouralResponseContentInput = z.object({
     ]).optional(),
     personal_details_synced: z.boolean().optional().default(false),
     auto_download_media_disabled: z.boolean().optional().default(false),
-    all_active_sessions_deleted: z.boolean().optional().default(false)
+    all_active_sessions_deleted: z.boolean().optional().default(false),
+    unread_messages: z.union([
+        z.array(zChatInfo),
+        z.null()
+    ]).optional()
 });
 
 export const zSendBulkMessagesResponseContentInput = z.object({
@@ -242,6 +352,26 @@ export const zUserInfo = z.object({
         z.string(),
         z.null()
     ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
     subtitle: z.union([
         z.string(),
         z.null()
@@ -259,6 +389,47 @@ export const zResolvePhoneResponseContentInput = z.object({
     ]).optional()
 });
 
+export const zTweetInteractionStatus = z.enum([
+    'success',
+    'failed',
+    'already_done'
+]);
+
+export const zTweetInteractionResult = z.object({
+    like: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    retweet: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    bookmark: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    reply: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    reply_tweet_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    quote: z.union([
+        zTweetInteractionStatus,
+        z.null()
+    ]).optional(),
+    quote_tweet_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
+export const zInteractWithTweetResponseContentInput = z.object({
+    interaction_result: zTweetInteractionResult
+});
+
 export const zActionResponseInput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityActionsActionStatusActionStatus,
@@ -271,7 +442,8 @@ export const zActionResponseInput = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]),
     content: z.union([
         zSendMessageResponseContentInput,
@@ -283,6 +455,7 @@ export const zActionResponseInput = z.object({
         zSendBulkMessagesResponseContentInput,
         zReadMessagesResponseContent,
         zResolvePhoneResponseContentInput,
+        zInteractWithTweetResponseContentInput,
         z.null()
     ]),
     start_time: z.string().datetime(),
@@ -352,7 +525,11 @@ export const zBehaviouralResponseContentOutput = z.object({
     ]).optional(),
     personal_details_synced: z.boolean().optional().default(false),
     auto_download_media_disabled: z.boolean().optional().default(false),
-    all_active_sessions_deleted: z.boolean().optional().default(false)
+    all_active_sessions_deleted: z.boolean().optional().default(false),
+    unread_messages: z.union([
+        z.array(zChatInfo),
+        z.null()
+    ]).optional()
 });
 
 export const zSendBulkMessagesResponseContentOutput = z.object({
@@ -370,6 +547,10 @@ export const zResolvePhoneResponseContentOutput = z.object({
     ]).optional()
 });
 
+export const zInteractWithTweetResponseContentOutput = z.object({
+    interaction_result: zTweetInteractionResult
+});
+
 export const zActionResponseOutput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityActionsActionStatusActionStatus,
@@ -382,7 +563,8 @@ export const zActionResponseOutput = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]),
     content: z.union([
         zSendMessageResponseContentOutput,
@@ -394,6 +576,7 @@ export const zActionResponseOutput = z.object({
         zSendBulkMessagesResponseContentOutput,
         zReadMessagesResponseContent,
         zResolvePhoneResponseContentOutput,
+        zInteractWithTweetResponseContentOutput,
         z.null()
     ]),
     start_time: z.string().datetime(),
@@ -470,17 +653,32 @@ export const zAttachment = z.object({
     ]).optional()
 });
 
+export const zSyncPersonalDetailsArgs = z.object({
+    first_name: z.string().optional().default(''),
+    last_name: z.string().optional().default(''),
+    bio: z.string().optional().default(''),
+    username: z.string().optional().default('')
+});
+
 export const zBehaviouralArgs = z.object({
     wait_time: z.number().int().optional().default(0),
     sync_context: z.boolean().optional().default(false),
     get_chats: z.boolean().optional().default(false),
-    sync_personal_details: z.boolean().optional().default(false),
+    sync_personal_details: z.union([
+        zSyncPersonalDetailsArgs,
+        z.null()
+    ]).optional(),
     disable_auto_download_media: z.boolean().optional().default(false),
-    delete_all_active_sessions: z.boolean().optional().default(false)
+    delete_all_active_sessions: z.boolean().optional().default(false),
+    get_unread_messages: z.boolean().optional().default(false)
 });
 
 export const zBehaviouralAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -490,7 +688,8 @@ export const zBehaviouralAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zBehaviouralArgs
@@ -547,8 +746,15 @@ export const zCategoryRead = z.object({
     ]).optional()
 });
 
+export const zCharacterProvider = z.enum([
+    'avatar',
+    'dolphin',
+    'adspower'
+]);
+
 export const zCharacter = z.object({
-    id: z.string().optional()
+    id: z.string().optional(),
+    provider: zCharacterProvider.optional()
 });
 
 export const zCharacterCreate = z.object({
@@ -740,33 +946,6 @@ export const zChatCreate = z.object({
     ]).optional(),
     bots: z.union([
         z.array(z.object({})),
-        z.null()
-    ]).optional()
-});
-
-export const zChatInfo = z.object({
-    id: z.union([
-        z.number().int(),
-        z.null()
-    ]).optional(),
-    name: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    phone_number: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    title: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    type: z.union([
-        zChatType,
-        z.null()
-    ]).optional(),
-    description: z.union([
-        z.string(),
         z.null()
     ]).optional()
 });
@@ -1022,6 +1201,10 @@ export const zJoinGroupArgs = z.object({
 
 export const zJoinGroupAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1031,7 +1214,8 @@ export const zJoinGroupAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zJoinGroupArgs
@@ -1043,6 +1227,10 @@ export const zLeaveGroupArgs = z.object({
 
 export const zLeaveGroupAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1052,7 +1240,8 @@ export const zLeaveGroupAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zLeaveGroupArgs
@@ -1073,7 +1262,8 @@ export const zReplyToMessageArgs = z.object({
     ]).optional(),
     message_info: z.union([
         zModelsOperatorCommonMessageInfoMessageInfo,
-        z.string(),
+        z.object({}),
+        z.literal('${input.message_info}'),
         z.null()
     ]).optional(),
     input_message_content: zInputMessage,
@@ -1085,6 +1275,10 @@ export const zReplyToMessageArgs = z.object({
 
 export const zReplyToMessageAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1094,7 +1288,8 @@ export const zReplyToMessageAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReplyToMessageArgs
@@ -1107,6 +1302,10 @@ export const zSendMessageArgs = z.object({
 
 export const zSendMessageAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1116,7 +1315,8 @@ export const zSendMessageAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendMessageArgs
@@ -1129,6 +1329,7 @@ export const zForwardMessageArgs = z.object({
     ]).optional(),
     message_info: z.union([
         zModelsOperatorCommonMessageInfoMessageInfo,
+        z.object({}),
         z.literal('${input.message_info}'),
         z.null()
     ]).optional(),
@@ -1142,6 +1343,10 @@ export const zForwardMessageArgs = z.object({
 
 export const zForwardMessageAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1151,7 +1356,8 @@ export const zForwardMessageAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zForwardMessageArgs
@@ -1165,6 +1371,10 @@ export const zSendBulkMessagesArgs = z.object({
 
 export const zSendBulkMessagesAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1174,7 +1384,8 @@ export const zSendBulkMessagesAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zSendBulkMessagesArgs
@@ -1191,6 +1402,10 @@ export const zReadMessagesArgs = z.object({
 
 export const zReadMessagesAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1200,7 +1415,8 @@ export const zReadMessagesAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zReadMessagesArgs
@@ -1212,6 +1428,10 @@ export const zResolvePhoneArgs = z.object({
 
 export const zResolvePhoneAction = z.object({
     id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
     type: z.enum([
         'send_message',
         'send_bulk_messages',
@@ -1221,10 +1441,60 @@ export const zResolvePhoneAction = z.object({
         'forward_message',
         'behavioural',
         'read_messages',
-        'resolve_phone'
+        'resolve_phone',
+        'interact_with_tweet'
     ]).optional(),
     prefrences: zActionPrefrences.optional(),
     args: zResolvePhoneArgs
+});
+
+export const zTweetContent = z.object({
+    text: z.string(),
+    media: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional()
+});
+
+export const zTweetInteraction = z.object({
+    like: z.boolean().optional().default(false),
+    retweet: z.boolean().optional().default(false),
+    bookmark: z.boolean().optional().default(false),
+    reply: z.union([
+        zTweetContent,
+        z.null()
+    ]).optional(),
+    quote: z.union([
+        zTweetContent,
+        z.null()
+    ]).optional()
+});
+
+export const zInteractWithTweetArgs = z.object({
+    url: z.string(),
+    interaction: zTweetInteraction
+});
+
+export const zInteractWithTweetAction = z.object({
+    id: z.string().optional(),
+    platform: z.enum([
+        'telegram',
+        'twitter'
+    ]).optional(),
+    type: z.enum([
+        'send_message',
+        'send_bulk_messages',
+        'join_group',
+        'leave_group',
+        'reply_to_message',
+        'forward_message',
+        'behavioural',
+        'read_messages',
+        'resolve_phone',
+        'interact_with_tweet'
+    ]).optional(),
+    prefrences: zActionPrefrences.optional(),
+    args: zInteractWithTweetArgs
 });
 
 export const zScenario = z.object({
@@ -1298,7 +1568,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-08-17T07:09:03.202094Z'),
+    trigger_time: z.string().datetime().optional().default('2025-10-09T10:08:26.641737Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1317,7 +1587,7 @@ export const zFindUsersByPhoneMissionInput = z.object({
     time_between_scenarios: z.number().int().optional().default(10),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-08-17T07:09:03.050189Z')
+    start_time: z.string().datetime().optional().default('2025-10-09T10:08:26.457246Z')
 });
 
 export const zFluffMissionInput = z.object({
@@ -1333,9 +1603,14 @@ export const zFluffMissionInput = z.object({
     batch_size: z.number().int().optional().default(20),
     batch_interval: z.number().int().optional().default(10),
     get_chats: z.boolean().optional().default(false),
-    sync_personal_details: z.boolean().optional().default(false),
+    sync_personal_details: z.union([
+        zSyncPersonalDetailsArgs,
+        z.boolean(),
+        z.null()
+    ]).optional(),
     disable_auto_download_media: z.boolean().optional().default(false),
-    delete_all_active_sessions: z.boolean().optional().default(false)
+    delete_all_active_sessions: z.boolean().optional().default(false),
+    get_unread_messages: z.boolean().optional().default(false)
 });
 
 export const zOperatorValidationError = z.object({
@@ -1363,7 +1638,7 @@ export const zHttpValidationError = z.object({
 
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-08-17T07:09:03.050847Z'),
+    trigger_time: z.string().datetime().optional().default('2025-10-09T10:08:26.458860Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -1382,7 +1657,7 @@ export const zMassDmMissionInput = z.object({
     batch_size: z.number().int().optional().default(20),
     batch_interval: z.number().int().optional().default(10),
     message: zInputMessage,
-    start_time: z.string().datetime().optional().default('2025-08-17T07:09:03.049392Z')
+    start_time: z.string().datetime().optional().default('2025-10-09T10:08:26.455806Z')
 });
 
 export const zMissionStatus = z.enum([
@@ -1595,7 +1870,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-08-17T07:09:03.205101Z'),
+    start_time: z.string().datetime().optional().default('2025-10-09T10:08:26.649729Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
@@ -1631,9 +1906,14 @@ export const zScenarioInfo = z.object({
 });
 
 export const zScenarioResultStatus = z.enum([
+    'scheduled',
+    'pending',
+    'running',
+    'cancelled',
+    'in_process',
+    'planned',
     'success',
     'failed',
-    'pending',
     'finished',
     'proxy_error',
     'browser_error',

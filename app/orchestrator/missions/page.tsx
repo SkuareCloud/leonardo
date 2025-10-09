@@ -6,25 +6,25 @@ import Link from "next/link"
 import { MissionsList } from "./missions-list"
 
 export default async function Page() {
-  const missions = await new ApiService().getOrchestratorMissionsWithExposureAndStats()
+    const missions = await new ApiService().getOrchestratorMissionsWithExposureAndStats()
 
-  return (
-    <div className="flex flex-col gap-8 w-full pr-92">
-      <PageHeader title="Missions" subtitle="View and manage missions">
-        <div className="flex flex-row items-center gap-6">
-          <Link href="/orchestrator/mission-builder">
-            <Button className="scale-100 cursor-pointer hover:scale-[102%] focus:scale-[98%]">
-              <PlusIcon className="w-4 h-4" />
-              Create new mission
-            </Button>
-          </Link>
-        </div>
-      </PageHeader>
+    return (
+        <div className="flex w-full flex-col gap-8 pr-92">
+            <PageHeader title="Missions" subtitle="View and manage missions">
+                <div className="flex flex-row items-center gap-6">
+                    <Link href="/orchestrator/mission-builder">
+                        <Button className="scale-100 cursor-pointer hover:scale-[102%] focus:scale-[98%]">
+                            <PlusIcon className="h-4 w-4" />
+                            Create new mission
+                        </Button>
+                    </Link>
+                </div>
+            </PageHeader>
 
-      <MissionsList data={missions} />
+            <MissionsList data={missions} />
 
-      {/* TODO: add tab navigation when stats are added */}
-      {/* <Tabs defaultValue="list">
+            {/* TODO: add tab navigation when stats are added */}
+            {/* <Tabs defaultValue="list">
         <TabsList>
           <TabsTrigger value="list" className="px-4">
             <ListIcon className="w-4 h-4" />
@@ -39,6 +39,6 @@ export default async function Page() {
           <MissionsList data={missions} />
         </TabsContent>
       </Tabs> */}
-    </div>
-  )
+        </div>
+    )
 }

@@ -26,7 +26,7 @@ export type Access = {
     usage: number;
 };
 
-export type ActionErrorCode = 'chat_not_found' | 'general_error' | 'account_muted' | 'send_message_error' | 'message_deleted' | 'sending_attachment_error' | 'did_not_find_message_after_sending' | 'username_not_valid' | 'failed_to_download_attachment' | 'join_group_chat_type_user' | 'account_in_slow_mode' | 'timeout' | 'tweet_does_not_exist' | 'tweet_is_unavailable' | 'tweet_page_load_failed';
+export type ActionErrorCode = 'chat_not_found' | 'general_error' | 'account_muted' | 'send_message_error' | 'message_deleted' | 'sending_attachment_error' | 'did_not_find_message_after_sending' | 'username_not_valid' | 'failed_to_download_attachment' | 'join_group_chat_type_user' | 'account_in_slow_mode' | 'timeout' | 'can_not_resolve_phone_number' | 'tweet_does_not_exist' | 'tweet_is_unavailable' | 'tweet_page_load_failed';
 
 export type ActionPrefrences = {
     fail_fast?: boolean | null;

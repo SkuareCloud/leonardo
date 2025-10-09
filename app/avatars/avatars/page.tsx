@@ -4,20 +4,20 @@ import { ServiceClient } from "@lib/service-client"
 import { AvatarsView } from "./avatars-view"
 
 export default async function Page() {
-  const serviceClient = new ServiceClient()
-  const apiService = new ApiService()
-  
-  const [avatars, allCategories] = await Promise.all([
-    serviceClient.getAvatars(),
-    apiService.getOrchestratorCategories(),
-  ])
+    const serviceClient = new ServiceClient()
+    const apiService = new ApiService()
 
-  return (
-    <div className="container py-6">
-      <div className="flex justify-between items-center mb-6">
-        <PageHeader title="Avatars" subtitle="Inventory of all avatars in the system." />
-      </div>
-      <AvatarsView avatars={avatars} allCategories={allCategories} />
-    </div>
-  )
+    const [avatars, allCategories] = await Promise.all([
+        serviceClient.getAvatars(),
+        apiService.getOrchestratorCategories(),
+    ])
+
+    return (
+        <div className="container py-6">
+            <div className="mb-6 flex items-center justify-between">
+                <PageHeader title="Avatars" subtitle="Inventory of all avatars in the system." />
+            </div>
+            <AvatarsView avatars={avatars} allCategories={allCategories} />
+        </div>
+    )
 }

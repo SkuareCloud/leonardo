@@ -45,7 +45,6 @@ openapi
 temp
 secrets
 .git
-.github
 .prettierrc.json
 
 openapi-ts-error*

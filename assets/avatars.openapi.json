@@ -1033,9 +1033,7 @@
                 },
                 "additionalProperties": false,
                 "type": "object",
-                "required": [
-                    "data"
-                ],
+                "required": ["data"],
                 "title": "AvatarBase"
             },
             "AvatarModelWithProxy": {
@@ -1131,12 +1129,7 @@
                     }
                 },
                 "type": "object",
-                "required": [
-                    "id",
-                    "data",
-                    "pir_id",
-                    "proxy"
-                ],
+                "required": ["id", "data", "pir_id", "proxy"],
                 "title": "AvatarModelWithProxy"
             },
             "HTTPValidationError": {
@@ -1178,10 +1171,7 @@
                 },
                 "additionalProperties": false,
                 "type": "object",
-                "required": [
-                    "name",
-                    "id"
-                ],
+                "required": ["name", "id"],
                 "title": "PIR"
             },
             "PatchAvatar": {
@@ -1205,9 +1195,7 @@
                 },
                 "additionalProperties": false,
                 "type": "object",
-                "required": [
-                    "path"
-                ],
+                "required": ["path"],
                 "title": "PatchAvatar"
             },
             "PirBase": {
@@ -1231,9 +1219,7 @@
                 },
                 "additionalProperties": false,
                 "type": "object",
-                "required": [
-                    "name"
-                ],
+                "required": ["name"],
                 "title": "PirBase"
             },
             "Proxy": {
@@ -1457,24 +1443,12 @@
                 },
                 "additionalProperties": false,
                 "type": "object",
-                "required": [
-                    "name",
-                    "type",
-                    "port",
-                    "username"
-                ],
+                "required": ["name", "type", "port", "username"],
                 "title": "ProxyBase"
             },
             "ProxyType": {
                 "type": "string",
-                "enum": [
-                    "socks4",
-                    "socks4a",
-                    "socks5",
-                    "socks5h",
-                    "https",
-                    "http"
-                ],
+                "enum": ["socks4", "socks4a", "socks5", "socks5h", "https", "http"],
                 "title": "ProxyType"
             },
             "ValidationError": {
@@ -1503,11 +1477,7 @@
                     }
                 },
                 "type": "object",
-                "required": [
-                    "loc",
-                    "msg",
-                    "type"
-                ],
+                "required": ["loc", "msg", "type"],
                 "title": "ValidationError"
             }
         },

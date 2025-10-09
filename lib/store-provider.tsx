@@ -10,24 +10,28 @@ export type OperatorStoreApi = ReturnType<typeof createOperatorStore>
 export const OperatorStoreContext = createContext<OperatorStoreApi | undefined>(undefined)
 
 export interface OperatorStoreProviderProps {
-  children: ReactNode
+    children: ReactNode
 }
 
 export const OperatorStoreProvider = ({ children }: OperatorStoreProviderProps) => {
-  const storeRef = useRef<OperatorStoreApi | null>(null)
-  if (storeRef.current === null) {
-    storeRef.current = createOperatorStore()
-  }
+    const storeRef = useRef<OperatorStoreApi | null>(null)
+    if (storeRef.current === null) {
+        storeRef.current = createOperatorStore()
+    }
 
-  return <OperatorStoreContext.Provider value={storeRef.current}>{children}</OperatorStoreContext.Provider>
+    return (
+        <OperatorStoreContext.Provider value={storeRef.current}>
+            {children}
+        </OperatorStoreContext.Provider>
+    )
 }
 
 export const useOperatorStore = <T,>(selector: (store: OperatorStore) => T): T => {
-  const operatorStoreContext = useContext(OperatorStoreContext)
+    const operatorStoreContext = useContext(OperatorStoreContext)
 
-  if (!operatorStoreContext) {
-    throw new Error(`useOperatorStore must be used within OperatorStoreProvider`)
-  }
+    if (!operatorStoreContext) {
+        throw new Error(`useOperatorStore must be used within OperatorStoreProvider`)
+    }
 
-  return useStore(operatorStoreContext, selector)
+    return useStore(operatorStoreContext, selector)
 }
