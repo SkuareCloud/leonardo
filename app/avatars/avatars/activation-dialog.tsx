@@ -455,11 +455,11 @@ export function ActivationDialog({
                                             <div className="text-center">
                                                 <div className="text-muted-foreground text-sm">
                                                     {activationStatus === "CHECKING_PROFILE" &&
-                                                        "Checking profile status..."}
+                                                        "Checking avatar status..."}
                                                     {activationStatus === "STARTED" &&
                                                         "Starting browser session..."}
                                                     {activationStatus === "ALREADY_LOGGED_IN" &&
-                                                        "Profile already logged in..."}
+                                                        "Avatar already logged in..."}
                                                     {activationStatus === "ENTERING_OTP" &&
                                                         "Processing OTP..."}
                                                     {activationStatus ===

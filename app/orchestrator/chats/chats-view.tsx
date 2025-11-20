@@ -2,10 +2,14 @@
 
 import { TreeNode } from "@/components/tree"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { CategoryWithChatCount } from "@lib/api/models"
 import { CategoryRead, ChatView } from "@lib/api/orchestrator"
 import { Handle, Position } from "@xyflow/react"
-import { ChatsList } from "./chats-list"
+import { FileDown, Loader2 } from "lucide-react"
+import { useRef, useState } from "react"
+import { toast } from "sonner"
+import { ChatsList, ChatsListHandle } from "./chats-list"
 
 type ChatNodeData = {
     category: CategoryRead
@@ -57,9 +61,45 @@ export function ChatsView({
     chats: ChatView[]
     allCategories: CategoryRead[]
 }) {
+    const chatsListRef = useRef<ChatsListHandle>(null)
+    const [isExporting, setIsExporting] = useState(false)
+
+    const handleExport = async () => {
+        if (!chatsListRef.current) {
+            toast.error("Chats are still loading. Please try again.")
+            return
+        }
+        setIsExporting(true)
+        try {
+            await chatsListRef.current.exportCurrentChatsToCsv()
+        } catch (error) {
+            console.error("Export failed:", error)
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
     return (
         <div className="flex w-full flex-col gap-6">
-            <ChatsList chats={chats} allCategories={allCategories} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm text-muted-foreground">
+                    Showing {chats.length} total chat{chats.length === 1 ? "" : "s"}
+                </div>
+                <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+                    {isExporting ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Exporting...
+                        </>
+                    ) : (
+                        <>
+                            <FileDown className="mr-2 h-4 w-4" />
+                            Export CSV
+                        </>
+                    )}
+                </Button>
+            </div>
+            <ChatsList ref={chatsListRef} chats={chats} allCategories={allCategories} />
         </div>
     )
 }

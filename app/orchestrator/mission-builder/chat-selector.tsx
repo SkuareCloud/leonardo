@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ChatRead } from "@lib/api/orchestrator"
 import { Loader2, PlusCircleIcon, Search, XIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { FieldWithLabel } from "./mission-builder-utils"
 
 export function ChatSelector({
@@ -27,10 +28,30 @@ export function ChatSelector({
     const [searchResults, setSearchResults] = useState<ChatRead[]>([])
     const [loading, setLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [isImporting, setIsImporting] = useState(false)
+    const [cachedChats, setCachedChats] = useState<ChatRead[] | null>(null)
 
     useEffect(() => {
         onChangeValue?.(selected)
     }, [selected, onChangeValue])
+
+    const loadChats = async (): Promise<ChatRead[]> => {
+        if (cachedChats) {
+            return cachedChats
+        }
+        const params = new URLSearchParams()
+        params.set("limit", "0")
+        if (writable) {
+            params.set("writable", "true")
+        }
+        const response = await fetch(`/api/orchestrator/chats?${params.toString()}`)
+        if (!response.ok) {
+            throw new Error("Failed to fetch chats")
+        }
+        const data: ChatRead[] = await response.json()
+        setCachedChats(data)
+        return data
+    }
 
     const performSearch = async (term: string) => {
         if (term.trim() === "") {
@@ -40,19 +61,19 @@ export function ChatSelector({
 
         setLoading(true)
         try {
-            let url = `/api/orchestrator/chats/search/?q=${encodeURIComponent(term)}`
-            if (writable) {
-                url += "&writable=true"
-            }
-
-            const response = await fetch(url)
-            if (response.ok) {
-                const results: ChatRead[] = await response.json()
-                setSearchResults(results)
-            } else {
-                console.error("Search failed:", response.status, response.statusText)
-                setSearchResults([])
-            }
+            const chats = await loadChats()
+            const normalized = term.toLowerCase()
+            const filtered = chats.filter((chat) => {
+                const fields = [
+                    chat.username,
+                    chat.title,
+                    chat.about,
+                    chat.id,
+                    chat.platform_id ? chat.platform_id.toString() : "",
+                ]
+                return fields.some((field) => field?.toLowerCase().includes(normalized))
+            })
+            setSearchResults(filtered)
         } catch (error) {
             console.error("Search failed:", error)
             setSearchResults([])
@@ -64,6 +85,47 @@ export function ChatSelector({
     const handleSearch = (value: string) => {
         setSearchTerm(value)
         performSearch(value)
+    }
+
+    const handleImportChat = async () => {
+        const identifier = searchTerm.trim()
+        if (!identifier) {
+            toast.error("Enter a username or platform ID to import.")
+            return
+        }
+        setIsImporting(true)
+        try {
+            const response = await fetch("/api/orchestrator/chats/import", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ identifier }),
+            })
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.error || "Failed to import chat")
+            }
+            const createdChat = (await response.json()) as ChatRead
+            setSearchResults((prev) => {
+                const filtered = prev.filter((chat) => chat.id !== createdChat.id)
+                return [createdChat, ...filtered]
+            })
+            setCachedChats((prev) => {
+                if (!prev) return [createdChat]
+                const filtered = prev.filter((chat) => chat.id !== createdChat.id)
+                return [createdChat, ...filtered]
+            })
+            toast.success(
+                `Imported chat ${createdChat.username || createdChat.title || createdChat.id}`,
+            )
+        } catch (error) {
+            toast.error(
+                `Failed to import chat: ${error instanceof Error ? error.message : "Unknown error"}`,
+            )
+        } finally {
+            setIsImporting(false)
+        }
     }
 
     const handleChatSelect = (chatId: string) => {
@@ -178,6 +240,25 @@ export function ChatSelector({
                                         No chats found for "{searchTerm}"
                                         <div className="mt-1 text-xs">
                                             Try searching by username or platform ID
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            className="mt-3"
+                                            onClick={handleImportChat}
+                                            disabled={isImporting}
+                                        >
+                                            {isImporting ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Importing...
+                                                </>
+                                            ) : (
+                                                "Find via Mystique"
+                                            )}
+                                        </Button>
+                                        <div className="mt-1 text-[11px] text-gray-400">
+                                            Automatically imports the chat into the orchestrator if
+                                            found.
                                         </div>
                                     </div>
                                 )}

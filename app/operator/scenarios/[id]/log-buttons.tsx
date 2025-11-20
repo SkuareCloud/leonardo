@@ -17,7 +17,7 @@ export function LogButtons({ profileId, scenarioId }: LogButtonsProps) {
                     rel="noopener noreferrer"
                 >
                     <ExternalLinkIcon className="h-4 w-4" />
-                    Profile Logs
+                    Avatar Logs
                 </a>
             </Button>
             <Button variant="outline" asChild className="flex items-center gap-2">

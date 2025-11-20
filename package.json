@@ -12,6 +12,7 @@
         "openapi-avatars": "node -r dotenv/config ./node_modules/.bin/openapi-ts -f openapi-ts.avatars.config.ts && npm run fix:baseurl",
         "openapi-operator": "node -r dotenv/config ./node_modules/.bin/openapi-ts -f openapi-ts.operator.config.ts && npm run fix:baseurl",
         "openapi-orchestrator": "node -r dotenv/config ./node_modules/.bin/openapi-ts -f openapi-ts.orchestrator.config.ts && npm run fix:baseurl",
+        "openapi-mystique": "node -r dotenv/config ./node_modules/.bin/openapi-ts -f openapi-ts.mystique.config.ts && npm run fix:baseurl",
         "fix:baseurl": "node scripts/removeBaseUrl.js",
         "openapi-all": "npm run openapi-avatars && npm run openapi-operator && npm run openapi-orchestrator && npm run fix:baseurl",
         "lint": "next lint",

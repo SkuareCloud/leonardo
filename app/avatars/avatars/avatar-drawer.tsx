@@ -306,7 +306,7 @@ export function AvatarDrawer({
                         {/* Editable Fields Section */}
                         <div className="space-y-6">
                             <h2 className="text-foreground text-lg font-semibold">
-                                Profile Details
+                                Avatar Details
                             </h2>
 
                             <LoadingInputField

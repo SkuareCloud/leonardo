@@ -180,7 +180,7 @@ const proxyColumns: ColumnDef<Proxy>[] = [
                                     <AlertDialogTitle>Disable Proxy</AlertDialogTitle>
                                     <AlertDialogDescription>
                                         Are you sure you want to disable this proxy? This will
-                                        prevent it from being used by any profiles.
+                                        prevent it from being used by any avatars.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -208,7 +208,7 @@ const proxyColumns: ColumnDef<Proxy>[] = [
                                     <AlertDialogTitle>Enable Proxy</AlertDialogTitle>
                                     <AlertDialogDescription>
                                         Are you sure you want to enable this proxy? It will be
-                                        available for use by profiles.
+                                        available for use by avatars.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

@@ -1,7 +1,6 @@
 "use client"
 
 import {
-    ActivityIcon,
     Crosshair,
     HardHat,
     ImageIcon,
@@ -13,7 +12,7 @@ import {
     SpeechIcon,
     Users2Icon,
     // VenetianMask,
-    Waypoints,
+    Waypoints
 } from "lucide-react"
 import * as React from "react"
 
@@ -79,11 +78,11 @@ const data = {
                     url: "/avatars/proxies",
                     icon: Waypoints,
                 },
-                {
-                    title: "Activation",
-                    url: "/profiles/activation",
-                    icon: ActivityIcon,
-                },
+                // {
+                //     title: "Activation",
+                //     url: "/profiles/activation",
+                //     icon: ActivityIcon,
+                // },
             ],
         },
         {

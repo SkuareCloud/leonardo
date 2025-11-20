@@ -61,23 +61,19 @@ export function FluffMissionBuilder({ categories }: { categories: CategoryRead[]
         <div className="flex flex-col gap-6">
             <div className="rounded-2xl bg-gradient-to-br from-blue-50/50 to-blue-100/50 px-4 py-3 text-gray-900 shadow-sm">
                 <div className="flex flex-col gap-4">
-                    <h3 className="text-lg font-medium">Character Selection</h3>
+                    <h3 className="text-lg font-medium">Avatar Selection</h3>
                     <p className="text-sm text-gray-600"></p>
 
                     <div className="flex flex-col gap-12">
-                        {activeCharacterCategories.length > 0 && (
-                            <CategorySelector
-                                categories={activeCharacterCategories}
-                                label="Character categories"
-                                onChangeValue={(value) => setCharacterCategories(value)}
-                            />
-                        )}
-                        {setCharacterIds.length > 0 && (
-                            <CharacterSelector
-                                label="Characters by Name/ID"
-                                onChangeValue={(value) => setCharacterIds(value)}
-                            />
-                        )}
+                        <CategorySelector
+                            categories={activeCharacterCategories}
+                            label="Avatar categories"
+                            onChangeValue={(value) => setCharacterCategories(value)}
+                        />
+                        <CharacterSelector
+                            label="Avatars by Name/ID"
+                            onChangeValue={(value) => setCharacterIds(value)}
+                        />
                     </div>
                     <div className="text-sm text-gray-500"></div>
                 </div>
@@ -89,7 +85,7 @@ export function FluffMissionBuilder({ categories }: { categories: CategoryRead[]
 
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
                         <InputWithLabel
-                            label="Batch size [Number of characters running simultaneously]"
+                            label="Batch size [Number of avatars running simultaneously]"
                             type="number"
                             min="1"
                             value={batchSize}

@@ -4,7 +4,7 @@ import TelegramIcon from "@/assets/telegram.svg"
 import { CreateCategoryDialog } from "@/components/create-category-dialog"
 import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -22,7 +22,7 @@ import { getSocialNetworkStatus } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
-import { MarsIcon, VenusIcon } from "lucide-react"
+import { Loader2, MarsIcon, VenusIcon } from "lucide-react"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -89,29 +89,8 @@ const createProfileColumns = (
     categories: CategoryRead[],
     onUpdateAvatarCategories: (avatarId: string, categories: CategoryRead[]) => void,
     socialNetworksArray: string[],
+    onCreateCategory?: (name: string) => Promise<CategoryRead | null>,
 ): ColumnDef<ProfileDataRow>[] => [
-    {
-        id: "select",
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && "indeterminate")
-                }
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
     {
         accessorKey: "name",
         header: "Name",
@@ -251,6 +230,8 @@ const createProfileColumns = (
                     <CategorySelector
                         existingCategories={avatarCategories}
                         categories={categories}
+                        allowCreate
+                        onCreateCategory={onCreateCategory}
                         onChangeValue={async (
                             selectedCategories: { id: string; label: string }[],
                         ) => {
@@ -344,7 +325,7 @@ const createProfileColumns = (
     },
     {
         accessorKey: "profileId",
-        header: "Profile ID",
+        header: "Avatar ID",
         size: 60,
         cell: ({ row }) => {
             const profile = row.original
@@ -383,7 +364,12 @@ export function AvatarsList({
     const [profilesData, setProfilesData] = useState<ProfileDataRow[]>([])
     const [categories, setCategories] = useState<CategoryRead[]>(allCategories)
     const [activeCategory, setActiveCategory] = useState<string | null>(null)
+    const [categorySelectValue, setCategorySelectValue] = useState("All")
+    const [bulkCategoryInput, setBulkCategoryInput] = useState<string>("")
+    const [isApplyingBulkCategory, setIsApplyingBulkCategory] = useState(false)
+    const [isRemovingBulkCategory, setIsRemovingBulkCategory] = useState(false)
     const tableRef = useRef<HTMLDivElement>(null)
+    const bulkCategoryOptionsId = "avatar-bulk-category-options"
 
     const searchParams = useSearchParams()
     const id = searchParams.get("id")
@@ -415,6 +401,14 @@ export function AvatarsList({
         }
     }, [id, avatars])
 
+    useEffect(() => {
+        if (!activeCategory) {
+            setCategorySelectValue("All")
+        } else {
+            setCategorySelectValue(activeCategory)
+        }
+    }, [activeCategory])
+
     const handleCategoryCreated = (newCategory: CategoryRead) => {
         setCategories((prev) => [...prev, newCategory])
         toast.success(`Created category: ${newCategory.name}`)
@@ -432,6 +426,44 @@ export function AvatarsList({
         toast.success(`Category deleted successfully`)
     }
 
+    const ensureCategoryByName = async (name: string): Promise<CategoryRead | null> => {
+        const normalized = name.trim()
+        if (!normalized) {
+            toast.error("Category name is required")
+            return null
+        }
+        const existing = categories.find(
+            (category) => category.name?.toLowerCase() === normalized.toLowerCase(),
+        )
+        if (existing) {
+            return existing
+        }
+        const rootCategory = categories.find((category) => !category.parent_id)
+        try {
+            const response = await fetch("/api/orchestrator/categories", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: normalized,
+                    description: "",
+                    parent_id: rootCategory?.id ?? null,
+                }),
+            })
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.error || "Failed to create category")
+            }
+            const newCategory = await response.json()
+            handleCategoryCreated(newCategory)
+            return newCategory
+        } catch (error) {
+            toast.error(
+                `Failed to create category: ${error instanceof Error ? error.message : "Unknown error"}`,
+            )
+            return null
+        }
+    }
+
     const handleUpdateAvatarCategories = (avatarId: string, newCategories: CategoryRead[]) => {
         setProfilesData((prev) =>
             prev.map((profile) =>
@@ -440,6 +472,163 @@ export function AvatarsList({
                     : profile,
             ),
         )
+    }
+
+    const findCategoryByNameOrId = (value: string): CategoryRead | null => {
+        const normalized = value.trim()
+        if (!normalized) {
+            return null
+        }
+        const normalizedLower = normalized.toLowerCase()
+        return (
+            categories.find(
+                (category) =>
+                    category.name?.toLowerCase() === normalizedLower ||
+                    category.id === normalized ||
+                    category.id?.toLowerCase() === normalizedLower,
+            ) ?? null
+        )
+    }
+
+    const handleBulkAssignCategories = async (
+        avatarIds: string[],
+        onComplete: () => void,
+    ): Promise<void> => {
+        if (avatarIds.length === 0) {
+            toast.error("Select at least one avatar to update.")
+            return
+        }
+        if (!bulkCategoryInput.trim()) {
+            toast.error("Enter or select a category name.")
+            return
+        }
+
+        setIsApplyingBulkCategory(true)
+        try {
+            const category = await ensureCategoryByName(bulkCategoryInput)
+            if (!category) {
+                return
+            }
+
+            await Promise.all(
+                avatarIds.map(async (avatarId) => {
+                    const response = await fetch(
+                        `/api/orchestrator/characters?character_id=${avatarId}&operation=add_category`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ categoryId: category.id }),
+                        },
+                    )
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}))
+                        throw new Error(errorData.error || `Failed to add category to avatar ${avatarId}`)
+                    }
+                }),
+            )
+
+            setProfilesData((prev) =>
+                prev.map((profile) => {
+                    if (!avatarIds.includes(profile.profileId)) {
+                        return profile
+                    }
+                    const existingCategories = profile.categories || []
+                    if (existingCategories.some((cat) => cat.id === category.id)) {
+                        return profile
+                    }
+                    return {
+                        ...profile,
+                        categories: [...existingCategories, category],
+                    }
+                }),
+            )
+
+            toast.success(
+                `Assigned ${category.name ?? "category"} to ${avatarIds.length} avatar${
+                    avatarIds.length === 1 ? "" : "s"
+                }.`,
+            )
+            setBulkCategoryInput("")
+            onComplete()
+        } catch (error) {
+            toast.error(
+                `Failed to assign categories: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
+            )
+        } finally {
+            setIsApplyingBulkCategory(false)
+        }
+    }
+
+    const handleBulkRemoveCategories = async (
+        avatarIds: string[],
+        onComplete: () => void,
+    ): Promise<void> => {
+        if (avatarIds.length === 0) {
+            toast.error("Select at least one avatar to update.")
+            return
+        }
+        const categoryInput = bulkCategoryInput.trim()
+        if (!categoryInput) {
+            toast.error("Enter or select a category name.")
+            return
+        }
+
+        const category = findCategoryByNameOrId(categoryInput)
+        if (!category) {
+            toast.error("Category not found.")
+            return
+        }
+
+        setIsRemovingBulkCategory(true)
+        try {
+            await Promise.all(
+                avatarIds.map(async (avatarId) => {
+                    const response = await fetch(
+                        `/api/orchestrator/characters?character_id=${avatarId}&operation=remove_category`,
+                        {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ categoryId: category.id }),
+                        },
+                    )
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}))
+                        throw new Error(errorData.error || "Failed to remove category")
+                    }
+                }),
+            )
+
+            setProfilesData((prev) =>
+                prev.map((profile) => {
+                    if (!avatarIds.includes(profile.profileId)) {
+                        return profile
+                    }
+                    const existingCategories = profile.categories || []
+                    return {
+                        ...profile,
+                        categories: existingCategories.filter((cat) => cat.id !== category.id),
+                    }
+                }),
+            )
+
+            toast.success(
+                `Removed ${category.name ?? "category"} from ${avatarIds.length} avatar${
+                    avatarIds.length === 1 ? "" : "s"
+                }.`,
+            )
+            setBulkCategoryInput("")
+            onComplete()
+        } catch (error) {
+            toast.error(
+                `Failed to remove categories: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
+            )
+        } finally {
+            setIsRemovingBulkCategory(false)
+        }
     }
 
     // Load avatar categories
@@ -469,6 +658,22 @@ export function AvatarsList({
     useEffect(() => {
         loadAvatarCategories()
     }, [avatars])
+
+    // Log avatar counts for debugging
+    useEffect(() => {
+        const categoryFiltered = profilesData.filter((profile) => {
+            if (!activeCategory) {
+                return true
+            }
+            if (!profile.categories) {
+                return false
+            }
+            return profile.categories.some((category) => category.name === activeCategory)
+        })
+        logger.info(
+            `Avatar filtering: Total=${profilesData.length}, Category filtered (${activeCategory || "All"})=${categoryFiltered.length}`,
+        )
+    }, [profilesData, activeCategory])
 
     const refreshAvatar = async () => {
         // HACK: Slight delay to allow DB to catch up.
@@ -527,6 +732,7 @@ export function AvatarsList({
         categories,
         handleUpdateAvatarCategories,
         socialNetworksArray,
+        ensureCategoryByName,
     )
 
     return (
@@ -541,30 +747,49 @@ export function AvatarsList({
             tabIndex={0}
         >
             <div className="mb-4 flex flex-row items-center justify-between">
-                <div className="flex flex-row gap-2">
-                    <Label>Category</Label>
-                    <Select
-                        value={activeCategory ?? undefined}
-                        onValueChange={(value) => {
-                            if (value === "All") {
-                                setActiveCategory(null)
-                            } else {
-                                setActiveCategory(value)
-                            }
-                        }}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All</SelectItem>
-                            {categories.map((category) => (
-                                <SelectItem key={category.name} value={category.name ?? ""}>
-                                    {category.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-row items-center gap-4">
+                    <div className="flex flex-row items-center gap-2">
+                        <Label>Category</Label>
+                        <Select
+                            value={categorySelectValue}
+                            onValueChange={(value) => {
+                                setCategorySelectValue(value)
+                                if (value === "All") {
+                                    setActiveCategory(null)
+                                } else {
+                                    setActiveCategory(value)
+                                }
+                            }}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All</SelectItem>
+                                {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.name ?? category.id}>
+                                        {category.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="text-muted-foreground flex flex-row items-center gap-2 text-md">
+                        <Badge variant="secondary" className="font-normal">
+                            {profilesData.filter((profile) => {
+                                if (!activeCategory) {
+                                    return true
+                                }
+                                if (!profile.categories) {
+                                    return false
+                                }
+                                return profile.categories.some(
+                                    (category) => category.name === activeCategory,
+                                )
+                            }).length}{" "}
+                            of {profilesData.length} avatars
+                        </Badge>
+                    </div>
                 </div>
                 <div>
                     <CreateCategoryDialog
@@ -579,6 +804,7 @@ export function AvatarsList({
                 <div className="flex w-full max-w-[1280px] flex-col gap-4" ref={tableRef}>
                     <DataTable
                         columns={profileColumns}
+                        enableRowSelection
                         onClickRow={(row) => {
                             logger.info("Clicked row: ", row.original)
                             setActiveRow(row)
@@ -594,8 +820,10 @@ export function AvatarsList({
                                 (category) => category.name === activeCategory,
                             )
                         })}
-                        header={({ table }) => {
-                            return (
+                    header={({ table }) => {
+                        const selectedRows = table.getFilteredSelectedRowModel().rows
+                        return (
+                            <div className="flex flex-col gap-4">
                                 <div className="flex flex-row gap-2">
                                     <div className="flex flex-col gap-2">
                                         <Label htmlFor="name">Name</Label>
@@ -616,7 +844,7 @@ export function AvatarsList({
                                         />
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <Label htmlFor="profileId">Profile ID</Label>
+                                        <Label htmlFor="profileId">Avatar ID</Label>
                                         <Input
                                             id="profileId"
                                             placeholder="Filter by ID..."
@@ -703,8 +931,88 @@ export function AvatarsList({
                                         </Select>
                                     </div>
                                 </div>
-                            )
-                        }}
+                                {selectedRows.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/40 p-3">
+                                        <Badge variant="secondary">
+                                            {selectedRows.length} selected
+                                        </Badge>
+                                        <Input
+                                            placeholder="Category name"
+                                            value={bulkCategoryInput}
+                                            onChange={(event) => setBulkCategoryInput(event.target.value)}
+                                            list={bulkCategoryOptionsId}
+                                            className="w-64"
+                                        />
+                                        <datalist id={bulkCategoryOptionsId}>
+                                            {categories
+                                                .filter((category) => !!category.name)
+                                                .map((category) => (
+                                                    <option key={category.id} value={category.name ?? ""} />
+                                                ))}
+                                        </datalist>
+                                        <Button
+                                            size="sm"
+                                            onClick={() =>
+                                                handleBulkAssignCategories(
+                                                    selectedRows.map(
+                                                        (row) => row.original.profileId,
+                                                    ),
+                                                    () => table.resetRowSelection(),
+                                                )
+                                            }
+                                            disabled={
+                                                !bulkCategoryInput.trim() ||
+                                                isApplyingBulkCategory ||
+                                                isRemovingBulkCategory
+                                            }
+                                        >
+                                            {isApplyingBulkCategory ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Assigning
+                                                </>
+                                            ) : (
+                                                "Assign category"
+                                            )}
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() =>
+                                                handleBulkRemoveCategories(
+                                                    selectedRows.map(
+                                                        (row) => row.original.profileId,
+                                                    ),
+                                                    () => table.resetRowSelection(),
+                                                )
+                                            }
+                                            disabled={
+                                                !bulkCategoryInput.trim() ||
+                                                isRemovingBulkCategory ||
+                                                isApplyingBulkCategory
+                                            }
+                                        >
+                                            {isRemovingBulkCategory ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Removing
+                                                </>
+                                            ) : (
+                                                "Remove category"
+                                            )}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => table.resetRowSelection()}
+                                        >
+                                            Clear selection
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }}
                     />
                 </div>
             </div>

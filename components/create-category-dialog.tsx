@@ -231,7 +231,7 @@ export function CreateCategoryDialog({
                                                     </div>
                                                 )}
                                                 <div className="text-muted-foreground text-xs">
-                                                    Chats: {category.chat_count || 0} | Characters:{" "}
+                                                    Chats: {category.chat_count || 0} | Avatars:{" "}
                                                     {category.character_count || 0}
                                                 </div>
                                             </div>

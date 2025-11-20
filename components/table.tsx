@@ -47,6 +47,7 @@ export interface DataTableProps<T> {
     onClickRow?: (rowData: T) => void
     enableRowSelection?: boolean
     tableContainerClassName?: string
+    paginationPosition?: "top" | "bottom" | "both"
 }
 
 export function DataTable<T>({
@@ -60,6 +61,7 @@ export function DataTable<T>({
     enableRowSelection = false,
     rowClassName,
     tableContainerClassName,
+    paginationPosition = "bottom",
 }: DataTableProps<T>) {
     const [sorting, setSorting] = React.useState<SortingState>(initialSortingState)
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -96,11 +98,13 @@ export function DataTable<T>({
 
         const selectionColumn: ColumnDef<T> = {
             id: "select",
+            size: 50,
             header: ({ table }) => (
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
                     aria-label="Select all"
+                    className="h-5 w-5"
                 />
             ),
             cell: ({ row }) => (
@@ -109,6 +113,7 @@ export function DataTable<T>({
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label="Select row"
+                    className="h-5 w-5"
                 />
             ),
             enableSorting: false,
@@ -144,6 +149,60 @@ export function DataTable<T>({
             size: 150,
         },
     })
+
+    const totalFilteredRows = table.getFilteredRowModel().rows.length
+    const { pageIndex, pageSize: currentPageSize } = table.getState().pagination
+    const pageStart = totalFilteredRows === 0 ? 0 : pageIndex * currentPageSize + 1
+    const pageEnd =
+        totalFilteredRows === 0
+            ? 0
+            : Math.min(totalFilteredRows, pageStart + currentPageSize - 1)
+    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length
+
+    const showTopPagination =
+        paginationPosition === "top" || paginationPosition === "both"
+    const showBottomPagination =
+        paginationPosition === "bottom" || paginationPosition === "both"
+
+    const renderPaginationControls = (position: "top" | "bottom") => (
+        <div
+            className={cn(
+                "flex flex-wrap items-center justify-end space-x-2 py-4",
+                position === "top" && "pt-0",
+            )}
+        >
+            <div className="text-muted-foreground flex-1 text-sm">
+                {totalFilteredRows === 0
+                    ? "Showing 0 rows"
+                    : `Showing ${pageStart}-${pageEnd} of ${totalFilteredRows} row${
+                          totalFilteredRows === 1 ? "" : "s"
+                      }`}
+                {enableRowSelection && (
+                    <span className="ml-3">
+                        {selectedRowCount} selected
+                    </span>
+                )}
+            </div>
+            <div className="space-x-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </Button>
+            </div>
+        </div>
+    )
 
     return (
         <div className="relative flex min-h-[600px] w-full flex-col">
@@ -202,6 +261,7 @@ export function DataTable<T>({
                     </Button>
                 </div>
             </div>
+            {showTopPagination && renderPaginationControls("top")}
             <div className="flex-1 pt-8">
                 <div className={cn("rounded-md border bg-white", tableContainerClassName)}>
                     <Table>
@@ -295,30 +355,7 @@ export function DataTable<T>({
                     </Table>
                 </div>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="text-muted-foreground flex-1 text-sm">
-                    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
+            {showBottomPagination && renderPaginationControls("bottom")}
         </div>
     )
 }

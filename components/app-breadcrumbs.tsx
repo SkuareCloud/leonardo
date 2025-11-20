@@ -5,12 +5,12 @@ import { BreadcrumbItem, Breadcrumbs } from "./breadcrumbs"
 
 const PATH_TO_BREADCRUMB: Record<string, BreadcrumbItem> = {
     "/": { title: "/", url: "/" },
-    "/profiles": { title: "Profiles", url: "/profiles" },
+    "/profiles": { title: "Avatars", url: "/profiles" },
     "/profiles/proxy": { title: "Proxy", url: "/profiles/proxy" },
-    "/profiles/activation": {
-        title: "Activation",
-        url: "/profiles/activation",
-    },
+    // "/profiles/activation": {
+    //     title: "Activation",
+    //     url: "/profiles/activation",
+    // },
     "/operator/scenarios": {
         title: "Scenarios",
         url: "/operator/scenarios",

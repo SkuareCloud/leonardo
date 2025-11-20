@@ -28,6 +28,8 @@ import {
     MissionWithExposureAndStats,
     MissionWithExposureStats,
 } from "@lib/api/models"
+import { client as mystiqueClient } from "@lib/api/mystique/client.gen"
+import { findTelegramChatApiChatsFindTelegramChatUserIdChatIdentifierGet } from "@lib/api/mystique/sdk.gen"
 import { ActivationStatus } from "@lib/api/operator"
 import { client as operatorClient } from "@lib/api/operator/client.gen"
 import {
@@ -49,6 +51,8 @@ import {
     MissionCreate,
     MissionExposure,
     MissionRead,
+    ChatCreate as OrchestratorChatCreate,
+    Scenario,
     ScenarioRead,
 } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
@@ -56,8 +60,10 @@ import {
     addCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPost,
     addChatToCategoryChatsChatIdCategoriesCategoryIdPost,
     createCategoryCategoriesPost,
+    createChatChatsPost,
     createMissionMissionsPost,
     deleteCategoryCategoriesCategoryIdDelete,
+    deleteChatChatsChatIdDelete,
     deleteMissionMissionsMissionIdDelete,
     getAllCategoriesCategoriesGet,
     getAllCharactersCharactersGet as getAllCharactersCharactersGetOrchestrator,
@@ -83,7 +89,9 @@ import {
     removeCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDelete,
     removeChatFromCategoryChatsChatIdCategoriesCategoryIdDelete,
     runMissionMissionsRunMissionMissionIdPost,
-    searchChatsChatsSearchGet,
+    searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGet,
+    searchChatsByTopicsChatsSearchChatsGet,
+    searchChatsChatsSearchGet
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { ServerSettings } from "@lib/server-settings"
@@ -95,6 +103,7 @@ export class ApiService {
     private mediaS3Client: S3Client
     private operatorLogsS3Client: S3Client
     private env: ServerEnv
+    private mystiqueUserId: string
 
     constructor(
         avatarsApiEndpoint: string | null = null,
@@ -151,6 +160,14 @@ export class ApiService {
                 "X-Api-Key": effectiveOrchestratorApiKey,
             },
         })
+
+        mystiqueClient.setConfig({
+            baseUrl: env.mystiqueApiEndpoint,
+            headers: {
+                "X-Api-Key": env.mystiqueApiKey,
+            },
+        })
+        this.mystiqueUserId = env.mystiqueUserId
 
         this.mediaS3Client = new S3Client({ region: env.mediaBucketRegion })
         this.operatorLogsS3Client = new S3Client({ region: env.mediaBucketRegion })
@@ -479,6 +496,41 @@ export class ApiService {
         return response.data ?? []
     }
 
+    async searchChatsByTopics(
+        query: string,
+        categoryName?: string,
+        topk?: number,
+        threshold?: number,
+    ) {
+        logger.info(`Searching chats by topics: ${query}`)
+        
+        const queryParams: any = {
+            query,
+            ...(typeof topk === "number" && !Number.isNaN(topk) ? { topk } : {}),
+            ...(typeof threshold === "number" && !Number.isNaN(threshold) ? { threshold } : {}),
+        }
+        
+        if (categoryName) {
+            queryParams.category_name = categoryName
+        }
+
+        const response = categoryName
+            ? await searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGet({
+                  client: orchestratorClient,
+                  query: queryParams,
+              })
+            : await searchChatsByTopicsChatsSearchChatsGet({
+                  client: orchestratorClient,
+                  query: queryParams,
+              })
+
+        if (response.error) {
+            throw new Error(`Failed to search chats by topics: ${JSON.stringify(response.error)}`)
+        }
+        logger.info(`Successfully searched chats by topics: ${query}`)
+        return response
+    }
+
     async getOrchestratorChat(chatId: string): Promise<ChatRead> {
         logger.info(`Getting orchestrator chat: ${chatId}`)
         const response = await getChatChatsChatIdGet({
@@ -635,6 +687,62 @@ export class ApiService {
         }
         logger.info(`Successfully removed chat from category: ${chatId}`)
         return response.data ?? null
+    }
+
+    async deleteOrchestratorChat(chatId: string) {
+        logger.info(`Deleting orchestrator chat: ${chatId}`)
+        const response = await deleteChatChatsChatIdDelete({
+            client: orchestratorClient,
+            path: { chat_id: chatId },
+        })
+        if (response.error) {
+            throw new Error(`Failed to delete orchestrator chat: ${JSON.stringify(response.error)}`)
+        }
+        logger.info(`Successfully deleted orchestrator chat: ${chatId}`)
+        return response.data ?? null
+    }
+
+    private async fetchMystiqueChat(
+        chatIdentifier: string,
+    ): Promise<OrchestratorChatCreate | null> {
+        const trimmed = chatIdentifier.trim()
+        if (!trimmed) {
+            throw new Error("Chat identifier is required")
+        }
+        const numericValue = Number(trimmed)
+        const isNumeric = !Number.isNaN(numericValue) && /^\d+$/.test(trimmed)
+        const identifierValue = isNumeric ? numericValue : trimmed
+
+        logger.info(`Searching Mystique for chat identifier: ${identifierValue}`)
+        const response = await findTelegramChatApiChatsFindTelegramChatUserIdChatIdentifierGet({
+            client: mystiqueClient,
+            path: {
+                user_id: this.mystiqueUserId,
+                chat_identifier: identifierValue as string | number,
+            },
+        })
+        if (response.error) {
+            throw new Error(`Mystique lookup failed: ${JSON.stringify(response.error)}`)
+        }
+        return (response.data as OrchestratorChatCreate | null) ?? null
+    }
+
+    async createChatFromMystique(chatIdentifier: string): Promise<ChatRead> {
+        const chatPayload = await this.fetchMystiqueChat(chatIdentifier)
+        if (!chatPayload) {
+            throw new Error("Mystique did not return a chat for the provided identifier")
+        }
+        const response = await createChatChatsPost({
+            client: orchestratorClient,
+            body: chatPayload,
+        })
+        if (response.error || !response.data) {
+            throw new Error(
+                `Failed to create chat in orchestrator: ${JSON.stringify(response.error)}`,
+            )
+        }
+        logger.info(`Successfully imported chat ${response.data.id} via Mystique`)
+        return response.data
     }
 
     async createOrchestratorCategory(
@@ -943,7 +1051,7 @@ export class ApiService {
         })
         if (response.error) {
             throw new Error(
-                `Failed to plan orchestrator mission: ${JSON.stringify(response.error)}`,
+                `Failed to plan orchestrator mission: ${JSON.stringify((response.error as any).detail)}`,
             )
         }
         logger.info(`Successfully planned orchestrator mission: ${missionId}`)

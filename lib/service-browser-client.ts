@@ -3,13 +3,14 @@ import {
     CombinedAvatar,
     MediaItem,
     MediaUploadPayload,
+    MissionFailureReason,
     MissionStatistics,
     MissionWithExposureAndStats,
     MissionWithExposureStats,
 } from "./api/models"
 import { ActivationStatus } from "./api/operator"
 import { MissionCreate, MissionRead, ScenarioRead } from "./api/orchestrator"
-import { ActionRead, ChatRead } from "./api/orchestrator/types.gen"
+import { ChatRead } from "./api/orchestrator/types.gen"
 import { ClientEnv, read_client_env } from "./client-env"
 import { logger } from "./logger"
 import { Web1Account } from "./web1/web1-models"
@@ -238,7 +239,9 @@ export class ServiceBrowserClient {
             method: "POST",
         })
         if (!resp.ok) {
-            throw new Error(`Failed to plan mission: ${resp.statusText}`)
+            const errorData = await resp.json().catch(() => ({ error: resp.statusText }))
+            const errorMessage = errorData.error || errorData.detail || resp.statusText
+            throw new Error(errorMessage)
         }
         const json = (await resp.json()) as ScenarioRead[]
         return json
@@ -250,9 +253,9 @@ export class ServiceBrowserClient {
         return json
     }
 
-    async getMissionFailureReasons(missionId: string): Promise<ActionRead[]> {
+    async getMissionFailureReasons(missionId: string): Promise<MissionFailureReason[]> {
         const resp = await fetch(`/api/orchestrator/missions/failure_reasons/${missionId}`)
-        const json = (await resp.json()) as ActionRead[]
+        const json = (await resp.json()) as MissionFailureReason[]
         return json
     }
 

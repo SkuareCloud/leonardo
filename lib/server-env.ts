@@ -5,6 +5,9 @@ export interface ServerEnv {
     operatorApiEndpoint: string
     orchestratorApiEndpoint: string
     orchestratorApiKey: string
+    mystiqueApiEndpoint: string
+    mystiqueApiKey: string
+    mystiqueUserId: string
     serverUrl: string
     web1DataPath?: string
     allowedCountries: string[]
@@ -34,6 +37,19 @@ export function read_server_env(): ServerEnv {
         throw new Error("Missing environment variable 'ORCHESTRATOR_API_ENDPOINT'")
     }
     const orchestratorApiKey = process.env.ORCHESTRATOR_API_KEY
+    const mystiqueApiEndpoint = process.env.MYSTIQUE_API_ENDPOINT
+    if (!mystiqueApiEndpoint) {
+        throw new Error("Missing environment variable 'MYSTIQUE_API_ENDPOINT'")
+    }
+    const mystiqueApiKey = process.env.MYSTIQUE_API_KEY
+    if (!mystiqueApiKey) {
+        throw new Error("Missing environment variable 'MYSTIQUE_API_KEY'")
+    }
+    const mystiqueUserId = process.env.MYSTIQUE_USER_ID
+    if (!mystiqueUserId) {
+        throw new Error("Missing environment variable 'MYSTIQUE_USER_ID'")
+    }
+
     if (!orchestratorApiKey) {
         throw new Error("Missing environment variable 'ORCHESTRATOR_API_KEY'")
     }
@@ -73,6 +89,9 @@ export function read_server_env(): ServerEnv {
         operatorApiEndpoint,
         orchestratorApiEndpoint,
         orchestratorApiKey,
+        mystiqueApiEndpoint,
+        mystiqueApiKey,
+        mystiqueUserId,
         serverUrl,
         web1DataPath,
         allowedCountries: parsedAllowedCountries,

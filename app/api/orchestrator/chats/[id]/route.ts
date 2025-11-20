@@ -30,3 +30,32 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         )
     }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+    const { id: chatId } = await params
+    const apiService = new ApiService()
+
+    try {
+        await apiService.deleteOrchestratorChat(chatId)
+        return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+    } catch (error) {
+        console.error("Failed to delete chat:", error)
+        return new Response(
+            JSON.stringify({
+                error: "Failed to delete chat",
+                details: error instanceof Error ? error.message : String(error),
+            }),
+            {
+                status: 500,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            },
+        )
+    }
+}

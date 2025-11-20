@@ -199,13 +199,11 @@ export function EchoMissionBuilder({
                     />
                 )}
 
-                {activeProfileCategories.length > 0 && (
-                    <CategorySelector
-                        categories={activeProfileCategories}
-                        label="Profile categories"
-                        onChangeValue={(value) => setProfileCategories(value)}
-                    />
-                )}
+                <CategorySelector
+                    categories={activeProfileCategories}
+                    label="Avatar categories"
+                    onChangeValue={(value) => setProfileCategories(value)}
+                />
 
                 <FieldWithLabel label="Maximum retries">
                     <Slider

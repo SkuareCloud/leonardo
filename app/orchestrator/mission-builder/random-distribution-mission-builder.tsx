@@ -226,11 +226,11 @@ export function RandomDistributionMissionBuilder({
                     </CollapsibleTrigger>
                     <CollapsibleContent className="animate-in slide-in-from-top-2 mt-4 duration-300">
                         <div className="flex flex-col gap-8 rounded-lg border-2 border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-purple-50/50 p-6 backdrop-blur-sm dark:border-blue-800 dark:from-blue-950/30 dark:to-purple-950/30">
-                            {/* Profile Categories Section */}
+                            {/* Avatar Categories Section */}
                             <div className="flex flex-col gap-4">
                                 <CategorySelector
                                     categories={activeProfileCategories}
-                                    label="Profile categories"
+                                    label="Avatar categories"
                                     onChangeValue={(value) => setProfileCategories(value)}
                                 />
                             </div>
@@ -250,7 +250,7 @@ export function RandomDistributionMissionBuilder({
                                 className="w-28 max-w-28"
                             />
                             <InputWithLabel
-                                label="Messages amount per character"
+                                label="Messages amount per avatar"
                                 type="number"
                                 min="1"
                                 value={messagesAmountPerCharacter}

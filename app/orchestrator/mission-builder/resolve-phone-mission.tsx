@@ -90,10 +90,10 @@ export function ResolvePhoneMissionBuilder({ categories }: { categories: Categor
                         )}
                     </FieldWithLabel>
 
-                    <FieldWithLabel label="Characters categories" required>
+                    <FieldWithLabel label="Avatar categories" required>
                         <CategorySelector
                             categories={activeCharacterCategories}
-                            label=""
+                            label="Avatar Categories"
                             onChangeValue={(value) => setCharactersCategories(value)}
                         />
                     </FieldWithLabel>

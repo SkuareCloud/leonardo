@@ -10,7 +10,7 @@ export default async function Page() {
             <div className="mb-6 flex items-center justify-between">
                 <PageHeader
                     title="Operator Status"
-                    subtitle="View and manage characters running in this operator."
+                    subtitle="View and manage avatars running in this operator."
                 />
                 <div className="flex gap-2">
                     <StopAllButton />

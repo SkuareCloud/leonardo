@@ -1,13 +1,18 @@
-import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
-import { searchChatsChatsSearchGet } from "@lib/api/orchestrator/sdk.gen"
 import { NextRequest } from "next/server"
+import { ApiService } from "../../../lib/api_service"
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
-    const q = searchParams.get("q")
-    const writable = searchParams.get("writable") ? searchParams.get("writable") == "true" : false
+    const query = (searchParams.get("query") ?? searchParams.get("q") ?? "").trim()
+    const categoryName =
+        searchParams.get("category_name") ??
+        searchParams.get("category") ??
+        searchParams.get("categoryName") ??
+        undefined
+    const topkParam = searchParams.get("topk")
+    const thresholdParam = searchParams.get("threshold")
 
-    if (!q || !q.trim()) {
+    if (!query) {
         return new Response(JSON.stringify({ error: "Search query cannot be empty" }), {
             status: 400,
             headers: {
@@ -16,20 +21,20 @@ export async function GET(request: NextRequest) {
         })
     }
 
+    const topk = topkParam ? Number(topkParam) : undefined
+    const threshold = thresholdParam ? Number(thresholdParam) : undefined
+
+    const apiService = new ApiService()
+
     try {
-        const response = await searchChatsChatsSearchGet({
-            client: orchestratorClient,
-            query: {
-                q,
-                writable,
-            },
-        })
+        const response = await apiService.searchChatsByTopics(
+            query,
+            categoryName,
+            topk,
+            threshold,
+        )
 
-        if (response.error) {
-            throw new Error(`Failed to search chats: ${JSON.stringify(response.error)}`)
-        }
-
-        return new Response(JSON.stringify(response.data), {
+        return new Response(JSON.stringify(response.data ?? []), {
             status: 200,
             headers: {
                 "Content-Type": "application/json",

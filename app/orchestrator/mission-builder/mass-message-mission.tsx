@@ -147,10 +147,10 @@ export function MassMessageMissionBuilder({ categories }: { categories: Category
                         />
                     </FieldWithLabel>
 
-                    <FieldWithLabel label="Characters categories" required>
+                    <FieldWithLabel label="Avatar categories" required>
                         <CategorySelector
                             categories={activeCharacterCategories}
-                            label=""
+                            label="Avatar Categories"
                             onChangeValue={(value) => setCharactersCategories(value)}
                         />
                     </FieldWithLabel>
@@ -166,7 +166,7 @@ export function MassMessageMissionBuilder({ categories }: { categories: Category
                 <CollapsibleContent className="animate-in slide-in-from-top-2 mt-4 duration-300">
                     <div className="grid grid-cols-2 gap-4">
                         <InputWithLabel
-                            label="Contacts per character"
+                            label="Contacts per avatar"
                             type="number"
                             min="1"
                             value={contactsPerCharacter}

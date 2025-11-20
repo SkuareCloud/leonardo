@@ -128,15 +128,15 @@ const characterColumns: ColumnDef<ProfileWorkerView>[] = [
                     })
 
                     if (response.ok) {
-                        toast.success("Character stopped", {
-                            description: "The character has been successfully stopped.",
+                        toast.success("Avatar stopped", {
+                            description: "The avatar has been successfully stopped.",
                         })
                     } else {
                         const data = await response.json()
-                        throw new Error(data.error || "Failed to stop character")
+                        throw new Error(data.error || "Failed to stop avatar")
                     }
                 } catch (error) {
-                    toast.error("Failed to stop character", {
+                    toast.error("Failed to stop avatar", {
                         description:
                             error instanceof Error ? error.message : "An unexpected error occurred",
                     })
@@ -158,16 +158,16 @@ const characterColumns: ColumnDef<ProfileWorkerView>[] = [
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>Stop Character</AlertDialogTitle>
+                                <AlertDialogTitle>Stop Avatar</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Are you sure you want to stop this character? This will stop all
+                                    Are you sure you want to stop this avatar? This will stop all
                                     current actions and close all resources.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleStop}>
-                                    Stop Character
+                                    Stop Avatar
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
@@ -200,14 +200,14 @@ export function CharactersList() {
         if (previousOperatorSlotRef.current !== operatorSlot) {
             setIsSlotChanging(true)
             toast.info(`Switching to Operator Slot ${operatorSlot}`, {
-                description: "Loading characters for the new slot...",
+                description: "Loading avatars for the new slot...",
             })
 
             // Reset loading state after a short delay to allow the query to complete
             const timer = setTimeout(() => {
                 setIsSlotChanging(false)
                 toast.success(`Switched to Operator Slot ${operatorSlot}`, {
-                    description: "Characters loaded successfully.",
+                    description: "Avatars loaded successfully.",
                 })
             }, 2000)
 
@@ -227,7 +227,7 @@ export function CharactersList() {
                         <div className="text-center">
                             <h3 className="text-lg font-semibold">Switching Operator Slot</h3>
                             <p className="text-muted-foreground text-sm">
-                                Loading characters for Operator Slot {operatorSlot}...
+                                Loading avatars for Operator Slot {operatorSlot}...
                             </p>
                         </div>
                     </div>

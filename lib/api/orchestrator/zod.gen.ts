@@ -2,6 +2,9 @@
 
 import { z } from 'zod';
 
+/**
+ * ActionStatus
+ */
 export const zModelsActionsActionStatus = z.enum([
     'scheduled',
     'in_process',
@@ -13,6 +16,9 @@ export const zModelsActionsActionStatus = z.enum([
     'planned'
 ]);
 
+/**
+ * ActionCreate
+ */
 export const zActionCreate = z.object({
     serial_number: z.number().int(),
     action_type: z.string(),
@@ -26,6 +32,9 @@ export const zActionCreate = z.object({
     ]).optional()
 });
 
+/**
+ * ActionErrorCode
+ */
 export const zActionErrorCode = z.enum([
     'chat_not_found',
     'general_error',
@@ -45,6 +54,9 @@ export const zActionErrorCode = z.enum([
     'tweet_page_load_failed'
 ]);
 
+/**
+ * ActionPrefrences
+ */
 export const zActionPrefrences = z.object({
     fail_fast: z.union([
         z.boolean(),
@@ -56,6 +68,9 @@ export const zActionPrefrences = z.object({
     ]).optional()
 });
 
+/**
+ * ActionRead
+ */
 export const zActionRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -77,6 +92,9 @@ export const zActionRead = z.object({
     ]).optional()
 });
 
+/**
+ * ActionStatusCode
+ */
 export const zActionStatusCode = z.enum([
     'success',
     'failed',
@@ -86,6 +104,9 @@ export const zActionStatusCode = z.enum([
     'pending'
 ]);
 
+/**
+ * ActionStatus
+ */
 export const zModelsOperatorActivityActionsActionStatusActionStatus = z.object({
     status_code: zActionStatusCode,
     error: z.union([
@@ -98,6 +119,9 @@ export const zModelsOperatorActivityActionsActionStatusActionStatus = z.object({
     ]).optional()
 });
 
+/**
+ * MessageInfo
+ */
 export const zModelsOperatorCommonMessageInfoMessageInfo = z.object({
     timestamp: z.string(),
     peer_id: z.union([
@@ -122,16 +146,28 @@ export const zModelsOperatorCommonMessageInfoMessageInfo = z.object({
     ]).optional()
 });
 
+/**
+ * SendMessageResponseContent
+ */
 export const zSendMessageResponseContentInput = z.object({
     message_info: zModelsOperatorCommonMessageInfoMessageInfo
 });
 
+/**
+ * ReplyToMessageResponseContent
+ */
 export const zReplyToMessageResponseContentInput = z.object({
     message_info: zModelsOperatorCommonMessageInfoMessageInfo
 });
 
+/**
+ * LeaveGroupResponseContent
+ */
 export const zLeaveGroupResponseContent = z.object({});
 
+/**
+ * ChatType
+ */
 export const zChatType = z.enum([
     'User',
     'Group',
@@ -140,6 +176,9 @@ export const zChatType = z.enum([
     'Unknown'
 ]);
 
+/**
+ * ChannelInfo
+ */
 export const zChannelInfo = z.object({
     id: z.union([
         z.number().int(),
@@ -188,6 +227,9 @@ export const zChannelInfo = z.object({
     ]).optional()
 });
 
+/**
+ * GroupInfo
+ */
 export const zGroupInfo = z.object({
     id: z.union([
         z.number().int(),
@@ -240,6 +282,9 @@ export const zGroupInfo = z.object({
     ]).optional()
 });
 
+/**
+ * JoinGroupResponseContent
+ */
 export const zJoinGroupResponseContentInput = z.object({
     chat_info: z.union([
         zChannelInfo,
@@ -253,10 +298,16 @@ export const zJoinGroupResponseContentInput = z.object({
     ])
 });
 
+/**
+ * ForwardMessageResponseContent
+ */
 export const zForwardMessageResponseContentInput = z.object({
     message_info: zModelsOperatorCommonMessageInfoMessageInfo
 });
 
+/**
+ * ChatInfo
+ */
 export const zChatInfo = z.object({
     id: z.union([
         z.number().int(),
@@ -304,13 +355,19 @@ export const zChatInfo = z.object({
     ]).optional()
 });
 
+/**
+ * BehaviouralResponseContent
+ */
 export const zBehaviouralResponseContentInput = z.object({
     current_context: z.union([
         z.unknown(),
         z.null()
     ]).optional(),
     chats: z.union([
-        z.array(z.unknown()),
+        z.array(z.union([
+            zGroupInfo,
+            zChannelInfo
+        ])),
         z.null()
     ]).optional(),
     personal_details_synced: z.boolean().optional().default(false),
@@ -322,14 +379,23 @@ export const zBehaviouralResponseContentInput = z.object({
     ]).optional()
 });
 
+/**
+ * SendBulkMessagesResponseContent
+ */
 export const zSendBulkMessagesResponseContentInput = z.object({
     message_infos: z.array(zModelsOperatorCommonMessageInfoMessageInfo)
 });
 
+/**
+ * ReadMessagesResponseContent
+ */
 export const zReadMessagesResponseContent = z.object({
     messages_read: z.number().int()
 });
 
+/**
+ * UserInfo
+ */
 export const zUserInfo = z.object({
     id: z.union([
         z.number().int(),
@@ -378,6 +444,9 @@ export const zUserInfo = z.object({
     ]).optional()
 });
 
+/**
+ * ResolvePhoneResponseContent
+ */
 export const zResolvePhoneResponseContentInput = z.object({
     user_info: z.union([
         zUserInfo,
@@ -389,12 +458,18 @@ export const zResolvePhoneResponseContentInput = z.object({
     ]).optional()
 });
 
+/**
+ * TweetInteractionStatus
+ */
 export const zTweetInteractionStatus = z.enum([
     'success',
     'failed',
     'already_done'
 ]);
 
+/**
+ * TweetInteractionResult
+ */
 export const zTweetInteractionResult = z.object({
     like: z.union([
         zTweetInteractionStatus,
@@ -426,10 +501,16 @@ export const zTweetInteractionResult = z.object({
     ]).optional()
 });
 
+/**
+ * InteractWithTweetResponseContent
+ */
 export const zInteractWithTweetResponseContentInput = z.object({
     interaction_result: zTweetInteractionResult
 });
 
+/**
+ * ActionResponse
+ */
 export const zActionResponseInput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityActionsActionStatusActionStatus,
@@ -465,6 +546,9 @@ export const zActionResponseInput = z.object({
     ]).optional()
 });
 
+/**
+ * MessageInfo
+ */
 export const zMessageInfoOutput = z.object({
     timestamp: z.string(),
     peer_id: z.union([
@@ -489,14 +573,23 @@ export const zMessageInfoOutput = z.object({
     ]).optional()
 });
 
+/**
+ * SendMessageResponseContent
+ */
 export const zSendMessageResponseContentOutput = z.object({
     message_info: zMessageInfoOutput
 });
 
+/**
+ * ReplyToMessageResponseContent
+ */
 export const zReplyToMessageResponseContentOutput = z.object({
     message_info: zMessageInfoOutput
 });
 
+/**
+ * JoinGroupResponseContent
+ */
 export const zJoinGroupResponseContentOutput = z.object({
     chat_info: z.union([
         zChannelInfo,
@@ -510,17 +603,26 @@ export const zJoinGroupResponseContentOutput = z.object({
     ])
 });
 
+/**
+ * ForwardMessageResponseContent
+ */
 export const zForwardMessageResponseContentOutput = z.object({
     message_info: zMessageInfoOutput
 });
 
+/**
+ * BehaviouralResponseContent
+ */
 export const zBehaviouralResponseContentOutput = z.object({
     current_context: z.union([
         z.unknown(),
         z.null()
     ]).optional(),
     chats: z.union([
-        z.array(z.unknown()),
+        z.array(z.union([
+            zGroupInfo,
+            zChannelInfo
+        ])),
         z.null()
     ]).optional(),
     personal_details_synced: z.boolean().optional().default(false),
@@ -532,10 +634,16 @@ export const zBehaviouralResponseContentOutput = z.object({
     ]).optional()
 });
 
+/**
+ * SendBulkMessagesResponseContent
+ */
 export const zSendBulkMessagesResponseContentOutput = z.object({
     message_infos: z.array(zMessageInfoOutput)
 });
 
+/**
+ * ResolvePhoneResponseContent
+ */
 export const zResolvePhoneResponseContentOutput = z.object({
     user_info: z.union([
         zUserInfo,
@@ -547,10 +655,16 @@ export const zResolvePhoneResponseContentOutput = z.object({
     ]).optional()
 });
 
+/**
+ * InteractWithTweetResponseContent
+ */
 export const zInteractWithTweetResponseContentOutput = z.object({
     interaction_result: zTweetInteractionResult
 });
 
+/**
+ * ActionResponse
+ */
 export const zActionResponseOutput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityActionsActionStatusActionStatus,
@@ -586,6 +700,9 @@ export const zActionResponseOutput = z.object({
     ]).optional()
 });
 
+/**
+ * ActionStatusUpdate
+ */
 export const zActionStatusUpdate = z.object({
     status_code: zModelsActionsActionStatus,
     content: z.union([
@@ -598,16 +715,25 @@ export const zActionStatusUpdate = z.object({
     ]).optional()
 });
 
+/**
+ * AddManyCharactersToCategoryRequest
+ */
 export const zAddManyCharactersToCategoryRequest = z.object({
     character_ids: z.array(z.string().uuid()),
     remove_others: z.boolean().optional().default(false)
 });
 
+/**
+ * AddManyChatsToCategoryRequest
+ */
 export const zAddManyChatsToCategoryRequest = z.object({
     chat_ids: z.array(z.string().uuid()),
     remove_others: z.boolean().optional().default(false)
 });
 
+/**
+ * AllocateProfilesGroupsMissionInput
+ */
 export const zAllocateProfilesGroupsMissionInput = z.object({
     characters_categories: z.union([
         z.array(z.string()),
@@ -618,7 +744,7 @@ export const zAllocateProfilesGroupsMissionInput = z.object({
         z.null()
     ]).optional(),
     additional_chats: z.union([
-        z.array(z.string().uuid()),
+        z.array(z.string()),
         z.null()
     ]).optional(),
     diversify_chats: z.union([
@@ -641,6 +767,9 @@ export const zAllocateProfilesGroupsMissionInput = z.object({
     batch_interval: z.number().int().optional().default(15)
 });
 
+/**
+ * Attachment
+ */
 export const zAttachment = z.object({
     url: z.string(),
     name: z.union([
@@ -653,6 +782,9 @@ export const zAttachment = z.object({
     ]).optional()
 });
 
+/**
+ * SyncPersonalDetailsArgs
+ */
 export const zSyncPersonalDetailsArgs = z.object({
     first_name: z.string().optional().default(''),
     last_name: z.string().optional().default(''),
@@ -660,6 +792,9 @@ export const zSyncPersonalDetailsArgs = z.object({
     username: z.string().optional().default('')
 });
 
+/**
+ * BehaviouralArgs
+ */
 export const zBehaviouralArgs = z.object({
     wait_time: z.number().int().optional().default(0),
     sync_context: z.boolean().optional().default(false),
@@ -673,6 +808,9 @@ export const zBehaviouralArgs = z.object({
     get_unread_messages: z.boolean().optional().default(false)
 });
 
+/**
+ * BehaviouralAction
+ */
 export const zBehaviouralAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -695,14 +833,23 @@ export const zBehaviouralAction = z.object({
     args: zBehaviouralArgs
 });
 
+/**
+ * Body_create_chats_from_csv_chats_from_csv__post
+ */
 export const zBodyCreateChatsFromCsvChatsFromCsvPost = z.object({
     file: z.string()
 });
 
+/**
+ * Body_create_resolve_phone_mission_missions_resolve_phone_results__post
+ */
 export const zBodyCreateResolvePhoneMissionMissionsResolvePhoneResultsPost = z.object({
     csv_file: z.string()
 });
 
+/**
+ * CategoryCreate
+ */
 export const zCategoryCreate = z.object({
     name: z.string().optional().default(''),
     description: z.string().optional().default(''),
@@ -712,6 +859,9 @@ export const zCategoryCreate = z.object({
     ]).optional()
 });
 
+/**
+ * CategoryNodePayload
+ */
 export const zCategoryNodePayload = z.object({
     id: z.string().uuid(),
     name: z.string(),
@@ -726,6 +876,9 @@ export const zCategoryNodePayload = z.object({
     ])
 });
 
+/**
+ * CategoryRead
+ */
 export const zCategoryRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -746,17 +899,26 @@ export const zCategoryRead = z.object({
     ]).optional()
 });
 
+/**
+ * CharacterProvider
+ */
 export const zCharacterProvider = z.enum([
     'avatar',
     'dolphin',
     'adspower'
 ]);
 
+/**
+ * Character
+ */
 export const zCharacter = z.object({
     id: z.string().optional(),
     provider: zCharacterProvider.optional()
 });
 
+/**
+ * CharacterCreate
+ */
 export const zCharacterCreate = z.object({
     name: z.string(),
     is_bot: z.boolean().optional().default(false),
@@ -769,6 +931,9 @@ export const zCharacterCreate = z.object({
     id: z.string().uuid()
 });
 
+/**
+ * CharacterRead
+ */
 export const zCharacterRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -783,6 +948,9 @@ export const zCharacterRead = z.object({
     telegram_id: z.string().optional().default('')
 });
 
+/**
+ * ChatCreate
+ */
 export const zChatCreate = z.object({
     platform: z.union([
         z.string(),
@@ -947,9 +1115,20 @@ export const zChatCreate = z.object({
     bots: z.union([
         z.array(z.object({})),
         z.null()
+    ]).optional(),
+    text_summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    embedding_summary: z.union([
+        z.array(z.number()),
+        z.null()
     ]).optional()
 });
 
+/**
+ * ChatRead
+ */
 export const zChatRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -1119,9 +1298,198 @@ export const zChatRead = z.object({
         z.null()
     ]).optional(),
     categories: z.array(z.string()).optional().default([]),
-    system_chat_members: z.array(z.string().uuid()).optional().default([])
+    system_chat_members: z.array(z.string().uuid()).optional().default([]),
+    text_summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    embedding_summary: z.union([
+        z.array(z.number()),
+        z.null()
+    ]).optional()
 });
 
+/**
+ * ChatUpdate
+ */
+export const zChatUpdate = z.object({
+    platform: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    chat_type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    platform_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    invite_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    max_capacity: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    about: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    messages_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    replies_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    forward_from_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    forward_to_count_last_month: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    average_reactions: z.union([
+        z.number(),
+        z.null()
+    ]).optional(),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    linked_chat_username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    slowmode_enabled: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    slowmode_seconds: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    noforwards: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    join_to_send: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    join_request: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    view_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_photos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_videos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    embed_links: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_polls: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_roundvideos: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_audios: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_voices: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_docs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_plain: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    change_info: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    invite_users: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    pin_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_stickers: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_gifs: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_games: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    send_inline: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    bots: z.union([
+        z.array(z.object({})),
+        z.null()
+    ]).optional(),
+    text_summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    embedding_summary: z.union([
+        z.array(z.number()),
+        z.null()
+    ]).optional()
+});
+
+/**
+ * ChatView
+ */
 export const zChatView = z.object({
     id: z.string().uuid(),
     platform_id: z.union([
@@ -1148,14 +1516,25 @@ export const zChatView = z.object({
         z.string(),
         z.null()
     ]),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ]),
     participants_count: z.union([
         z.number().int(),
         z.null()
     ]),
     categories: z.array(z.string()).optional().default([]),
-    system_chat_members: z.array(z.string().uuid()).optional().default([])
+    system_chat_members: z.array(z.string().uuid()).optional().default([]),
+    text_summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
+/**
+ * Prefrences
+ */
 export const zPrefrences = z.object({
     actions_timeout: z.union([
         z.number().int(),
@@ -1187,6 +1566,9 @@ export const zPrefrences = z.object({
     ]).optional()
 });
 
+/**
+ * JoinGroupArgs
+ */
 export const zJoinGroupArgs = z.object({
     chat: z.union([
         zChatInfo,
@@ -1199,6 +1581,9 @@ export const zJoinGroupArgs = z.object({
     ]).optional()
 });
 
+/**
+ * JoinGroupAction
+ */
 export const zJoinGroupAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1221,10 +1606,16 @@ export const zJoinGroupAction = z.object({
     args: zJoinGroupArgs
 });
 
+/**
+ * LeaveGroupArgs
+ */
 export const zLeaveGroupArgs = z.object({
     chat: zChatInfo
 });
 
+/**
+ * LeaveGroupAction
+ */
 export const zLeaveGroupAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1247,6 +1638,9 @@ export const zLeaveGroupAction = z.object({
     args: zLeaveGroupArgs
 });
 
+/**
+ * InputMessage
+ */
 export const zInputMessage = z.object({
     text: z.union([
         z.string(),
@@ -1255,6 +1649,9 @@ export const zInputMessage = z.object({
     attachments: z.array(zAttachment).optional().default([])
 });
 
+/**
+ * ReplyToMessageArgs
+ */
 export const zReplyToMessageArgs = z.object({
     chat: z.union([
         zChatInfo,
@@ -1273,6 +1670,9 @@ export const zReplyToMessageArgs = z.object({
     ]).optional()
 });
 
+/**
+ * ReplyToMessageAction
+ */
 export const zReplyToMessageAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1295,11 +1695,17 @@ export const zReplyToMessageAction = z.object({
     args: zReplyToMessageArgs
 });
 
+/**
+ * SendMessageArgs
+ */
 export const zSendMessageArgs = z.object({
     chat: zChatInfo,
     input_message_content: zInputMessage
 });
 
+/**
+ * SendMessageAction
+ */
 export const zSendMessageAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1322,6 +1728,9 @@ export const zSendMessageAction = z.object({
     args: zSendMessageArgs
 });
 
+/**
+ * ForwardMessageArgs
+ */
 export const zForwardMessageArgs = z.object({
     from_chat: z.union([
         zChatInfo,
@@ -1341,6 +1750,9 @@ export const zForwardMessageArgs = z.object({
     ]).optional()
 });
 
+/**
+ * ForwardMessageAction
+ */
 export const zForwardMessageAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1363,12 +1775,18 @@ export const zForwardMessageAction = z.object({
     args: zForwardMessageArgs
 });
 
+/**
+ * SendBulkMessagesArgs
+ */
 export const zSendBulkMessagesArgs = z.object({
     chat: zChatInfo,
     messages: z.array(z.string()),
     interval: z.number().optional().default(1)
 });
 
+/**
+ * SendBulkMessagesAction
+ */
 export const zSendBulkMessagesAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1391,6 +1809,9 @@ export const zSendBulkMessagesAction = z.object({
     args: zSendBulkMessagesArgs
 });
 
+/**
+ * ReadMessagesArgs
+ */
 export const zReadMessagesArgs = z.object({
     chat: zChatInfo,
     amount_messages: z.union([
@@ -1400,6 +1821,9 @@ export const zReadMessagesArgs = z.object({
     read_all_in_end: z.boolean().optional().default(false)
 });
 
+/**
+ * ReadMessagesAction
+ */
 export const zReadMessagesAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1422,10 +1846,16 @@ export const zReadMessagesAction = z.object({
     args: zReadMessagesArgs
 });
 
+/**
+ * ResolvePhoneArgs
+ */
 export const zResolvePhoneArgs = z.object({
     phone_number: z.string()
 });
 
+/**
+ * ResolvePhoneAction
+ */
 export const zResolvePhoneAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1448,6 +1878,9 @@ export const zResolvePhoneAction = z.object({
     args: zResolvePhoneArgs
 });
 
+/**
+ * TweetContent
+ */
 export const zTweetContent = z.object({
     text: z.string(),
     media: z.union([
@@ -1456,6 +1889,9 @@ export const zTweetContent = z.object({
     ]).optional()
 });
 
+/**
+ * TweetInteraction
+ */
 export const zTweetInteraction = z.object({
     like: z.boolean().optional().default(false),
     retweet: z.boolean().optional().default(false),
@@ -1470,11 +1906,17 @@ export const zTweetInteraction = z.object({
     ]).optional()
 });
 
+/**
+ * InteractWithTweetArgs
+ */
 export const zInteractWithTweetArgs = z.object({
     url: z.string(),
     interaction: zTweetInteraction
 });
 
+/**
+ * InteractWithTweetAction
+ */
 export const zInteractWithTweetAction = z.object({
     id: z.string().optional(),
     platform: z.enum([
@@ -1497,13 +1939,30 @@ export const zInteractWithTweetAction = z.object({
     args: zInteractWithTweetArgs
 });
 
+/**
+ * Scenario
+ */
 export const zScenario = z.object({
     id: z.string().optional(),
     profile: zCharacter,
     prefrences: zPrefrences.optional(),
-    actions: z.array(z.unknown())
+    actions: z.array(z.union([
+        zJoinGroupAction,
+        zLeaveGroupAction,
+        zReplyToMessageAction,
+        zSendMessageAction,
+        zForwardMessageAction,
+        zBehaviouralAction,
+        zSendBulkMessagesAction,
+        zReadMessagesAction,
+        zResolvePhoneAction,
+        zInteractWithTweetAction
+    ]))
 });
 
+/**
+ * DependentScenario
+ */
 export const zDependentScenario: z.AnyZodObject = z.object({
     scenario: zScenario,
     relative_seconds_delay: z.number().int().optional().default(0),
@@ -1512,6 +1971,9 @@ export const zDependentScenario: z.AnyZodObject = z.object({
     })).optional().default([])
 });
 
+/**
+ * MessageInfo
+ */
 export const zModelsPlannerMessageInfo = z.object({
     platform_chat_id: z.union([
         z.number().int(),
@@ -1544,6 +2006,9 @@ export const zModelsPlannerMessageInfo = z.object({
     ]).optional()
 });
 
+/**
+ * MessageForwardRequest
+ */
 export const zMessageForwardRequest = z.object({
     message_content: z.union([
         zInputMessage,
@@ -1560,6 +2025,9 @@ export const zMessageForwardRequest = z.object({
     ]).optional()
 });
 
+/**
+ * EchoMissionInput
+ */
 export const zEchoMissionInput = z.object({
     target_group_id: z.union([
         z.string().uuid(),
@@ -1568,7 +2036,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-10-09T10:08:26.641737Z'),
+    trigger_time: z.string().datetime().optional().default('2025-11-20T07:58:30.548441Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -1577,6 +2045,9 @@ export const zEchoMissionInput = z.object({
     ]).optional()
 });
 
+/**
+ * FindUsersByPhoneMissionInput
+ */
 export const zFindUsersByPhoneMissionInput = z.object({
     phone_numbers: z.array(z.string()),
     characters_categories: z.union([
@@ -1587,9 +2058,12 @@ export const zFindUsersByPhoneMissionInput = z.object({
     time_between_scenarios: z.number().int().optional().default(10),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-10-09T10:08:26.457246Z')
+    start_time: z.string().datetime().optional().default('2025-11-20T07:58:30.451149Z')
 });
 
+/**
+ * FluffMissionInput
+ */
 export const zFluffMissionInput = z.object({
     character_ids: z.union([
         z.array(z.string().uuid()),
@@ -1613,12 +2087,21 @@ export const zFluffMissionInput = z.object({
     get_unread_messages: z.boolean().optional().default(false)
 });
 
+/**
+ * OperatorValidationError
+ */
 export const zOperatorValidationError = z.object({
-    loc: z.array(z.unknown()),
+    loc: z.array(z.union([
+        z.string(),
+        z.number().int()
+    ])),
     msg: z.string(),
     type: z.string()
 });
 
+/**
+ * HTTPOperatorValidationError
+ */
 export const zHttpOperatorValidationError = z.object({
     detail: z.union([
         z.array(zOperatorValidationError),
@@ -1626,26 +2109,44 @@ export const zHttpOperatorValidationError = z.object({
     ]).optional()
 });
 
+/**
+ * ValidationError
+ */
 export const zValidationError = z.object({
-    loc: z.array(z.unknown()),
+    loc: z.array(z.union([
+        z.string(),
+        z.number().int()
+    ])),
     msg: z.string(),
     type: z.string()
 });
 
+/**
+ * HTTPValidationError
+ */
 export const zHttpValidationError = z.object({
     detail: z.array(zValidationError).optional()
 });
 
+/**
+ * SeedScenario
+ */
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-10-09T10:08:26.458860Z'),
+    trigger_time: z.string().datetime().optional().default('2025-11-20T07:58:30.452571Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
+/**
+ * ManualMissionInput
+ */
 export const zManualMissionInput = z.object({
     scenarios: z.array(zSeedScenario)
 });
 
+/**
+ * MassDmMissionInput
+ */
 export const zMassDmMissionInput = z.object({
     characters_categories: z.union([
         z.array(z.string()),
@@ -1657,9 +2158,12 @@ export const zMassDmMissionInput = z.object({
     batch_size: z.number().int().optional().default(20),
     batch_interval: z.number().int().optional().default(10),
     message: zInputMessage,
-    start_time: z.string().datetime().optional().default('2025-10-09T10:08:26.455806Z')
+    start_time: z.string().datetime().optional().default('2025-11-20T07:58:30.449715Z')
 });
 
+/**
+ * MissionStatus
+ */
 export const zMissionStatus = z.enum([
     'submitted',
     'planning',
@@ -1670,6 +2174,9 @@ export const zMissionStatus = z.enum([
     'planned'
 ]);
 
+/**
+ * MissionCreate
+ */
 export const zMissionCreate = z.object({
     description: z.union([
         z.string(),
@@ -1687,6 +2194,9 @@ export const zMissionCreate = z.object({
     ]).optional()
 });
 
+/**
+ * MissionExposure
+ */
 export const zMissionExposure = z.object({
     potential_exposure: z.number().int(),
     potential_exposure_groups: z.number().int(),
@@ -1710,6 +2220,9 @@ export const zMissionExposure = z.object({
     ]).optional()
 });
 
+/**
+ * ScenarioStatus
+ */
 export const zModelsScenariosScenarioStatus = z.enum([
     'scheduled',
     'pending',
@@ -1721,6 +2234,9 @@ export const zModelsScenariosScenarioStatus = z.enum([
     'planned'
 ]);
 
+/**
+ * ScenarioRead
+ */
 export const zScenarioRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -1763,6 +2279,9 @@ export const zScenarioRead = z.object({
     mission_id: z.string().uuid()
 });
 
+/**
+ * MissionRead
+ */
 export const zMissionRead = z.object({
     id: z.string().uuid(),
     created_at: z.string().datetime(),
@@ -1786,6 +2305,9 @@ export const zMissionRead = z.object({
     success_scenarios: z.number().int().optional().default(0)
 });
 
+/**
+ * MissionStatistics
+ */
 export const zMissionStatistics = z.object({
     mission_type: z.union([
         z.string(),
@@ -1811,6 +2333,9 @@ export const zMissionStatistics = z.object({
     cancelled: z.number().int()
 });
 
+/**
+ * MissionRunResult
+ */
 export const zMissionRunResult = z.object({
     mission_exposure: z.union([
         zMissionExposure,
@@ -1822,6 +2347,9 @@ export const zMissionRunResult = z.object({
     ]).optional()
 });
 
+/**
+ * PuppetShowInput
+ */
 export const zPuppetShowInput = z.object({
     participants: z.number().int().optional().default(2),
     max_depth: z.number().int().optional().default(10),
@@ -1851,6 +2379,9 @@ export const zPuppetShowInput = z.object({
     ]).optional()
 });
 
+/**
+ * RandomDistributionMissionInput
+ */
 export const zRandomDistributionMissionInput = z.object({
     characters_categories: z.union([
         z.array(z.string()),
@@ -1861,7 +2392,7 @@ export const zRandomDistributionMissionInput = z.object({
         z.null()
     ]).optional(),
     additional_chats: z.union([
-        z.array(z.string().uuid()),
+        z.array(z.string()),
         z.null()
     ]).optional(),
     messages: z.array(zInputMessage),
@@ -1870,11 +2401,14 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-10-09T10:08:26.649729Z'),
+    start_time: z.string().datetime().optional().default('2025-11-20T07:58:30.555655Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
 
+/**
+ * ScenarioCreate
+ */
 export const zScenarioCreate = z.object({
     description: z.string(),
     trigger_time: z.string().datetime(),
@@ -1897,6 +2431,9 @@ export const zScenarioCreate = z.object({
     prefrences: zPrefrences.optional()
 });
 
+/**
+ * ScenarioInfo
+ */
 export const zScenarioInfo = z.object({
     start_time: z.string().datetime().optional(),
     end_time: z.union([
@@ -1905,6 +2442,9 @@ export const zScenarioInfo = z.object({
     ]).optional()
 });
 
+/**
+ * ScenarioResultStatus
+ */
 export const zScenarioResultStatus = z.enum([
     'scheduled',
     'pending',
@@ -1925,6 +2465,9 @@ export const zScenarioResultStatus = z.enum([
     'profile_proxy_not_configured'
 ]);
 
+/**
+ * ScenarioStatus
+ */
 export const zModelsOperatorActivityScenarioScenarioStatus = z.object({
     status_code: zScenarioResultStatus.optional(),
     error: z.union([
@@ -1933,6 +2476,9 @@ export const zModelsOperatorActivityScenarioScenarioStatus = z.object({
     ]).optional()
 });
 
+/**
+ * ScenarioResult
+ */
 export const zScenarioResultInput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityScenarioScenarioStatus.optional(),
@@ -1940,6 +2486,9 @@ export const zScenarioResultInput = z.object({
     actions_responses: z.array(zActionResponseInput).optional()
 });
 
+/**
+ * ScenarioResult
+ */
 export const zScenarioResultOutput = z.object({
     id: z.string().optional(),
     status: zModelsOperatorActivityScenarioScenarioStatus.optional(),
@@ -1947,6 +2496,9 @@ export const zScenarioResultOutput = z.object({
     actions_responses: z.array(zActionResponseOutput).optional()
 });
 
+/**
+ * ScenarioUpdate
+ */
 export const zScenarioUpdate = z.object({
     status_code: zModelsScenariosScenarioStatus.optional(),
     start_time: z.union([
@@ -1964,6 +2516,9 @@ export const zScenarioUpdate = z.object({
     retries: z.number().int().optional().default(0)
 });
 
+/**
+ * TreeNode[CategoryNodePayload]
+ */
 export const zTreeNodeCategoryNodePayload: z.AnyZodObject = z.object({
     payload: zCategoryNodePayload,
     children: z.union([
@@ -1974,131 +2529,1108 @@ export const zTreeNodeCategoryNodePayload: z.AnyZodObject = z.object({
     ])
 });
 
+export const zGetScenariosScenariosGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        skip: z.number().int().optional().default(0),
+        limit: z.number().int().optional().default(100)
+    }).optional()
+});
+
+/**
+ * Response Get Scenarios Scenarios  Get
+ * Successful Response
+ */
 export const zGetScenariosScenariosGetResponse = z.array(zScenarioRead);
 
+export const zCreateScenarioScenariosPostData = z.object({
+    body: zScenarioCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCreateScenarioScenariosPostResponse = zScenarioRead;
 
+export const zGetScenarioScenariosScenarioIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetScenarioScenariosScenarioIdGetResponse = zScenarioRead;
 
+export const zUpdateScenarioScenariosScenarioIdPutData = z.object({
+    body: zScenarioUpdate,
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zUpdateScenarioScenariosScenarioIdPutResponse = zScenarioRead;
 
+export const zGetScenarioChildrensScenariosScenarioIdChildrensGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetScenarioParentsScenariosScenarioIdParentGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zCancelScenarioScenariosScenarioIdCancelPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.object({
+        error: z.string().optional()
+    }).optional()
+});
+
+/**
+ * Response Cancel Scenario Scenarios  Scenario Id  Cancel Post
+ * Successful Response
+ */
 export const zCancelScenarioScenariosScenarioIdCancelPostResponse = z.boolean();
 
+export const zRerunScenarioScenariosScenarioIdRerunGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Rerun Scenario Scenarios  Scenario Id  Rerun Get
+ * Successful Response
+ */
 export const zRerunScenarioScenariosScenarioIdRerunGetResponse = z.boolean();
 
+export const zRescheduledScenariosScenariosRescheduledScenariosPostData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        delay_minutes: z.number().int().optional().default(10)
+    }).optional()
+});
+
+/**
+ * Response Rescheduled Scenarios Scenarios Rescheduled Scenarios  Post
+ * Successful Response
+ */
 export const zRescheduledScenariosScenariosRescheduledScenariosPostResponse = z.array(zScenarioRead);
 
+export const zGetActionActionsActionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        action_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetActionActionsActionIdGetResponse = zActionRead;
 
+export const zUpdateActionStatusActionsActionIdStatusPutData = z.object({
+    body: zActionStatusUpdate,
+    path: z.object({
+        action_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zUpdateActionStatusActionsActionIdStatusPutResponse = zActionRead;
 
+export const zGetAllCharactersCharactersGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        is_active: z.boolean().optional().default(true),
+        skip: z.number().int().optional().default(0),
+        limit: z.number().int().optional().default(100)
+    }).optional()
+});
+
+/**
+ * Response Get All Characters Characters  Get
+ * Successful Response
+ */
 export const zGetAllCharactersCharactersGetResponse = z.array(zCharacterRead);
 
+export const zCreateCharacterCharactersPostData = z.object({
+    body: zCharacterCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCreateCharacterCharactersPostResponse = zCharacterRead;
 
+export const zDeleteCharacterCharactersCharacterIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetCharacterCharactersCharacterIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetCharacterCharactersCharacterIdGetResponse = zCharacterRead;
 
+export const zGetCharacterByNameCharactersNameNameGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        name: z.string()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetCharacterByNameCharactersNameNameGetResponse = zCharacterRead;
 
+export const zGetBotCharactersCharactersBotsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Bot Characters Characters Bots  Get
+ * Successful Response
+ */
 export const zGetBotCharactersCharactersBotsGetResponse = z.array(zCharacterRead);
 
+export const zGetHumanCharactersCharactersHumansGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Human Characters Characters Humans  Get
+ * Successful Response
+ */
 export const zGetHumanCharactersCharactersHumansGetResponse = z.array(zCharacterRead);
 
+export const zGetCharacterChatsCharactersCharacterIdChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Character Chats Characters  Character Id  Chats Get
+ * Successful Response
+ */
 export const zGetCharacterChatsCharactersCharacterIdChatsGetResponse = z.union([
     z.array(zChatRead),
     z.null()
 ]);
 
+export const zAddCharacterToChatCharactersCharacterIdChatsChatIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid(),
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetSlotsCountCharactersSlotsCountGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Slots Count Characters Slots Count  Get
+ * Successful Response
+ */
 export const zGetSlotsCountCharactersSlotsCountGetResponse = z.object({});
 
+export const zGetCharacterCategoriesCharactersCharacterIdCategoriesGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Character Categories Characters  Character Id  Categories  Get
+ * Successful Response
+ */
 export const zGetCharacterCategoriesCharactersCharacterIdCategoriesGetResponse = z.array(zCategoryRead);
 
+export const zRemoveCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid(),
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zAddCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid(),
+        category_id: z.string().uuid()
+    }),
+    query: z.object({
+        remove_others: z.boolean().optional().default(false)
+    }).optional()
+});
+
+export const zGetCharactersStatesCharactersStatisticsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        characters_ids: z.array(z.string().uuid()).optional()
+    }).optional()
+});
+
+/**
+ * Response Get Characters States Characters Statistics  Get
+ * Successful Response
+ */
 export const zGetCharactersStatesCharactersStatisticsGetResponse = z.array(z.object({}));
 
+export const zGetCharactersStatesByDateCharactersStatisticsByDateGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        characters_ids: z.array(z.string().uuid()).optional()
+    }).optional()
+});
+
+/**
+ * Response Get Characters States By Date Characters Statistics By Date  Get
+ * Successful Response
+ */
 export const zGetCharactersStatesByDateCharactersStatisticsByDateGetResponse = z.array(z.object({}));
 
+export const zGetCharacterChatsCountCharactersCharacterIdChatCountGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zCreateChatFromUsernameOrPlatformIdChatsFromUsernameOrPlatformIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        platform_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional()
+    }).optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCreateChatFromUsernameOrPlatformIdChatsFromUsernameOrPlatformIdPostResponse = zChatRead;
 
+export const zGetAllChatsChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        skip: z.number().int().optional().default(0),
+        limit: z.number().int().optional().default(100)
+    }).optional()
+});
+
+/**
+ * Response Get All Chats Chats  Get
+ * Successful Response
+ */
 export const zGetAllChatsChatsGetResponse = z.array(zChatRead);
 
+export const zCreateChatChatsPostData = z.object({
+    body: zChatCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCreateChatChatsPostResponse = zChatRead;
 
+export const zCreateChatsFromCsvChatsFromCsvPostData = z.object({
+    body: zBodyCreateChatsFromCsvChatsFromCsvPost,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Create Chats From Csv Chats From Csv  Post
+ * Successful Response
+ */
 export const zCreateChatsFromCsvChatsFromCsvPostResponse = z.boolean();
 
+export const zDeleteChatChatsChatIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetChatChatsChatIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetChatChatsChatIdGetResponse = zChatRead;
 
+export const zUpdateChatChatsChatIdPutData = z.object({
+    body: zChatUpdate,
+    path: z.object({
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zUpdateChatChatsChatIdPutResponse = zChatRead;
 
+export const zGetChatByUsernameChatsUsernameUsernameGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        username: z.string()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Chat By Username Chats Username  Username  Get
+ * Successful Response
+ */
 export const zGetChatByUsernameChatsUsernameUsernameGetResponse = z.array(zChatRead);
 
+export const zGetChatByPlatformIdChatsPlatformIdPlatformIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        platform_id: z.number().int()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetChatByPlatformIdChatsPlatformIdPlatformIdGetResponse = zChatRead;
 
+export const zSearchChatsChatsSearchGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        q: z.string(),
+        writable: z.boolean().optional().default(false)
+    })
+});
+
+/**
+ * Response Search Chats Chats Search  Get
+ * Successful Response
+ */
 export const zSearchChatsChatsSearchGetResponse = z.array(zChatRead);
 
+export const zGetChatsViewChatsViewChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        skip: z.number().int().optional().default(0),
+        limit: z.number().int().optional().default(100)
+    }).optional()
+});
+
+/**
+ * Response Get Chats View Chats View Chats  Get
+ * Successful Response
+ */
 export const zGetChatsViewChatsViewChatsGetResponse = z.array(zChatView);
 
+export const zGetAllWritableGroupsChatsCanSendMessageChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        skip: z.number().int().optional().default(0),
+        limit: z.number().int().optional().default(100)
+    }).optional()
+});
+
+/**
+ * Response Get All Writable Groups Chats Can Send Message Chats  Get
+ * Successful Response
+ */
 export const zGetAllWritableGroupsChatsCanSendMessageChatsGetResponse = z.array(zChatRead);
 
+export const zGetChatCharactersChatsChatIdCharactersGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Chat Characters Chats  Chat Id  Characters Get
+ * Successful Response
+ */
 export const zGetChatCharactersChatsChatIdCharactersGetResponse = z.array(zCharacterRead);
 
+export const zRemoveCharacterFromChatChatsChatIdCharactersCharacterIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid(),
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetChatCategoriesChatsChatIdCategoriesGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Chat Categories Chats  Chat Id  Categories  Get
+ * Successful Response
+ */
 export const zGetChatCategoriesChatsChatIdCategoriesGetResponse = z.array(zCategoryRead);
 
+export const zRemoveChatFromCategoryChatsChatIdCategoriesCategoryIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid(),
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zAddChatToCategoryChatsChatIdCategoriesCategoryIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid(),
+        category_id: z.string().uuid()
+    }),
+    query: z.object({
+        remove_others: z.boolean().optional().default(false)
+    }).optional()
+});
+
+export const zGetChatCharactersCountChatsChatIdCharacterCountGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        chat_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zSearchChatsByTopicsChatsSearchChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        query: z.string(),
+        topk: z.number().int().optional().default(100),
+        threshold: z.number().optional().default(1)
+    })
+});
+
+/**
+ * Response Search Chats By Topics Chats Search Chats  Get
+ * Successful Response
+ */
+export const zSearchChatsByTopicsChatsSearchChatsGetResponse = z.array(zChatRead);
+
+export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        category_name: z.string(),
+        query: z.string(),
+        topk: z.number().int().optional().default(100),
+        threshold: z.number().optional().default(1)
+    })
+});
+
+/**
+ * Response Search Chats By Topics And Add To Category Chats Search Chats Add To Category  Get
+ * Successful Response
+ */
+export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponse = z.array(zChatRead);
+
+export const zGetExplorerChatsChatsExplorerChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        amount: z.number().int().optional().default(10),
+        min_distinct_senders: z.number().int().optional().default(10),
+        to_save_on_db: z.boolean().optional().default(false)
+    }).optional()
+});
+
+/**
+ * Response Get Explorer Chats Chats Explorer Chats  Get
+ * Successful Response
+ */
+export const zGetExplorerChatsChatsExplorerChatsGetResponse = z.array(zChatCreate);
+
+export const zGetExplorerChatsFromPostgresChatsExplorerChatsFromPostgresGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        amount: z.number().int().optional().default(10)
+    }).optional()
+});
+
+/**
+ * Response Get Explorer Chats From Postgres Chats Explorer Chats From Postgres  Get
+ * Successful Response
+ */
+export const zGetExplorerChatsFromPostgresChatsExplorerChatsFromPostgresGetResponse = z.string();
+
+export const zSubmitScenarioScenarioPostOperatorScenarioPostData = z.object({
+    body: zScenarioResultInput,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Submit Scenario Scenario Post Operator Scenario Post
+ * Successful Response
+ */
 export const zSubmitScenarioScenarioPostOperatorScenarioPostResponse = z.object({});
 
+export const zGetScenarioScenarioScenarioIdGetOperatorScenarioScenarioIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        scenario_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetScenarioScenarioScenarioIdGetOperatorScenarioScenarioIdGetResponse = zScenarioResultOutput;
 
+export const zSendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostData = z.object({
+    body: zScenario,
+    path: z.object({
+        slot: z.number().int()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Send Scenario Operator Mock Post With Slot Operator Mock  Slot  Scenario Post
+ * Successful Response
+ */
 export const zSendScenarioOperatorMockPostWithSlotOperatorMockSlotScenarioPostResponse = z.object({});
 
+export const zSendScenarioOperatorMockPostWithoutSlotOperatorMockScenarioPostData = z.object({
+    body: zScenario,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Send Scenario Operator Mock Post Without Slot Operator Mock Scenario Post
+ * Successful Response
+ */
 export const zSendScenarioOperatorMockPostWithoutSlotOperatorMockScenarioPostResponse = z.object({});
 
+export const zGetMissionsMissionsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        skip: z.number().int().optional().default(0),
+        limit: z.number().int().optional().default(100)
+    }).optional()
+});
+
+/**
+ * Response Get Missions Missions  Get
+ * Successful Response
+ */
 export const zGetMissionsMissionsGetResponse = z.array(zMissionRead);
 
+export const zCreateMissionMissionsPostData = z.object({
+    body: zMissionCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCreateMissionMissionsPostResponse = zMissionRead;
 
+export const zCreateResolvePhoneMissionMissionsResolvePhoneResultsPostData = z.object({
+    body: zBodyCreateResolvePhoneMissionMissionsResolvePhoneResultsPost,
+    path: z.never().optional(),
+    query: z.object({
+        max_phones_per_scenario: z.number().int().optional().default(10),
+        characters_categories: z.array(z.string()).optional().default([]),
+        time_between_scenarios: z.number().int().optional().default(10),
+        batch_size: z.number().int().optional().default(10),
+        batch_interval: z.number().int().optional().default(5)
+    }).optional(),
+    headers: z.object({
+        'X-Hide-Request-Body': z.boolean().optional().default(true)
+    }).optional()
+});
+
+/**
+ * Response Create Resolve Phone Mission Missions Resolve Phone Results  Post
+ * Successful Response
+ */
 export const zCreateResolvePhoneMissionMissionsResolvePhoneResultsPostResponse = z.array(zScenarioRead);
 
+export const zGetMissionsByTypeMissionsTypeMissionTypeGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_type: z.string()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Missions By Type Missions Type  Mission Type  Get
+ * Successful Response
+ */
 export const zGetMissionsByTypeMissionsTypeMissionTypeGetResponse = z.array(zMissionRead);
 
+export const zDeleteMissionMissionsMissionIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetMissionMissionsMissionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetMissionMissionsMissionIdGetResponse = zMissionRead;
 
+export const zUpdateMissionMissionsMissionIdPutData = z.object({
+    body: z.array(z.string()),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.object({
+        value: z.unknown()
+    })
+});
+
+/**
+ * Successful Response
+ */
 export const zUpdateMissionMissionsMissionIdPutResponse = zMissionRead;
 
+export const zPlanMissionMissionsPlanMissionMissionIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Plan Mission Missions Plan Mission  Mission Id  Post
+ * Successful Response
+ */
 export const zPlanMissionMissionsPlanMissionMissionIdPostResponse = z.array(zScenarioRead);
 
+export const zRunMissionMissionsRunMissionMissionIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Run Mission Missions Run Mission  Mission Id  Post
+ * Successful Response
+ */
 export const zRunMissionMissionsRunMissionMissionIdPostResponse = z.array(zScenarioRead);
 
+export const zRetryMissionMissionsRetryMissionMissionIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zCancelMissionMissionsCancelMissionMissionIdPostData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCancelMissionMissionsCancelMissionMissionIdPostResponse = zMissionRead;
 
+export const zCreateMission2MissionsCreateMission2PostData = z.object({
+    body: z.union([
+        zFluffMissionInput,
+        zAllocateProfilesGroupsMissionInput,
+        zEchoMissionInput,
+        zPuppetShowInput,
+        zRandomDistributionMissionInput,
+        zManualMissionInput,
+        zFindUsersByPhoneMissionInput,
+        zMassDmMissionInput
+    ]),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Create Mission2 Missions Create Mission2  Post
+ * Successful Response
+ */
 export const zCreateMission2MissionsCreateMission2PostResponse = z.boolean();
 
+export const zGetMissionsStatisticsMissionsStatisticsGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        mission_ids: z.array(z.string().uuid()).optional(),
+        mission_type: z.string().optional()
+    }).optional()
+});
+
+/**
+ * Response Get Missions Statistics Missions Statistics  Get
+ * Successful Response
+ */
 export const zGetMissionsStatisticsMissionsStatisticsGetResponse = z.array(z.object({}));
 
+export const zGetMissionPotentialExposureMissionsExposureMissionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetMissionPotentialExposureMissionsExposureMissionIdGetResponse = zMissionExposure;
 
+export const zGetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        character_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetFluffMissionByCharacterIdMissionsFluffMissionCharacterIdGetResponse = zMissionRead;
 
+export const zGetMissionRunResultMissionsRunResultMissionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetMissionRunResultMissionsRunResultMissionIdGetResponse = zMissionRunResult;
 
+export const zGetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Mission Successfull Destination Chats Missions Successfull Chats  Mission Id  Get
+ * Successful Response
+ */
 export const zGetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponse = z.array(zChatRead);
 
+export const zGetMissionFailureReasonsMissionsFailureReasonsMissionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Mission Failure Reasons Missions Failure Reasons  Mission Id  Get
+ * Successful Response
+ */
 export const zGetMissionFailureReasonsMissionsFailureReasonsMissionIdGetResponse = z.array(zActionRead);
 
+export const zGetAllCategoriesCategoriesGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get All Categories Categories  Get
+ * Successful Response
+ */
 export const zGetAllCategoriesCategoriesGetResponse = z.array(zCategoryRead);
 
+export const zCreateCategoryCategoriesPostData = z.object({
+    body: zCategoryCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zCreateCategoryCategoriesPostResponse = zCategoryRead;
 
+export const zDeleteCategoryCategoriesCategoryIdDeleteData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetCategoryCategoriesCategoryIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetCategoryCategoriesCategoryIdGetResponse = zCategoryRead;
 
+export const zUpdateCategoryCategoriesCategoryIdPutData = z.object({
+    body: zCategoryCreate,
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zUpdateCategoryCategoriesCategoryIdPutResponse = zCategoryRead;
 
+export const zGetRootCategoryCategoriesRootGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetRootCategoryCategoriesRootGetResponse = zCategoryRead;
 
+export const zGetCategoryChildrensCategoriesCategoryIdChildrensGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Category Childrens Categories  Category Id  Childrens  Get
+ * Successful Response
+ */
 export const zGetCategoryChildrensCategoriesCategoryIdChildrensGetResponse = z.array(zCategoryRead);
 
+export const zGetCategoryDescendantsCategoriesCategoryIdDescendantsGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Category Descendants Categories  Category Id  Descendants  Get
+ * Successful Response
+ */
 export const zGetCategoryDescendantsCategoriesCategoryIdDescendantsGetResponse = z.array(zCategoryRead);
 
+export const zGetCategoryCharactersCategoriesCategoryIdCharactersGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.object({
+        include_descendants: z.boolean().optional().default(false)
+    }).optional()
+});
+
+/**
+ * Response Get Category Characters Categories  Category Id  Characters  Get
+ * Successful Response
+ */
 export const zGetCategoryCharactersCategoriesCategoryIdCharactersGetResponse = z.array(zCharacterRead);
 
+export const zGetCategoryChatsCategoriesCategoryIdChatsGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.object({
+        include_descendants: z.boolean().optional().default(false)
+    }).optional()
+});
+
+/**
+ * Response Get Category Chats Categories  Category Id  Chats  Get
+ * Successful Response
+ */
 export const zGetCategoryChatsCategoriesCategoryIdChatsGetResponse = z.array(zChatRead);
 
+export const zGetCategoriesTreeCategoriesTreeGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
 export const zGetCategoriesTreeCategoriesTreeGetResponse = zTreeNodeCategoryNodePayload;
+
+export const zGetCategoryCharactersCountCategoriesCategoryIdCharacterCountGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zGetCategoryChatsCountCategoriesCategoryIdChatCountGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zAddManyCharactersToCategoryCategoriesCategoryIdManyCharactersPostData = z.object({
+    body: zAddManyCharactersToCategoryRequest,
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zAddManyChatsToCategoryCategoriesCategoryIdManyChatsPostData = z.object({
+    body: zAddManyChatsToCategoryRequest,
+    path: z.object({
+        category_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+export const zRootGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zHealthHealthGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});

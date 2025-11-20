@@ -45,7 +45,7 @@ export function CharacterSelector({
                 `/api/orchestrator/characters?is_active=true&skip=${skip}&limit=${pageSize}`,
             )
             if (!response.ok) {
-                throw new Error(`Failed to load characters: ${response.statusText}`)
+            throw new Error(`Failed to load avatars: ${response.statusText}`)
             }
             const characters: CharacterRead[] = await response.json()
 
@@ -68,7 +68,7 @@ export function CharacterSelector({
             setHasMore(characters.length === pageSize)
             setCurrentPage(page)
         } catch (error) {
-            console.error("Failed to load characters:", error)
+            console.error("Failed to load avatars:", error)
         } finally {
             setLoading(false)
         }
@@ -170,7 +170,7 @@ export function CharacterSelector({
                         <div className="flex w-full max-w-md flex-col gap-2">
                             <div className="flex items-center gap-2">
                                 <Input
-                                    placeholder="Search characters..."
+                            placeholder="Search avatars..."
                                     value={searchTerm}
                                     onChange={(e) => handleSearch(e.target.value)}
                                     className="flex-1"
@@ -187,7 +187,7 @@ export function CharacterSelector({
                             {loading && (
                                 <div className="flex items-center justify-center p-4">
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span className="ml-2">Loading characters...</span>
+                                    <span className="ml-2">Loading avatars...</span>
                                 </div>
                             )}
 
@@ -230,7 +230,7 @@ export function CharacterSelector({
                                 availableChoices.length === 0 &&
                                 availableCharacters.length === 0 && (
                                     <div className="p-4 text-center text-sm text-gray-500 italic">
-                                        No characters found. Try adjusting your search.
+                                        No avatars found. Try adjusting your search.
                                     </div>
                                 )}
                         </div>

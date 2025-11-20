@@ -30,7 +30,7 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
     },
     {
         accessorKey: "profileName",
-        header: "Profile Name",
+        header: "Avatar Name",
         size: 100,
         cell: ({ row }) => {
             return <div>{row.original.profileName}</div>
@@ -41,7 +41,14 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
         header: "Status",
         size: 50,
         cell: ({ row }) => {
-            return <StatusBadge status={row.original.status as any} />
+            return (
+                <div className="flex flex-col gap-1">
+                    <StatusBadge status={row.original.status as any} />
+                    {row.original.error && (
+                        <span className="text-xs text-red-600">{row.original.error}</span>
+                    )}
+                </div>
+            )
         },
     },
     {
@@ -109,7 +116,7 @@ export function OrchestratorScenariosList({
         const avatar = avatars.find((avatar) => avatar.id === scenario.character_id)
         const profileName =
             ((avatar as any)?.data?.eliza_character?.name as string | undefined) ||
-            "Unknown Profile"
+            "Unknown Avatar"
         return {
             scenarioId: scenario.id,
             profileId: scenario.character_id,
@@ -133,7 +140,7 @@ export function OrchestratorScenariosList({
                 return (
                     <div>
                         <Input
-                            placeholder="Filter by profile name..."
+                            placeholder="Filter by avatar name..."
                             value={
                                 (table.getColumn("profileName")?.getFilterValue() as string) ?? ""
                             }

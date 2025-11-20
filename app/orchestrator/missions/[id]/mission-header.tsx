@@ -7,8 +7,9 @@ import { ViewJsonButton } from "@/components/view-json-button"
 import { MissionRead, ScenarioRead } from "@lib/api/orchestrator/types.gen"
 import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
-import { PlayIcon } from "lucide-react"
+import { Loader2, PlayIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { toast } from "sonner"
 
 export function MissionHeader({
@@ -19,6 +20,7 @@ export function MissionHeader({
     onPlanMission: (scenarios: ScenarioRead[]) => void
 }) {
     const router = useRouter()
+    const [isRunningMission, setIsRunningMission] = useState(false)
     return (
         <div className="flex flex-row items-center gap-8">
             {/* <ViewAttachmentsButton content={mission.payload} title="Attachments" subtitle="Attachments for the mission" /> */}
@@ -64,20 +66,38 @@ export function MissionHeader({
             {mission.status_code === "planned" && (
                 <Button
                     variant="default"
-                    className="scale-100 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                    disabled={isRunningMission}
+                    className="scale-100 cursor-pointer transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
                     onClick={async () => {
+                        if (isRunningMission) {
+                            return
+                        }
+                        setIsRunningMission(true)
                         try {
                             const plannedMissionScenarios =
                                 await new ServiceBrowserClient().runMission(mission.id)
                             onPlanMission(plannedMissionScenarios)
+                            toast.success("Mission run started")
+                            router.refresh()
                         } catch (error) {
-                            toast.error(`Failed to plan mission: ${error}`)
+                            toast.error(`Failed to run mission: ${error}`)
                             logger.error(error)
+                        } finally {
+                            setIsRunningMission(false)
                         }
                     }}
                 >
-                    <PlayIcon className="h-4 w-4" />
-                    Run
+                    {isRunningMission ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Running...
+                        </>
+                    ) : (
+                        <>
+                            <PlayIcon className="h-4 w-4" />
+                            Run
+                        </>
+                    )}
                 </Button>
             )}
         </div>

@@ -39,7 +39,7 @@ export default async function RootLayout({
                             </main>
                         </SidebarInset>
                     </SidebarProvider>
-                    <Toaster />
+                    <Toaster position="top-right" />
                 </OperatorStoreProvider>
             </body>
         </html>

@@ -63,7 +63,7 @@ export function ProfileIdLink({ profileId, avatars }: ProfileIdLinkProps) {
                 disabled={isLoading}
                 className="my-2 flex flex-row gap-2 text-sm text-gray-600 transition-colors hover:text-gray-800"
             >
-                <b>Profile ID:</b> <span className="underline">{profileId}</span>{" "}
+                <b>Avatar ID:</b> <span className="underline">{profileId}</span>{" "}
                 <SquareArrowUpRightIcon className="size-4" />
             </button>
 

@@ -80,7 +80,7 @@ export function MissionBuilderCreateView({
     if (mission === "EchoMission") {
         missionName = "Echo Mission"
     } else if (mission === "AllocateProfilesGroupsMission") {
-        missionName = "Allocate Profiles Groups Mission"
+        missionName = "Allocate Avatars to Groups Mission"
     } else if (mission === "PuppetShowMission") {
         missionName = "Puppet Show Mission"
     } else if (mission === "FluffMission") {

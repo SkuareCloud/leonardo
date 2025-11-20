@@ -8,8 +8,8 @@ export default async function Page() {
     return (
         <>
             <PageHeader
-                title="Characters"
-                subtitle="Manage and monitor all characters in the system."
+                title="Avatars"
+                subtitle="Manage and monitor all avatars in the system."
             />
             <CharactersList characters={characters} />
         </>

@@ -31,6 +31,7 @@ interface ComboboxProps {
     emptyMessage?: string
     className?: string
     open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 export function Combobox({
@@ -39,6 +40,7 @@ export function Combobox({
     open: initialOpen,
     label,
     onValueChange,
+    onOpenChange,
     placeholder = "Select option...",
     searchPlaceholder = "Search...",
     emptyMessage = "No results found.",
@@ -47,16 +49,22 @@ export function Combobox({
     const [open, setOpen] = React.useState(initialOpen ?? false)
     const [internalValue, setInternalValue] = React.useState(value)
 
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen)
+        onOpenChange?.(newOpen)
+    }
+
     const handleValueChange = (newValue: string) => {
         setInternalValue(newValue)
         onValueChange?.(newValue)
         setOpen(false)
+        onOpenChange?.(false)
     }
 
     return (
         <div className={cn("flex flex-col gap-2", className)}>
             {label && <Label className="mb-1">{label}</Label>}
-            <Popover open={open} onOpenChange={setOpen}>
+            <Popover open={open} onOpenChange={handleOpenChange}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"

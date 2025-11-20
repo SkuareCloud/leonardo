@@ -13,16 +13,15 @@ import {
     zEchoMissionInput,
     zFluffMissionInput,
     zMassDmMissionInput,
-    zMissionCreate,
     zPuppetShowInput,
-    zRandomDistributionMissionInput,
+    zRandomDistributionMissionInput
 } from "@lib/api/orchestrator/zod.gen"
-import { logger } from "@lib/logger"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import {
     DicesIcon,
     DramaIcon,
+    Loader2,
     Mail,
     Phone,
     PlusIcon,
@@ -103,6 +102,7 @@ export function MissionBuilderView({
     )
     const [missionCreateRequest, setMissionCreateRequest] = React.useState<Partial<MissionCreate>>()
     const [error, setError] = React.useState<string | null>(null)
+    const [isSubmittingMission, setIsSubmittingMission] = React.useState(false)
 
     const MissionIcon = selectedMissionType && MissionMetadata[selectedMissionType].icon
 
@@ -127,100 +127,92 @@ export function MissionBuilderView({
                             <TooltipTrigger asChild>
                                 <Button
                                     className="scale-100 cursor-pointer font-bold uppercase transition-all hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={isSubmittingMission}
                                     onClick={async () => {
-                                        if (!selectedMissionType) return
+                                        if (isSubmittingMission) {
+                                            return
+                                        }
+                                        setIsSubmittingMission(true)
+                                        try {
+                                            if (!selectedMissionType) return
 
-                                        if (selectedMissionType === "ResolvePhoneMission") {
-                                            const payloadAny = missionCreateRequest?.payload as any
-                                            const csvFile: File | undefined = payloadAny?.csv_file
-                                            if (!csvFile) {
-                                                toast.error("CSV file is required")
-                                                setError("CSV file is required")
+                                            if (selectedMissionType === "ResolvePhoneMission") {
+                                                const payloadAny = missionCreateRequest?.payload as any
+                                                const csvFile: File | undefined = payloadAny?.csv_file
+                                                if (!csvFile) {
+                                                    toast.error("CSV file is required")
+                                                    setError("CSV file is required")
+                                                    return
+                                                }
+                                                try {
+                                                    const scenarios =
+                                                        await new ServiceBrowserClient().submitResolvePhoneMission(
+                                                            {
+                                                                csv_file: csvFile,
+                                                                characters_categories:
+                                                                    payloadAny?.characters_categories,
+                                                                max_phones_per_scenario:
+                                                                    payloadAny?.max_phones_per_scenario,
+                                                                time_between_scenarios:
+                                                                    payloadAny?.time_between_scenarios,
+                                                                batch_size: payloadAny?.batch_size,
+                                                                batch_interval:
+                                                                    payloadAny?.batch_interval,
+                                                            },
+                                                        )
+                                                    toast.success("Resolve phone mission submitted")
+                                                    const missionId =
+                                                        Array.isArray(scenarios) && scenarios.length > 0
+                                                            ? scenarios[0]?.mission_id
+                                                            : undefined
+                                                    // Update description if provided
+                                                    const desc =
+                                                        missionCreateRequest?.description?.trim()
+                                                    if (missionId && desc) {
+                                                        try {
+                                                            await new ServiceBrowserClient().updateMissionDescription(
+                                                                missionId,
+                                                                desc,
+                                                            )
+                                                        } catch {}
+                                                    }
+                                                    if (missionId) {
+                                                        await new Promise((resolve) => {
+                                                            setTimeout(resolve, 2000)
+                                                        })
+                                                        router.refresh()
+                                                        router.push(
+                                                            `/orchestrator/missions/${missionId}`,
+                                                        )
+                                                    }
+                                                } catch (error) {
+                                                    toast.error("Failed to submit mission: " + error)
+                                                    setError(
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : "Unknown error",
+                                                    )
+                                                }
                                                 return
                                             }
-                                            try {
-                                                const scenarios =
-                                                    await new ServiceBrowserClient().submitResolvePhoneMission(
-                                                        {
-                                                            csv_file: csvFile,
-                                                            characters_categories:
-                                                                payloadAny?.characters_categories,
-                                                            max_phones_per_scenario:
-                                                                payloadAny?.max_phones_per_scenario,
-                                                            time_between_scenarios:
-                                                                payloadAny?.time_between_scenarios,
-                                                            batch_size: payloadAny?.batch_size,
-                                                            batch_interval:
-                                                                payloadAny?.batch_interval,
-                                                        },
-                                                    )
-                                                toast.success("Resolve phone mission submitted")
-                                                const missionId =
-                                                    Array.isArray(scenarios) && scenarios.length > 0
-                                                        ? scenarios[0]?.mission_id
-                                                        : undefined
-                                                // Update description if provided
-                                                const desc =
-                                                    missionCreateRequest?.description?.trim()
-                                                if (missionId && desc) {
-                                                    try {
-                                                        await new ServiceBrowserClient().updateMissionDescription(
-                                                            missionId,
-                                                            desc,
-                                                        )
-                                                    } catch {}
-                                                }
-                                                if (missionId) {
-                                                    router.push(
-                                                        `/orchestrator/missions/${missionId}`,
-                                                    )
-                                                }
-                                            } catch (error) {
-                                                toast.error("Failed to submit mission: " + error)
-                                                setError(
-                                                    error instanceof Error
-                                                        ? error.message
-                                                        : "Unknown error",
-                                                )
-                                            }
-                                            return
-                                        }
 
-                                        if (!missionCreateRequest) {
-                                            toast.error("No request found. Check the JSON.")
-                                            return
-                                        }
-                                        if (!missionCreateRequest.payload) {
-                                            toast.error("No payload found. Check the JSON.")
-                                            setError("No payload found. Check the JSON.")
-                                            return
-                                        }
-                                        if (
-                                            !missionCreateRequest.description ||
-                                            !missionCreateRequest.description.trim()
-                                        ) {
-                                            toast.error("Description is required")
-                                            setError("Description is required")
-                                            return
-                                        }
-                                        logger.info(
-                                            "Validating mission request",
-                                            missionCreateRequest,
-                                        )
-                                        const validatedMissionRequest =
-                                            zMissionCreate.safeParse(missionCreateRequest)
-                                        logger.info(
-                                            "Validated mission request",
-                                            validatedMissionRequest,
-                                        )
-                                        if (validatedMissionRequest.error) {
-                                            toast.error(
-                                                "Invalid mission request: " +
-                                                    validatedMissionRequest.error.message,
-                                            )
-                                            setError(validatedMissionRequest.error.message)
-                                            return
-                                        }
+                                            if (!missionCreateRequest) {
+                                                toast.error("No request found. Check the JSON.")
+                                                return
+                                            }
+                                            if (!missionCreateRequest.payload) {
+                                                toast.error("No payload found. Check the JSON.")
+                                                setError("No payload found. Check the JSON.")
+                                                return
+                                            }
+                                            if (
+                                                !missionCreateRequest.description ||
+                                                !missionCreateRequest.description.trim()
+                                            ) {
+                                                toast.error("Description is required")
+                                                setError("Description is required")
+                                                return
+                                            }
 
                                         // validate specific mission payload
                                         if (selectedMissionType === "EchoMission") {
@@ -337,21 +329,37 @@ export function MissionBuilderView({
                                             } else {
                                                 toast.error("Failed to plan mission")
                                             }
-                                            await new Promise((resolve) =>
-                                                setTimeout(resolve, 1000),
-                                            )
+                                            await new Promise((resolve) => {
+                                                setTimeout(resolve, 2000)
+                                            })
+                                            router.refresh()
                                         } catch (error) {
-                                            toast.error("Failed to submit mission: " + error)
-                                            setError(
-                                                error instanceof Error
-                                                    ? error.message
-                                                    : "Unknown error",
+                                            const errorMessage =
+                                                error instanceof Error ? error.message : String(error)
+                                            // Extract the innermost error message if it's wrapped
+                                            const match = errorMessage.match(
+                                                /"([^"]+)"$/,
                                             )
+                                            const cleanMessage = match ? match[1] : errorMessage
+                                            toast.error(cleanMessage)
+                                            setError(cleanMessage)
                                         }
-                                    }}
+                                    } finally {
+                                        setIsSubmittingMission(false)
+                                    }
+                                }}
                                 >
-                                    <PlusIcon className="mr-2 size-4" />
-                                    Submit and Plan
+                                    {isSubmittingMission ? (
+                                        <>
+                                            <Loader2 className="mr-2 size-4 animate-spin" />
+                                            Running...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <PlusIcon className="mr-2 size-4" />
+                                            Submit and Plan
+                                        </>
+                                    )}
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent

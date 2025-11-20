@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { TooltipContent } from "@radix-ui/react-tooltip"
 import { PlusCircleIcon, XIcon } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export function LabelSelector({
     defaultSelected,
@@ -17,6 +17,10 @@ export function LabelSelector({
     const [selected, setSelected] = useState<{ id: string; label: string }[]>(defaultSelected)
     const [isAdding, setIsAdding] = useState(false)
 
+    useEffect(() => {
+        setSelected(defaultSelected)
+    }, [defaultSelected])
+
     const availableChoices = choices.filter((choice) => !selected.some((s) => s.id === choice.id))
 
     function handleChangeSelected(selected: { id: string; label: string }[]) {
@@ -27,45 +31,6 @@ export function LabelSelector({
     return (
         <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-4 select-none">
-                {!isAdding && availableChoices.length > 0 && (
-                    <div
-                        className="hover:text-primary text-muted-foreground flex cursor-pointer items-center justify-center p-2"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setIsAdding(true)
-                        }}
-                    >
-                        <PlusCircleIcon className="h-4 w-4" />
-                    </div>
-                )}
-                {isAdding && availableChoices.length > 0 && (
-                    <div onClick={(e) => e.stopPropagation()}>
-                        <Combobox
-                            options={availableChoices.map((choice) => ({
-                                value: choice.id,
-                                label: choice.label,
-                            }))}
-                            open={availableChoices.length > 0}
-                            onValueChange={(value) => {
-                                if (value) {
-                                    handleChangeSelected([
-                                        ...selected,
-                                        // Inefficient, but it's ok for now
-                                        {
-                                            id: value,
-                                            label:
-                                                availableChoices.find((c) => c.id === value)
-                                                    ?.label ?? "",
-                                        },
-                                    ])
-                                }
-                                setIsAdding(false)
-                            }}
-                            placeholder="Select a category..."
-                            className="w-full max-w-36"
-                        />
-                    </div>
-                )}
                 {selected.map((choice) => (
                     <TooltipProvider key={choice.id}>
                         <Tooltip delayDuration={200}>
@@ -100,6 +65,34 @@ export function LabelSelector({
                     </TooltipProvider>
                 ))}
             </div>
+            {availableChoices.length > 0 && (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Combobox
+                        options={availableChoices.map((choice) => ({
+                            value: choice.id,
+                            label: choice.label,
+                        }))}
+                        open={isAdding}
+                        onOpenChange={setIsAdding}
+                        onValueChange={(value) => {
+                            if (value) {
+                                handleChangeSelected([
+                                    ...selected,
+                                    {
+                                        id: value,
+                                        label:
+                                            availableChoices.find((c) => c.id === value)
+                                                ?.label ?? "",
+                                    },
+                                ])
+                            }
+                            setIsAdding(false)
+                        }}
+                        placeholder="Select categories..."
+                        className="w-full max-w-xs"
+                    />
+                </div>
+            )}
         </div>
     )
 }

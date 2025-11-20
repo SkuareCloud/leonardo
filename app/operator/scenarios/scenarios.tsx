@@ -37,7 +37,7 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
     },
     {
         accessorKey: "profileName",
-        header: "Profile Name",
+        header: "Avatar Name",
         size: 100,
     },
     {
@@ -154,8 +154,8 @@ const ScenariosListInner = ({
                 avatar?.data.eliza_character &&
                 typeof avatar.data.eliza_character === "object" &&
                 avatar.data.eliza_character !== null
-                    ? (avatar.data.eliza_character as any).name || "Unknown Profile"
-                    : "Unknown Profile"
+                    ? (avatar.data.eliza_character as any).name || "Unknown Avatar"
+                    : "Unknown Avatar"
 
             return {
                 scenarioId,
@@ -196,10 +196,10 @@ const ScenariosListInner = ({
                         return (
                             <div className="flex flex-row gap-2">
                                 <div className="flex flex-col gap-2">
-                                    <Label htmlFor="profileName">Profile Name</Label>
+                                    <Label htmlFor="profileName">Avatar Name</Label>
                                     <Input
                                         id="profileName"
-                                        placeholder="Filter by profile name..."
+                                        placeholder="Filter by avatar name..."
                                         value={
                                             (table
                                                 .getColumn("profileName")
@@ -252,10 +252,10 @@ const ScenariosListInner = ({
                 return (
                     <div className="flex flex-row gap-2">
                         <div className="flex flex-col gap-2">
-                            <Label htmlFor="profileName">Profile Name</Label>
+                            <Label htmlFor="profileName">Avatar Name</Label>
                             <Input
                                 id="profileName"
-                                placeholder="Filter by profile name..."
+                                placeholder="Filter by avatar name..."
                                 value={
                                     (table.getColumn("profileName")?.getFilterValue() as string) ??
                                     ""

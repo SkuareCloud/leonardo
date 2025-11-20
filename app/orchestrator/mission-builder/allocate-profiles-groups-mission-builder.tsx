@@ -114,23 +114,19 @@ export function AllocateProfilesGroupsMissionBuilder({
                     <h3 className="text-center text-lg font-medium">Category Selection</h3>
                     <div className="flex flex-row gap-18">
                         <div className="flex-2">
-                            {activeCharacterCategories.length > 0 && (
-                                <CategorySelector
-                                    categories={activeCharacterCategories}
-                                    label="Character categories"
-                                    onChangeValue={(value) => setCharacterCategories(value)}
-                                />
-                            )}
+                            <CategorySelector
+                                categories={activeCharacterCategories}
+                                label="Avatar categories"
+                                onChangeValue={(value) => setCharacterCategories(value)}
+                            />
                         </div>
 
                         <div className="flex-2">
-                            {activeChatCategories.length > 0 && (
-                                <CategorySelector
-                                    categories={activeChatCategories}
-                                    label="Chat categories"
-                                    onChangeValue={(value) => setChatCategories(value)}
-                                />
-                            )}
+                            <CategorySelector
+                                categories={activeChatCategories}
+                                label="Chat categories"
+                                onChangeValue={(value) => setChatCategories(value)}
+                            />
                         </div>
 
                         <div className="flex-2">
@@ -205,7 +201,7 @@ export function AllocateProfilesGroupsMissionBuilder({
 
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
                     <InputWithLabel
-                        label="Batch size [Number of characters running simultaneously]"
+                        label="Batch size [Number of avatars running simultaneously]"
                         type="number"
                         min="1"
                         value={batchSize}

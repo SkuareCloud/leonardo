@@ -2,12 +2,14 @@ import { z } from "zod"
 import { zAvatarModelWithProxy } from "./avatars/zod.gen"
 import { zProfileWorkerView } from "./operator/zod.gen"
 import {
+  ActionRead,
   CategoryRead,
   ChatRead,
   EchoMissionInput,
   MissionCreate,
   MissionExposure,
   MissionRead,
+  ModelsOperatorActivityScenarioScenarioStatus,
 } from "./orchestrator"
 
 export const MissionTypes = [
@@ -108,4 +110,8 @@ export interface MissionStatistics {
   success: number
   failed: number
   cancelled: number
+}
+
+export type MissionFailureReason = ActionRead & {
+  status?: ModelsOperatorActivityScenarioScenarioStatus | null
 }

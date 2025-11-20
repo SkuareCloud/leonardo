@@ -44,25 +44,25 @@ export function StopAllButton() {
                     } else {
                         // Check if timeout reached
                         if (Date.now() - startTime > TIMEOUT) {
-                            throw new Error("Timeout waiting for characters to stop")
+                            throw new Error("Timeout waiting for avatars to stop")
                         }
                         // Wait for 1 second before checking again
                         await new Promise((resolve) => setTimeout(resolve, 1000))
                     }
                 }
 
-                toast.success("All profiles stopped", {
-                    description: "All running profiles have been successfully stopped.",
+                toast.success("All avatars stopped", {
+                    description: "All running avatars have been successfully stopped.",
                 })
             } else {
-                throw new Error(data.error || "Failed to stop characters")
+                throw new Error(data.error || "Failed to stop avatars")
             }
         } catch (error) {
-            toast.error("Failed to stop profiles", {
+            toast.error("Failed to stop avatars", {
                 description:
                     error instanceof Error
                         ? error.message
-                        : "An unexpected error occurred while stopping profiles",
+                        : "An unexpected error occurred while stopping avatars",
                 action: {
                     label: "Undo",
                     onClick: () => logger.info("Undo"),
@@ -86,9 +86,9 @@ export function StopAllButton() {
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Stop All Characters</DialogTitle>
+                    <DialogTitle>Stop All Avatars</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to stop all running characters? This action cannot be
+                        Are you sure you want to stop all running avatars? This action cannot be
                         undone.
                     </DialogDescription>
                 </DialogHeader>

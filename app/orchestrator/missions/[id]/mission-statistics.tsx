@@ -13,8 +13,8 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { ChartConfig, ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart"
-import { MissionStatistics as MissionStatisticsType } from "@lib/api/models"
-import { ActionRead, CategoryRead, ChatRead, MissionRead } from "@lib/api/orchestrator/types.gen"
+import { MissionFailureReason, MissionStatistics as MissionStatisticsType } from "@lib/api/models"
+import { CategoryRead, ChatRead, MissionRead } from "@lib/api/orchestrator/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { useQuery } from "@tanstack/react-query"
 import { Loader2, MessageCircle, Settings, Users, X } from "lucide-react"
@@ -244,13 +244,26 @@ function MissionFailureReasonsChart({
     failureReasons,
     refreshing,
 }: {
-    failureReasons: ActionRead[]
+    failureReasons: MissionFailureReason[]
     refreshing: boolean
 }) {
+    const safeFailureReasons = Array.isArray(failureReasons) ? failureReasons : []
+
     // Group failure reasons by error and count them
-    const failureReasonCounts = failureReasons.reduce(
+    const failureReasonCounts = safeFailureReasons.reduce(
         (acc, action) => {
-            const actionError = action.error || "unknown"
+            const primaryError = typeof action.error === "string" ? action.error.trim() : ""
+            const statusError =
+                typeof action.status?.error === "string" ? action.status.error.trim() : ""
+            const fallbackStatusCode =
+                action.status?.status_code && action.status.status_code.length > 0
+                    ? `Status: ${action.status.status_code}`
+                    : ""
+            const actionError =
+                primaryError ||
+                statusError ||
+                fallbackStatusCode ||
+                "Unknown failure reason"
             acc[actionError] = (acc[actionError] || 0) + 1
             return acc
         },
@@ -288,14 +301,14 @@ function MissionFailureReasonsChart({
                 <CardHeader className="items-center pb-0">
                     <CardTitle>Failure Reasons</CardTitle>
                     <CardDescription>
-                        {failureReasons.length === 0
+                        {safeFailureReasons.length === 0
                             ? "No failures found"
                             : "No failure data available"}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 pb-0">
                     <div className="text-muted-foreground flex h-[300px] items-center justify-center">
-                        {failureReasons.length === 0
+                        {safeFailureReasons.length === 0
                             ? "No failure data available"
                             : "Processing failure data..."}
                     </div>

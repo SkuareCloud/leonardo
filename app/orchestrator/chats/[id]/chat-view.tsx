@@ -108,24 +108,6 @@ export function ChatView({
                         </div>
                         <div>
                             <label className="text-muted-foreground text-sm font-medium">
-                                Messages last month
-                            </label>
-                            <p className="text-sm">{chat.messages_count_last_month || 0}</p>
-                        </div>
-                        <div>
-                            <label className="text-muted-foreground text-sm font-medium">
-                                Forwarded from this chat last month
-                            </label>
-                            <p className="text-sm">{chat.forward_from_count_last_month || 0}</p>
-                        </div>
-                        <div>
-                            <label className="text-muted-foreground text-sm font-medium">
-                                Forwarded to this chat last month
-                            </label>
-                            <p className="text-sm">{chat.forward_to_count_last_month || 0}</p>
-                        </div>
-                        <div>
-                            <label className="text-muted-foreground text-sm font-medium">
                                 Can Forward from
                             </label>
                             <p className="text-sm">{chat.noforwards ? "No" : "Yes"}</p>
@@ -136,6 +118,25 @@ export function ChatView({
                             </label>
                             <p className="text-sm">{chat.linked_chat_username || "N/A"}</p>
                         </div>
+                        <div>
+                            <label className="text-muted-foreground text-sm font-medium">
+                                Linked chat ID
+                            </label>
+                            <p className="text-sm">
+                                {(chat as ChatRead & { linked_chat_id?: number | null }).linked_chat_id ??
+                                    "N/A"}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Chat summary */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Chat Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm">{chat.text_summary || "No summary"}</p>
                     </CardContent>
                 </Card>
             </div>
