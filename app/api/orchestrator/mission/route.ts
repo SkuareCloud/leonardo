@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-    logger.info("DELETE /api/missions/delete called")
+    logger.info("DELETE /api/orchestrator/mission called")
     const apiService = new ApiService()
     const id = request.nextUrl.searchParams.get("id")
     if (!id) {
@@ -22,10 +22,13 @@ export async function DELETE(request: NextRequest) {
     }
     try {
         await apiService.deleteOrchestratorMission(id)
-        logger.info("DELETE /api/missions/delete success")
+        logger.info(`DELETE /api/orchestrator/mission success: ${id}`)
         return NextResponse.json({ message: "Mission deleted" })
     } catch (error) {
-        logger.error("DELETE /api/missions/delete error")
-        return NextResponse.json({ error: "Failed to delete mission" }, { status: 500 })
+        logger.error(`DELETE /api/orchestrator/mission error: ${error instanceof Error ? error.message : String(error)}`)
+        return NextResponse.json({ 
+            error: "Failed to delete mission",
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 })
     }
 }

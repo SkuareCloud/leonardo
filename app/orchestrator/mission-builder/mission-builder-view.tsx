@@ -20,14 +20,11 @@ import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import {
     DicesIcon,
-    DramaIcon,
     Loader2,
-    Mail,
-    Phone,
     PlusIcon,
     PodcastIcon,
     RabbitIcon,
-    ShuffleIcon,
+    ShuffleIcon
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React from "react"
@@ -61,30 +58,30 @@ const MissionMetadata: Record<
         supported: true,
         icon: ShuffleIcon,
     },
-    PuppetShowMission: {
-        name: "Puppet Show",
-        description: "Orchestrate a debate on a certain group",
-        supported: false,
-        icon: DramaIcon,
-    },
+    // PuppetShowMission: {
+    //     name: "Puppet Show",
+    //     description: "Orchestrate a debate on a certain group",
+    //     supported: false,
+    //     icon: DramaIcon,
+    // },
     FluffMission: {
         name: "Sync profiles",
         description: "Sync a group of characters with their platform feed and preferences",
         supported: true,
         icon: RabbitIcon,
     },
-    MassDmMission: {
-        name: "Mass DM",
-        description: "Send direct messages to a contact list using many profiles",
-        supported: true,
-        icon: Mail,
-    },
-    ResolvePhoneMission: {
-        name: "Resolve Phone",
-        description: "Resolve phone numbers to usernames and collect results",
-        supported: true,
-        icon: Phone,
-    },
+    // MassDmMission: {
+    //     name: "Mass DM",
+    //     description: "Send direct messages to a contact list using many profiles",
+    //     supported: false,
+    //     icon: Mail,
+    // },
+    // ResolvePhoneMission: {
+    //     name: "Resolve Phone",
+    //     description: "Resolve phone numbers to usernames and collect results",
+    //     supported: false,
+    //     icon: Phone,
+    // },
 }
 
 export function MissionBuilderView({

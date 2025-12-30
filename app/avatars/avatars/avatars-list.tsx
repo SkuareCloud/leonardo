@@ -15,21 +15,20 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { AvatarModelWithProxy, Proxy } from "@lib/api/avatars"
+import { AvatarRead, ProxyRead } from "@lib/api/avatars"
 import { CategoryRead } from "@lib/api/orchestrator"
 import { logger } from "@lib/logger"
-import { getSocialNetworkStatus } from "@lib/profile-utils"
+import { getAvatarDisplayName, getSocialNetworkStatus } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { ColumnDef } from "@tanstack/react-table"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
 import { Loader2, MarsIcon, VenusIcon } from "lucide-react"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { CategorySelector } from "../../orchestrator/mission-builder/category-selector"
 import { AvatarDrawer } from "./avatar-drawer"
-import { getBadgeClassNamesByActivationSource } from "./avatars-utils"
 import { Proxy as ProxyComponent } from "./proxy"
 
 export type ViewMode = "Grid" | "Table"
@@ -48,39 +47,32 @@ function Gender({ gender }: { gender: string }) {
 }
 
 export interface ProfileDataRow {
-    original: AvatarModelWithProxy
+    original: AvatarRead
     name: string
     city: string | undefined
     geocode: string | undefined
     gender: string
     age: string | undefined
-    telegram: number | undefined
     profileId: string
-    proxy: Proxy | null
+    proxy: ProxyRead | null
     phone: string | undefined
     socialNetworks: { [network: string]: boolean }
-    activationSource: string | undefined
     categories?: CategoryRead[]
 }
 
-function avatarToRow(avatar: AvatarModelWithProxy): ProfileDataRow {
+function avatarToRow(avatar: AvatarRead): ProfileDataRow {
+    const address = avatar.address
     return {
         original: avatar,
-        name: (avatar.data?.eliza_character as any)?.name || "Unknown",
-        city: avatar?.home_city,
-        geocode: avatar?.home_iso_3166_1_alpha_2_code,
-        gender: (avatar?.data.gender as string) || "Female",
-        age: (avatar?.data.date_of_birth as string) || undefined,
-        telegram: (avatar?.data.social_network_accounts as any)?.telegram?.active
-            ? (avatar?.data.social_network_accounts as any)?.telegram?.api?.api_id
-            : undefined,
-        profileId: avatar?.id || "",
-        proxy: avatar?.proxy || null,
-        phone: (avatar?.data.phone_number as string) || undefined,
+        name: getAvatarDisplayName(avatar),
+        city: address?.city ?? undefined,
+        geocode: address?.iso_3166_1_alpha_2_code ?? undefined,
+        gender: avatar.gender || "Unknown",
+        age: avatar.birth_date || undefined,
+        profileId: avatar.id || "",
+        proxy: avatar.proxy || null,
+        phone: avatar.phone_number || undefined,
         socialNetworks: getSocialNetworkStatus(avatar),
-        activationSource: (
-            (avatar?.data.social_network_accounts as any)?.telegram?.activation_source || ""
-        ).toUpperCase(),
         categories: [],
     }
 }
@@ -175,25 +167,6 @@ const createProfileColumns = (
                         </div>
                     ))}
                 </div>
-            )
-        },
-    },
-    {
-        accessorKey: "activationSource",
-        header: "Activation Source",
-        size: 60,
-        cell: ({ row }) => {
-            const profile = row.original
-            return (
-                <Badge
-                    variant="outline"
-                    className={cn(
-                        "font-bold tracking-wide",
-                        getBadgeClassNamesByActivationSource(profile.activationSource || ""),
-                    )}
-                >
-                    {profile.activationSource}
-                </Badge>
             )
         },
     },
@@ -356,11 +329,11 @@ export function AvatarsList({
     avatars: initialAvatars,
     allCategories,
 }: {
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
     allCategories: CategoryRead[]
 }) {
     const [activeRow, setActiveRow] = useState<ProfileDataRow | undefined>(undefined)
-    const [avatars, setAvatars] = useState<AvatarModelWithProxy[]>(initialAvatars)
+    const [avatars, setAvatars] = useState<AvatarRead[]>(initialAvatars)
     const [profilesData, setProfilesData] = useState<ProfileDataRow[]>([])
     const [categories, setCategories] = useState<CategoryRead[]>(allCategories)
     const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -375,12 +348,7 @@ export function AvatarsList({
     const id = searchParams.get("id")
 
     const activationSources = new Set(
-        avatars.map(
-            (avatar) =>
-                (
-                    avatar.data.social_network_accounts as any
-                )?.telegram?.activation_source?.toUpperCase() || "",
-        ),
+        avatars.map((avatar) => avatar.avatar_state?.state?.toUpperCase() || "UNKNOWN"),
     )
 
     const activationSourcesArray = Array.from(activationSources)
@@ -632,7 +600,7 @@ export function AvatarsList({
     }
 
     // Load avatar categories
-    const loadAvatarCategories = async () => {
+    const loadAvatarCategories = useCallback(async () => {
         try {
             const avatarsWithCategories = await Promise.all(
                 avatars.map(async (avatar) => {
@@ -652,12 +620,12 @@ export function AvatarsList({
         } catch (error) {
             console.error("Failed to load avatar categories:", error)
         }
-    }
+    }, [avatars])
 
     // Load categories on mount
     useEffect(() => {
         loadAvatarCategories()
-    }, [avatars])
+    }, [avatars, loadAvatarCategories])
 
     // Log avatar counts for debugging
     useEffect(() => {
@@ -675,7 +643,7 @@ export function AvatarsList({
         )
     }, [profilesData, activeCategory])
 
-    const refreshAvatar = async () => {
+    const refreshAvatar = async (): Promise<AvatarRead> => {
         // HACK: Slight delay to allow DB to catch up.
         await new Promise((resolve) => setTimeout(resolve, 5000))
         if (!activeRow) {
@@ -693,38 +661,12 @@ export function AvatarsList({
         return avatar
     }
 
-    const updateField = async (path: string, value: string) => {
+    const updateField = async (path: string, value: unknown) => {
         if (!activeRow) {
             return
         }
         logger.info("Updating avatar...")
         await new ServiceBrowserClient().updateProfile(activeRow.original.id, path, value)
-
-        // Update the avatar in the list immediately
-        setAvatars((prevAvatars) =>
-            prevAvatars.map((avatar) => {
-                if (avatar.id === activeRow.original.id) {
-                    const updatedAvatar = { ...avatar }
-                    const pathParts = path.split(".")
-                    let current = updatedAvatar.data as { [key: string]: unknown }
-
-                    // Navigate to the parent object
-                    for (let i = 0; i < pathParts.length - 1; i++) {
-                        if (!current[pathParts[i]]) {
-                            current[pathParts[i]] = {}
-                        }
-                        current = current[pathParts[i]] as { [key: string]: unknown }
-                    }
-
-                    // Set the final value
-                    current[pathParts[pathParts.length - 1]] = value
-
-                    return updatedAvatar
-                }
-                return avatar
-            }),
-        )
-
         await refreshAvatar()
     }
 
@@ -860,39 +802,6 @@ export function AvatarsList({
                                             }
                                             className="w-[30ch]"
                                         />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="activationSource">Activation Source</Label>
-                                        <Select
-                                            onValueChange={(value) => {
-                                                if (value === "all") {
-                                                    table
-                                                        .getColumn("activationSource")
-                                                        ?.setFilterValue(undefined)
-                                                } else {
-                                                    table
-                                                        .getColumn("activationSource")
-                                                        ?.setFilterValue(value)
-                                                }
-                                            }}
-                                            defaultValue={
-                                                table
-                                                    .getColumn("activationSource")
-                                                    ?.getFilterValue() as string
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Filter by activation source..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">All</SelectItem>
-                                                {activationSourcesArray.map((source) => (
-                                                    <SelectItem key={source} value={source}>
-                                                        {source}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <Label htmlFor="socialNetworks">Social Networks</Label>

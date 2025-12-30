@@ -1,4 +1,4 @@
-export function getBadgeColorByActivationSource(activationSource: string, dim: boolean = false) {
+export function getBadgeColorByActivationSource(activationSource: string, _dim: boolean = false) {
     // Hash the activation source to a color
     const hash = activationSource.split("").reduce((acc, char) => {
         return acc + char.charCodeAt(0)
@@ -9,7 +9,7 @@ export function getBadgeColorByActivationSource(activationSource: string, dim: b
 
 export function getBadgeClassNamesByActivationSource(
     activationSource: string,
-    dim: boolean = false,
+    _dim: boolean = false,
 ) {
     const hash = activationSource.split("").reduce((acc, char) => {
         return acc + char.charCodeAt(0)

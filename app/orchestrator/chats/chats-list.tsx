@@ -1,6 +1,5 @@
 "use client"
 
-import { CreateCategoryDialog } from "@/components/create-category-dialog"
 import { DataTable } from "@/components/table"
 import {
     AlertDialog,
@@ -16,7 +15,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
     Select,
     SelectContent,
@@ -25,10 +23,10 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { CategoryRead, ChatRead, ChatType, ChatView } from "@lib/api/orchestrator/types.gen"
+import { CategoryRead, ChatRead, ChatType, ChatView } from "@lib/api/models"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
-import { ColumnDef } from "@tanstack/react-table"
-import { Loader2 } from "lucide-react"
+import { ColumnDef, PaginationState } from "@tanstack/react-table"
+import { ChevronDown, ChevronUp, Filter, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
     forwardRef,
@@ -36,7 +34,8 @@ import {
     useEffect,
     useImperativeHandle,
     useMemo,
-    useState,
+    useRef,
+    useState
 } from "react"
 import { toast } from "sonner"
 import { CategorySelector } from "../mission-builder/category-selector"
@@ -65,27 +64,21 @@ export type ChatsListHandle = {
 type ChatsListProps = {
     chats: ChatView[]
     allCategories: CategoryRead[]
+    initialPageSize: number
+    initialTotalCount?: number
+    onStatsChange?: (stats: { totalCount: number; isSearchMode: boolean }) => void
 }
 
 const chatColumns: ColumnDef<ChatRow>[] = [
     {
         accessorKey: "username",
         header: "Username",
-        size: 200,
-        // Add custom filter function that checks both username and platform_id
-        filterFn: (row, columnId, filterValue) => {
-            const chat = row.original
-            const searchValue = filterValue.toLowerCase()
-            const username = chat.username?.toLowerCase() || ""
-            const platformId = chat.platform_id?.toString().toLowerCase() || ""
-
-            return username.includes(searchValue) || platformId.includes(searchValue)
-        },
+        size: 100,
         cell: ({ row }) => {
             const chat = row.original
             return (
-                <div className="flex flex-col">
-                    <span className="font-medium">{chat.username || chat.platform_id}</span>
+                <div className="flex flex-col text-center">
+                    <span className="font-medium text-center">{chat.username || chat.platform_id}</span>
                     {/* {chat.username && <span className="text-sm text-gray-500">@{chat.username}</span>} */}
                 </div>
             )
@@ -94,14 +87,14 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     {
         accessorKey: "title",
         header: "Title",
-        size: 200,
+        size: 100,
         cell: ({ row }) => {
             const chat = row.original
             return (
-                <div className="flex flex-col">
-                    <span className="font-medium">{chat.title || "Untitled"}</span>
+                <div className="flex flex-col items-center text-center whitespace-pre-wrap">
+                    <span className="font-medium text-center flex-wrap">{chat.title || "Untitled"}</span>
                     {chat.username && (
-                        <span className="text-sm text-gray-500">@{chat.username}</span>
+                        <span className="text-sm text-gray-500 text-center">@{chat.username}</span>
                     )}
                 </div>
             )
@@ -110,7 +103,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     {
         accessorKey: "type",
         header: "Type",
-        size: 100,
+        size: 75,
         cell: ({ row }) => {
             const chat = row.original
             const typeColors: Record<ChatType, { bg: string; text: string }> = {
@@ -122,7 +115,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
             }
             const colors = typeColors[chat.type || "Unknown"]
             return (
-                <span>
+                <span className="text-center">
                     <Badge className={cn(colors.bg, colors.text)}>{chat.type || "Unknown"}</Badge>
                 </span>
             )
@@ -130,12 +123,12 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     },
     {
         accessorKey: "participants_count",
-        header: "participants_count",
-        size: 200,
+        header: "Participants Count",
+        size: 100,
         cell: ({ row }) => {
             const chat = row.original
             return (
-                <div className="flex flex-col">
+                <div className="flex flex-col text-center">
                     <span className="font-medium">{chat.participants_count || 0}</span>
                 </div>
             )
@@ -176,12 +169,12 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     {
         accessorKey: "system_chat_members",
         header: "System members count",
-        size: 200,
+        size: 100,
         cell: ({ row }) => {
             const chat = row.original
             return (
-                <div className="flex flex-col">
-                    <span className="font-medium">{chat.system_chat_members?.length || 0}</span>
+                <div className="flex flex-col text-center">
+                    <span className="font-medium text-center">{chat.system_chat_members?.length || 0}</span>
                 </div>
             )
         },
@@ -189,12 +182,12 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     {
         accessorKey: "linked_chat_username",
         header: "Linked chat (discussion or channel)",
-        size: 200,
+        size: 100,
         cell: ({ row }) => {
             const chat = row.original
             return (
-                <div className="flex flex-col">
-                    <span className="font-medium">
+                <div className="flex flex-col text-center">
+                    <span className="font-medium text-center">
                         {chat.linked_chat_username ||
                             (chat.linked_chat_id ? chat.linked_chat_id.toString() : "None")}
                     </span>
@@ -205,7 +198,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     {
         accessorKey: "Chat summary",
         header: "Chat summary",
-        size: 100,
+        size: 500,
         cell: ({ row }) => {
             const chat = row.original
             return (
@@ -217,42 +210,178 @@ const chatColumns: ColumnDef<ChatRow>[] = [
     },
 ]
 
+// Cache key for localStorage
+const FILTER_CACHE_KEY = "chats-list-filters-cache"
+const CACHE_EXPIRATION_MS = 5 * 60 * 1000 // 5 minutes
+
+interface FilterCache {
+    filters: {
+        username: string
+        title: string
+        chatType: string
+        platform: string
+        minParticipants: string
+        maxParticipants: string
+        linkedChatUsername: string
+        categoryName: string
+    }
+    activeCategory: string | null
+    pagination: PaginationState
+    selectedIds: string[]
+    timestamp: number
+}
+
+// Cache utility functions
+const saveFilterCache = (cache: Omit<FilterCache, "timestamp">) => {
+    try {
+        const cacheWithTimestamp: FilterCache = {
+            ...cache,
+            timestamp: Date.now(),
+        }
+        localStorage.setItem(FILTER_CACHE_KEY, JSON.stringify(cacheWithTimestamp))
+    } catch (error) {
+        console.warn("Failed to save filter cache:", error)
+    }
+}
+
+const loadFilterCache = (): Omit<FilterCache, "timestamp"> | null => {
+    try {
+        const cached = localStorage.getItem(FILTER_CACHE_KEY)
+        if (!cached) return null
+
+        const cache: FilterCache = JSON.parse(cached)
+        const now = Date.now()
+        const age = now - cache.timestamp
+
+        // Check if cache is expired
+        if (age > CACHE_EXPIRATION_MS) {
+            localStorage.removeItem(FILTER_CACHE_KEY)
+            return null
+        }
+
+        return {
+            filters: cache.filters,
+            activeCategory: cache.activeCategory,
+            pagination: cache.pagination,
+            selectedIds: cache.selectedIds || [],
+        }
+    } catch (error) {
+        console.warn("Failed to load filter cache:", error)
+        return null
+    }
+}
+
 export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function ChatsList(
-    { chats, allCategories },
+    { chats, allCategories, initialPageSize, initialTotalCount, onStatsChange },
     ref,
 ) {
     const router = useRouter()
     const bulkCategoryOptionsId = "chat-bulk-category-options"
-    const [activeCategory, setActiveCategory] = useState<string | null>(null)
-    const [masterChats, setMasterChats] = useState<ChatView[]>(chats)
+    const filterCategoryOptionsId = "chat-filter-category-options"
+    
+    // Load cached filters on mount
+    const cachedFilters = loadFilterCache()
+    
+    const [activeCategory, setActiveCategory] = useState<string | null>(cachedFilters?.activeCategory ?? null)
     const [chatData, setChatData] = useState<ChatView[]>(chats)
     const [categories, setCategories] = useState<CategoryRead[]>(allCategories)
     const [searchQuery, setSearchQuery] = useState("")
     const [isSearchMode, setIsSearchMode] = useState(false)
+    const [paginationState, setPaginationState] = useState<PaginationState>(
+        cachedFilters?.pagination ?? {
+            pageIndex: 0,
+            pageSize: initialPageSize,
+        }
+    )
+    const [hasNextPage, setHasNextPage] = useState(() => {
+        if (typeof initialTotalCount === "number") {
+            return initialTotalCount > initialPageSize
+        }
+        return chats.length === initialPageSize
+    })
+    const derivedInitialTotal =
+        typeof initialTotalCount === "number"
+            ? initialTotalCount
+            : chats.length < initialPageSize
+                ? chats.length
+                : null
+    const [totalCount, setTotalCount] = useState<number | null>(derivedInitialTotal)
+    const [isPageLoading, setIsPageLoading] = useState(false)
     const [isSearchingChats, setIsSearchingChats] = useState(false)
     const [searchResultCount, setSearchResultCount] = useState<number | null>(null)
     const [searchMode, setSearchMode] = useState<"topics" | "topicsAddToCategory">("topics")
     const [searchCategoryName, setSearchCategoryName] = useState("")
     const [searchTopK, setSearchTopK] = useState("")
     const [bulkCategoryInput, setBulkCategoryInput] = useState("")
+
+    // Filter parameters - initialize from cache if available
+    const [filterUsername, setFilterUsername] = useState(cachedFilters?.filters.username ?? "")
+    const [filterTitle, setFilterTitle] = useState(cachedFilters?.filters.title ?? "")
+    const [filterChatType, setFilterChatType] = useState<string>(cachedFilters?.filters.chatType ?? "")
+    const [filterPlatform, setFilterPlatform] = useState(cachedFilters?.filters.platform ?? "")
+    const [filterMinParticipants, setFilterMinParticipants] = useState(cachedFilters?.filters.minParticipants ?? "")
+    const [filterMaxParticipants, setFilterMaxParticipants] = useState(cachedFilters?.filters.maxParticipants ?? "")
+    const [filterLinkedChatUsername, setFilterLinkedChatUsername] = useState(cachedFilters?.filters.linkedChatUsername ?? "")
+    const [filterCategoryName, setFilterCategoryName] = useState(cachedFilters?.filters.categoryName ?? "")
+    const [showFilters, setShowFilters] = useState(false)
     const [isAddingBulkCategory, setIsAddingBulkCategory] = useState(false)
     const [isRemovingBulkCategory, setIsRemovingBulkCategory] = useState(false)
     const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
-    const [categorySelectValue, setCategorySelectValue] = useState("All")
-    const filteredChats = useMemo(() => {
-        return chatData.filter((chat) => {
-            if (!activeCategory) {
-                return true
+    const [isSelectingAllFiltered, setIsSelectingAllFiltered] = useState(false)
+    const [categorySelectValue, setCategorySelectValue] = useState(
+        cachedFilters?.activeCategory ? cachedFilters.activeCategory : "All"
+    )
+    const serviceClientRef = useRef(new ServiceBrowserClient())
+    // Persistent selection state that survives page changes - initialize from cache
+    const [persistentSelectedIds, setPersistentSelectedIds] = useState<Set<string>>(
+        new Set(cachedFilters?.selectedIds || [])
+    )
+    // Row selection state for the table (using chat IDs as keys)
+    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+
+    // No client-side filtering - all filtering is done server-side
+    const filteredChats = chatData
+
+    // Sync row selection state with persistent selection when data changes
+    useEffect(() => {
+        const newSelection: Record<string, boolean> = {}
+        chatData.forEach((chat) => {
+            if (persistentSelectedIds.has(chat.id)) {
+                newSelection[chat.id] = true
             }
-            if (!chat.categories) {
-                return false
-            }
-            return chat.categories.some((category) => category === activeCategory)
         })
-    }, [activeCategory, chatData])
+        setRowSelection(newSelection)
+    }, [chatData, persistentSelectedIds])
+
+    // Handle row selection changes - update persistent selection
+    const handleRowSelectionChange = useCallback((updater: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => {
+        setRowSelection((prevSelection) => {
+            const newSelection = typeof updater === 'function' ? updater(prevSelection) : updater
+            
+            // Update persistent selection
+            setPersistentSelectedIds((prevIds) => {
+                const newSet = new Set(prevIds)
+                
+                // First, remove all current page selections from persistent set
+                chatData.forEach((chat) => {
+                    newSet.delete(chat.id)
+                })
+                
+                // Then add back the ones that are selected in the new selection
+                Object.entries(newSelection).forEach(([id, isSelected]) => {
+                    if (isSelected) {
+                        newSet.add(id)
+                    }
+                })
+                
+                return newSet
+            })
+            
+            return newSelection
+        })
+    }, [chatData])
 
     useEffect(() => {
-        setMasterChats(chats)
         if (!isSearchMode) {
             setChatData(chats)
         }
@@ -263,12 +392,211 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
     }, [allCategories])
 
     useEffect(() => {
+        // Always use actual data length for accurate counts
+        const visibleCount = isSearchMode
+            ? chatData.length
+            : totalCount ?? chatData.length
+        onStatsChange?.({
+            totalCount: visibleCount,
+            isSearchMode,
+        })
+    }, [onStatsChange, isSearchMode, chatData.length, totalCount])
+
+    // Save filters and selection to cache whenever they change
+    useEffect(() => {
+        saveFilterCache({
+            filters: {
+                username: filterUsername,
+                title: filterTitle,
+                chatType: filterChatType,
+                platform: filterPlatform,
+                minParticipants: filterMinParticipants,
+                maxParticipants: filterMaxParticipants,
+                linkedChatUsername: filterLinkedChatUsername,
+                categoryName: filterCategoryName,
+            },
+            activeCategory,
+            pagination: paginationState,
+            selectedIds: Array.from(persistentSelectedIds),
+        })
+    }, [
+        filterUsername,
+        filterTitle,
+        filterChatType,
+        filterPlatform,
+        filterMinParticipants,
+        filterMaxParticipants,
+        filterLinkedChatUsername,
+        filterCategoryName,
+        activeCategory,
+        paginationState,
+        persistentSelectedIds,
+    ])
+
+    const getCurrentFilters = () => {
+        const filters = {
+            username: filterUsername.trim() || undefined,
+            title: filterTitle.trim() || undefined,
+            chatType: filterChatType || undefined,
+            platform: filterPlatform.trim() || undefined,
+            minParticipants: filterMinParticipants.trim() || undefined,
+            maxParticipants: filterMaxParticipants.trim() || undefined,
+            linkedChatUsername: filterLinkedChatUsername.trim() || undefined,
+            categoryName: filterCategoryName.trim() || undefined,
+        }
+        console.log('[Filters] getCurrentFilters returning:', filters)
+        return filters
+    }
+
+    const fetchChatsPage = useCallback(
+        async (pageIndex: number, pageSize: number, categoryName: string | null = null) => {
+            setIsPageLoading(true)
+            try {
+                const filters = getCurrentFilters()
+                // If filterCategoryName is set (advanced filter), use it instead of the categoryName parameter
+                const effectiveCategoryName = filters.categoryName || categoryName || undefined
+                
+                // Remove categoryName from filters to avoid duplication
+                const { categoryName: _, ...filtersWithoutCategory } = filters
+                
+                const { chats: pageChats, hasMore } =
+                    await serviceClientRef.current.getOrchestratorChatsPage({
+                        pageIndex,
+                        pageSize,
+                        categoryName: effectiveCategoryName,
+                        ...filtersWithoutCategory,
+                    })
+                setChatData(pageChats)
+
+                // Use hasMore flag for pagination
+                setHasNextPage(hasMore ?? false)
+                setTotalCount(null) // We don't have total count with cursor pagination
+            } catch (error) {
+                console.error("Failed to load chats page:", error)
+                toast.error("Failed to load chats page")
+                throw error
+            } finally {
+                setIsPageLoading(false)
+            }
+        },
+        [
+            filterUsername,
+            filterTitle,
+            filterChatType,
+            filterPlatform,
+            filterMinParticipants,
+            filterMaxParticipants,
+            filterLinkedChatUsername,
+            filterCategoryName,
+        ],
+    )
+
+    const handlePaginationChange = useCallback(
+        (next: PaginationState) => {
+            if (isSearchMode) {
+                return
+            }
+            console.log(`[Pagination] Navigating to page ${next.pageIndex + 1} (pageSize: ${next.pageSize})`)
+            setPaginationState(next)
+            void fetchChatsPage(next.pageIndex, next.pageSize, activeCategory)
+        },
+        [fetchChatsPage, isSearchMode, activeCategory],
+    )
+
+    // Track if this is the initial mount to avoid unnecessary fetches
+    const isInitialMount = useRef(true)
+    const hasAppliedCache = useRef(!!cachedFilters)
+    
+    // Update select value when active category changes
+    useEffect(() => {
         if (!activeCategory) {
             setCategorySelectValue("All")
         } else {
             setCategorySelectValue(activeCategory)
         }
     }, [activeCategory])
+    
+    // Apply cached filters on initial mount
+    useEffect(() => {
+        if (cachedFilters && hasAppliedCache.current) {
+            // If we have cached filters, fetch data with them instead of using initial data
+            void fetchChatsPage(
+                cachedFilters.pagination.pageIndex,
+                cachedFilters.pagination.pageSize,
+                cachedFilters.activeCategory
+            )
+            hasAppliedCache.current = false // Mark as applied
+        }
+        isInitialMount.current = false
+    }, [fetchChatsPage]) // Include fetchChatsPage to avoid stale closure
+    
+    // Fetch new data when category changes (but not on initial mount with initial data)
+    useEffect(() => {
+        // Skip on initial mount (we already have initial data or cached filters)
+        if (isInitialMount.current) {
+            return
+        }
+
+        // Skip if in search mode - category changes should exit search mode, but we handle that separately
+        // to avoid triggering this effect when ENTERING search mode
+        if (isSearchMode) {
+            console.log('[Category] Skipping category refetch - in search mode')
+            return
+        }
+
+        console.log('[Category] Category changed, refetching chats')
+        setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
+        void fetchChatsPage(0, paginationState.pageSize, activeCategory)
+    }, [activeCategory, isSearchMode, fetchChatsPage, paginationState.pageSize])
+
+    // Fetch new data when filters change
+    useEffect(() => {
+        // Skip on initial mount
+        if (isInitialMount.current) {
+            return
+        }
+
+        // Skip if this is search mode
+        if (isSearchMode) {
+            console.log('[Filters] Skipping filter refetch - in search mode')
+            return
+        }
+
+        const debounceMs = 350
+        const nextPageSize = paginationState.pageSize
+        const nextCategory = activeCategory
+
+        const timeoutId = window.setTimeout(() => {
+            console.log('[Filters] Filters changed, refetching chats:', {
+                filterUsername,
+                filterTitle,
+                filterChatType,
+                filterPlatform,
+                filterMinParticipants,
+                filterMaxParticipants,
+                filterLinkedChatUsername,
+                filterCategoryName
+            })
+            // When filters change, reset to first page and fetch with new filters
+            setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
+            void fetchChatsPage(0, nextPageSize, nextCategory)
+        }, debounceMs)
+
+        return () => window.clearTimeout(timeoutId)
+    }, [
+        filterUsername,
+        filterTitle,
+        filterChatType,
+        filterPlatform,
+        filterMinParticipants,
+        filterMaxParticipants,
+        filterLinkedChatUsername,
+        filterCategoryName,
+        isSearchMode,
+        paginationState.pageSize,
+        activeCategory,
+        fetchChatsPage
+    ])
 
     const handleCategoryCreated = (newCategory: CategoryRead) => {
         setCategories((prev) => [...prev, newCategory])
@@ -281,16 +609,10 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                 prevChat.id === chatId ? { ...prevChat, categories: updatedCategoryNames } : prevChat,
             ),
         )
-        setMasterChats((prevChats) =>
-            prevChats.map((prevChat) =>
-                prevChat.id === chatId ? { ...prevChat, categories: updatedCategoryNames } : prevChat,
-            ),
-        )
     }
 
     const removeChatFromState = (chatId: string) => {
         setChatData((prevChats) => prevChats.filter((chat) => chat.id !== chatId))
-        setMasterChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId))
     }
 
     const ensureCategoryByName = async (name: string): Promise<CategoryRead | null> => {
@@ -363,10 +685,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         if (!summary) {
             return undefined
         }
-        const match = summary.match(/Top topics:\s*(\[[^\]]*\])/i)
-        if (match && match[1]) {
-            return match[1]
-        }
+
         return summary
     }
 
@@ -417,7 +736,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
             }
 
             const categoryName = category.name ?? bulkCategoryInput.trim()
-            const client = new ServiceBrowserClient()
+            const client = serviceClientRef.current
 
             await Promise.all(
                 chatIds.map(async (chatId) => {
@@ -468,7 +787,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         }
 
         setIsRemovingBulkCategory(true)
-        const client = new ServiceBrowserClient()
+        const client = serviceClientRef.current
         try {
             await Promise.all(
                 chatIds.map(async (chatId) => {
@@ -480,7 +799,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                             .filter((value): value is string => typeof value === "string" && value.length > 0)
                             .map((value) => value.toLowerCase()),
                     )
-                    const updatedCategoryNames = existingCategories.filter((existing) => {
+                    const updatedCategoryNames = existingCategories.filter((existing: string) => {
                         const normalized = existing?.toString().toLowerCase()
                         return normalized ? !targetsToRemove.has(normalized) : true
                     })
@@ -510,7 +829,8 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         if (!query) {
             setIsSearchMode(false)
             setSearchResultCount(null)
-            setChatData(masterChats)
+            setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
+            void fetchChatsPage(0, paginationState.pageSize)
             return
         }
 
@@ -534,14 +854,51 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         setIsSearchingChats(true)
         try {
             const params = new URLSearchParams({ query })
+            
+            // Only send category_name when in "Search & add to category" mode
+            // This ensures we only call the add-to-category endpoint when explicitly requested
             if (isAddMode) {
                 params.set("category_name", searchCategoryName.trim())
             }
+            
             if (typeof topkNumber === "number") {
                 params.set("topk", topkNumber.toString())
             }
 
-            const response = await fetch(`/api/orchestrator/chats/search?${params.toString()}`)
+            // Add filter parameters
+            const filters = getCurrentFilters()
+            if (filters.username) {
+                params.set("username", filters.username)
+            }
+            if (filters.title) {
+                params.set("title", filters.title)
+            }
+            if (filters.chatType) {
+                params.set("chat_type", filters.chatType)
+            }
+            // Note: Search endpoint uses platform_id (number), not platform (string)
+            // So we skip platform filter for search
+            if (filters.minParticipants) {
+                params.set("min_participants", filters.minParticipants)
+            }
+            if (filters.maxParticipants) {
+                params.set("max_participants", filters.maxParticipants)
+            }
+            if (filters.linkedChatUsername) {
+                params.set("linked_chat_username", filters.linkedChatUsername)
+            }
+            // Use has_category for filtering by category (works in both search modes)
+            // This is different from category_name which is only used to ADD chats to a category
+            if (filters.categoryName) {
+                params.set("has_category", filters.categoryName)
+            }
+
+            // Add cache-busting parameter to ensure fresh results for different queries
+            params.set("_t", Date.now().toString())
+
+            const response = await fetch(`/api/orchestrator/chats/search?${params.toString()}`, {
+                cache: 'no-store',
+            })
             const rawPayload = await response.json().catch(() => [])
 
             if (!response.ok) {
@@ -552,9 +909,11 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
 
             const payload = (rawPayload ?? []) as (ChatView | ChatRead)[]
             const normalizedResults = payload.map((chat) => convertToChatView(chat))
+            
             setChatData(normalizedResults)
             setIsSearchMode(true)
             setSearchResultCount(normalizedResults.length)
+            setHasNextPage(false)
             if (isAddMode) {
                 toast.success(
                     `Added ${normalizedResults.length} chat${normalizedResults.length === 1 ? "" : "s"} to ${searchCategoryName.trim()}.`,
@@ -574,7 +933,8 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         setSearchQuery("")
         setIsSearchMode(false)
         setSearchResultCount(null)
-        setChatData(masterChats)
+        setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
+        void fetchChatsPage(0, paginationState.pageSize, activeCategory)
     }
 
     const handleDeleteChat = async (chatId: string, label?: string) => {
@@ -761,6 +1121,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                             onChangeValue={async (
                                 selectedCategories: { id: string; label: string }[],
                             ) => {
+                                const client = serviceClientRef.current
                                 const newCategories = selectedCategories.filter(
                                     (c: { id: string; label: string }) =>
                                         !chatCategories.some(
@@ -777,7 +1138,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                 try {
                                     for (const newCategory of newCategories) {
                                         try {
-                                            await new ServiceBrowserClient().updateChatCategories(
+                                        await client.updateChatCategories(
                                                 chat.id,
                                                 [newCategory.id],
                                                 [],
@@ -800,7 +1161,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                             )
                                         ) {
                                             try {
-                                                await new ServiceBrowserClient().updateChatCategories(
+                                            await client.updateChatCategories(
                                                     chat.id,
                                                     [],
                                                     [removedCategory.id],
@@ -844,11 +1205,11 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                 )
             },
         },
-        ...chatColumns.slice(5), // Include remaining columns (system_chat_members, linked_chat_username, id)
+        ...chatColumns.slice(5), 
         {
             id: "actions",
             header: "Actions",
-            size: 120,
+            size: 50,
             enableSorting: false,
             cell: ({ row }) => {
                 const chat = row.original
@@ -856,7 +1217,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                 return (
                     <div
                         onClick={(event) => event.stopPropagation()}
-                        className="flex justify-end"
+                        className="flex justify-center"
                     >
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -901,113 +1262,64 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         },
     ]
 
+    const manualPaginationEnabled = !isSearchMode
+    const tablePageSize = manualPaginationEnabled ? paginationState.pageSize : 10
+
+    const computedPageCount = manualPaginationEnabled
+        ? typeof totalCount === "number"
+            ? Math.max(1, Math.ceil(totalCount / paginationState.pageSize))
+            : hasNextPage
+                ? paginationState.pageIndex + 2 // Current page + at least one more
+                : paginationState.pageIndex + 1 // Only current page
+        : undefined
+
+    const actualDataLength = filteredChats.length
+    const estimatedTotal = manualPaginationEnabled && hasNextPage
+        ? paginationState.pageIndex * paginationState.pageSize + actualDataLength
+        : actualDataLength
+    const displayTotalItems = manualPaginationEnabled
+        ? totalCount ?? estimatedTotal
+        : chatData.length
+    
+    if (process.env.NODE_ENV === 'development') {
+        console.log('[Pagination Display]', {
+            manualPaginationEnabled,
+            hasNextPage,
+            pageIndex: paginationState.pageIndex,
+            pageSize: paginationState.pageSize,
+            actualDataLength,
+            estimatedTotal,
+            isSearchMode,
+        })
+    }
+
+    const selectedIds = useMemo(() => Array.from(persistentSelectedIds), [persistentSelectedIds])
+
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex flex-row items-center justify-between">
-                <div className="flex flex-row gap-2">
-                    <Label>Category</Label>
-                    <Select
-                        value={categorySelectValue}
-                        onValueChange={(value) => {
-                            setCategorySelectValue(value)
-                            if (value === "All") {
-                                setActiveCategory(null)
-                            } else {
-                                setActiveCategory(value)
-                            }
-                        }}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All</SelectItem>
-                            {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.name ?? category.id}>
-                                    {category.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <CreateCategoryDialog
-                        categories={categories}
-                        onCategoryCreated={handleCategoryCreated}
-                        onCategoryDeleted={handleCategoryDeleted}
-                    />
-                </div>
-            </div>
+
             <div className="flex flex-col gap-4">
                 <DataTable
                     columns={columnsWithCategorySelector}
                     data={filteredChats.map(mapChatViewToRow)}
+                    isRefreshing={isPageLoading || isSearchingChats}
+                    pageSize={tablePageSize}
+                    manualPagination={manualPaginationEnabled}
+                    externalPagination={manualPaginationEnabled ? paginationState : undefined}
+                    onExternalPaginationChange={
+                        manualPaginationEnabled ? handlePaginationChange : undefined
+                    }
+                    pageCount={computedPageCount}
+                    totalItems={displayTotalItems}
                     enableRowSelection
                     paginationPosition="top"
+                    getRowId={(row) => row.id}
+                    externalRowSelection={rowSelection}
+                    onRowSelectionChange={handleRowSelectionChange}
                     header={({ table }) => {
                         const selectedRows = table.getFilteredSelectedRowModel().rows
-                        const selectedIds = selectedRows.map((row) => row.original.id)
                         return (
                             <div className="flex w-full flex-col gap-4">
-                                <div className="flex flex-wrap gap-2">
-                                    <div>
-                                        <Input
-                                            placeholder="Filter by username or platform ID..."
-                                            value={
-                                                (table
-                                                    .getColumn("username")
-                                                    ?.getFilterValue() as string) ?? ""
-                                            }
-                                            onChange={(event) =>
-                                                table
-                                                    .getColumn("username")
-                                                    ?.setFilterValue(event.target.value)
-                                            }
-                                            className="max-w-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Input
-                                            placeholder="Search title: key words"
-                                            value={
-                                                (table
-                                                    .getColumn("title")
-                                                    ?.getFilterValue() as string) ?? ""
-                                            }
-                                            onChange={(event) =>
-                                                table
-                                                    .getColumn("title")
-                                                    ?.setFilterValue(event.target.value)
-                                            }
-                                            className="max-w-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Select
-                                            value={
-                                                (table.getColumn("type")?.getFilterValue() as string) ??
-                                                ""
-                                            }
-                                            onValueChange={(value) =>
-                                                table
-                                                    .getColumn("type")
-                                                    ?.setFilterValue(value === "All" ? "" : value)
-                                            }
-                                        >
-                                            <SelectTrigger className="max-w-sm">
-                                                <SelectValue placeholder="Filter by Chat type..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="All">All</SelectItem>
-                                                <SelectItem value="User">User</SelectItem>
-                                                <SelectItem value="Group">Group</SelectItem>
-                                                <SelectItem value="Channel">Channel</SelectItem>
-                                                <SelectItem value="Bot">Bot</SelectItem>
-                                                <SelectItem value="Unknown">Unknown</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Input
                                         placeholder="Search chats by keywords..."
@@ -1079,17 +1391,133 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                             Clear
                                         </Button>
                                     )}
-                                    {searchResultCount !== null && (
+                                    {isSearchMode && (
                                         <Badge variant="outline">
-                                            Showing {searchResultCount} result
-                                            {searchResultCount === 1 ? "" : "s"}
+                                            Showing {chatData.length} result
+                                            {chatData.length === 1 ? "" : "s"}
                                         </Badge>
                                     )}
                                 </div>
-                                {selectedRows.length > 0 && (
+
+                                {/* Filter Section */}
+                                <div className="rounded-md border bg-blue-50/40">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowFilters(!showFilters)}
+                                        className="w-full justify-between p-3 h-auto"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Filter className="h-4 w-4" />
+                                            <span className="text-sm font-medium">Advanced Filters</span>
+                                        </div>
+                                        {showFilters ? (
+                                            <ChevronUp className="h-4 w-4" />
+                                        ) : (
+                                            <ChevronDown className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                    {showFilters && (
+                                        <div className="p-3 pt-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Input
+                                                    placeholder="Username"
+                                                    value={filterUsername}
+                                                    onChange={(event) => setFilterUsername(event.target.value)}
+                                                    className="w-32"
+                                                />
+                                                <Input
+                                                    placeholder="Title contains"
+                                                    value={filterTitle}
+                                                    onChange={(event) => setFilterTitle(event.target.value)}
+                                                    className="w-36"
+                                                />
+                                    <Select
+                                        value={filterChatType}
+                                        onValueChange={(value) => setFilterChatType(value === "all" ? "" : value)}
+                                    >
+                                        <SelectTrigger className="w-32">
+                                            <SelectValue placeholder="Chat type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All types</SelectItem>
+                                            <SelectItem value="User">User</SelectItem>
+                                            <SelectItem value="Group">Group</SelectItem>
+                                            <SelectItem value="Channel">Channel</SelectItem>
+                                            <SelectItem value="Bot">Bot</SelectItem>
+                                            <SelectItem value="Unknown">Unknown</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                                <Input
+                                                    placeholder="Platform"
+                                                    value={filterPlatform}
+                                                    onChange={(event) => setFilterPlatform(event.target.value)}
+                                                    className="w-28"
+                                                />
+                                                <Input
+                                                    placeholder="Min participants"
+                                                    value={filterMinParticipants}
+                                                    onChange={(event) => setFilterMinParticipants(event.target.value)}
+                                                    className="w-32"
+                                                    inputMode="numeric"
+                                                />
+                                                <Input
+                                                    placeholder="Max participants"
+                                                    value={filterMaxParticipants}
+                                                    onChange={(event) => setFilterMaxParticipants(event.target.value)}
+                                                    className="w-32"
+                                                    inputMode="numeric"
+                                                />
+                                                <Input
+                                                    placeholder="Linked chat username"
+                                                    value={filterLinkedChatUsername}
+                                                    onChange={(event) => setFilterLinkedChatUsername(event.target.value)}
+                                                    className="w-44"
+                                                />
+                                                <div className="relative">
+                                                    <Input
+                                                        placeholder="Category name (optional)"
+                                                        value={filterCategoryName}
+                                                        onChange={(event) => setFilterCategoryName(event.target.value)}
+                                                        list={filterCategoryOptionsId}
+                                                        className="w-44"
+                                                    />
+                                                    <datalist id={filterCategoryOptionsId}>
+                                                        {categories
+                                                            .filter((category) => !!category.name)
+                                                            .map((category) => (
+                                                                <option key={category.id} value={category.name ?? ""} />
+                                                            ))}
+                                                    </datalist>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setFilterUsername("")
+                                                        setFilterTitle("")
+                                                        setFilterChatType("")
+                                                        setFilterPlatform("")
+                                                        setFilterMinParticipants("")
+                                                        setFilterMaxParticipants("")
+                                                        setFilterLinkedChatUsername("")
+                                                        setFilterCategoryName("")
+                                                        // Reset to first page with cleared filters
+                                                        setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
+                                                        void fetchChatsPage(0, paginationState.pageSize, activeCategory)
+                                                    }}
+                                                >
+                                                    Clear Filters
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {selectedIds.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/40 p-3">
                                         <Badge variant="secondary">
-                                            {selectedRows.length} selected
+                                            {selectedIds.length} selected
                                         </Badge>
                                         <Input
                                             placeholder="Category name"
@@ -1109,6 +1537,8 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                             size="sm"
                                             onClick={() =>
                                                 handleBulkApplyCategory(selectedIds, () => {
+                                                    // Clear persistent selection after applying
+                                                    setPersistentSelectedIds(new Set())
                                                     table.resetRowSelection()
                                                 })
                                             }
@@ -1132,6 +1562,8 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                             size="sm"
                                             onClick={() =>
                                                 handleBulkRemoveCategory(selectedIds, () => {
+                                                    // Clear persistent selection after removing
+                                                    setPersistentSelectedIds(new Set())
                                                     table.resetRowSelection()
                                                 })
                                             }
@@ -1153,14 +1585,80 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => table.toggleAllRowsSelected(true)}
+                                            onClick={async () => {
+                                                // Select all chats matching current filters across all pages
+                                                // This requires fetching all matching chats
+                                                setIsSelectingAllFiltered(true)
+                                                try {
+                                                    const allMatchingIds = new Set<string>()
+                                                    
+                                                    // Start from page 0 and fetch all pages
+                                                    let currentPage = 0
+                                                    let hasMore = true
+                                                    
+                                                    while (hasMore) {
+                                                        const filters = getCurrentFilters()
+                                                        const effectiveCategoryName = filters.categoryName || activeCategory || undefined
+                                                        const { categoryName: _, ...filtersWithoutCategory } = filters
+                                                        
+                                                        const { chats: pageChats, hasMore: pageHasMore } =
+                                                            await serviceClientRef.current.getOrchestratorChatsPage({
+                                                                pageIndex: currentPage,
+                                                                pageSize: 100, // Use larger page size for efficiency
+                                                                categoryName: effectiveCategoryName,
+                                                                ...filtersWithoutCategory,
+                                                            })
+                                                        
+                                                        pageChats.forEach((chat) => {
+                                                            allMatchingIds.add(chat.id)
+                                                        })
+                                                        
+                                                        hasMore = pageHasMore ?? false
+                                                        currentPage++
+                                                        
+                                                        // Safety limit to prevent infinite loops
+                                                        if (currentPage > 1000) {
+                                                            break
+                                                        }
+                                                    }
+                                                    
+                                                    // Update persistent selection with all matching IDs
+                                                    setPersistentSelectedIds((prev) => {
+                                                        const newSet = new Set(prev)
+                                                        allMatchingIds.forEach((id) => newSet.add(id))
+                                                        return newSet
+                                                    })
+                                                    
+                                                    toast.success(`Selected ${allMatchingIds.size} chat${allMatchingIds.size === 1 ? "" : "s"} matching current filters`)
+                                                    
+                                                    // Reload current page to show updated selection
+                                                    await fetchChatsPage(paginationState.pageIndex, paginationState.pageSize, activeCategory)
+                                                } catch (error) {
+                                                    console.error("Failed to select all filtered chats:", error)
+                                                    toast.error("Failed to select all filtered chats")
+                                                } finally {
+                                                    setIsSelectingAllFiltered(false)
+                                                }
+                                            }}
+                                            disabled={isSelectingAllFiltered}
                                         >
-                                            Select filtered
+                                            {isSelectingAllFiltered ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Selecting...
+                                                </>
+                                            ) : (
+                                                "Select all filtered"
+                                            )}
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => table.resetRowSelection()}
+                                            onClick={() => {
+                                                // Clear all persistent selections
+                                                setPersistentSelectedIds(new Set())
+                                                table.resetRowSelection()
+                                            }}
                                         >
                                             Clear selection
                                         </Button>

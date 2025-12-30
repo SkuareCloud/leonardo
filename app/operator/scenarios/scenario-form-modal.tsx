@@ -9,14 +9,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { Scenario } from "@lib/api/operator"
 import { PlayIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { ScenarioForm } from "./scenario-form"
 
 interface ScenarioFormModalProps {
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
     trigger?: React.ReactNode
     title?: string
     description?: string

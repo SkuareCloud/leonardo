@@ -10,9 +10,7 @@ import {
     PackageIcon,
     ScrollText,
     SpeechIcon,
-    Users2Icon,
-    // VenetianMask,
-    Waypoints
+    Users2Icon
 } from "lucide-react"
 import * as React from "react"
 
@@ -51,40 +49,40 @@ const data = {
                     url: "/orchestrator/missions",
                     icon: Crosshair,
                 },
-                // {
-                //   title: "Characters",
-                //   url: "/orchestrator/characters",
-                //   icon: VenetianMask,
-                // },
                 {
                     title: "Chats",
                     url: "/orchestrator/chats",
                     icon: MessagesSquare,
                 },
-            ],
-        },
-        {
-            title: "Avatars",
-            url: "#",
-            icon: Users2Icon,
-            items: [
                 {
                     title: "Avatars",
                     url: "/avatars/avatars",
                     icon: Users2Icon,
                 },
-                {
-                    title: "Proxies",
-                    url: "/avatars/proxies",
-                    icon: Waypoints,
-                },
-                // {
-                //     title: "Activation",
-                //     url: "/profiles/activation",
-                //     icon: ActivityIcon,
-                // },
             ],
         },
+        // {
+        //     title: "Avatars",
+        //     url: "#",
+        //     icon: Users2Icon,
+        //     items: [
+        //         {
+        //             title: "Avatars",
+        //             url: "/avatars/avatars",
+        //             icon: Users2Icon,
+        //         },
+        //         // {
+        //         //     title: "Proxies",
+        //         //     url: "/avatars/proxies",
+        //         //     icon: Waypoints,
+        //         // },
+        //         // {
+        //         //     title: "Activation",
+        //         //     url: "/profiles/activation",
+        //         //     icon: ActivityIcon,
+        //         // },
+        //     ],
+        // },
         {
             title: "Operator",
             url: "#",

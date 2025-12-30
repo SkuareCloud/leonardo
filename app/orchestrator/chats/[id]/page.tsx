@@ -1,6 +1,6 @@
 import { ApiService } from "@/app/api/lib/api_service"
 import { PageHeader } from "@/components/page-header"
-import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { AvatarRead } from "@lib/api/avatars"
 import { CategoryRead, CharacterRead, ChatRead } from "@lib/api/orchestrator"
 import { ServiceClient } from "@lib/service-client"
 import { notFound } from "next/navigation"
@@ -11,7 +11,7 @@ export default async function Page({ params }: { params: { id: string } }) {
     const apiService = new ApiService()
     const serviceClient = new ServiceClient()
     let chat: ChatRead
-    let allAvatars: AvatarModelWithProxy[]
+    let allAvatars: AvatarRead[]
     let characters: CharacterRead[]
     let allCategories: CategoryRead[]
     let chatCategories: CategoryRead[]

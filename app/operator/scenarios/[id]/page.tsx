@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { ScenarioWithResult } from "@lib/api/operator/types.gen"
 import { ServiceClient } from "@lib/service-client"
 import { ClockIcon, FlagIcon } from "lucide-react"
@@ -32,7 +32,7 @@ export default async function ScenarioPage({ params }: { params: { id: string } 
 
     const serviceClient = new ServiceClient()
     const scenario: ScenarioWithResult | null = await serviceClient.getOperatorScenarioById(id)
-    const avatars: AvatarModelWithProxy[] = await serviceClient.getAvatars()
+    const avatars: AvatarRead[] = await serviceClient.getAvatars()
 
     if (!scenario) {
         throw new Error("Scenario not found")

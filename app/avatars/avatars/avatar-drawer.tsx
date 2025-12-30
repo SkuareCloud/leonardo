@@ -1,9 +1,7 @@
 "use client"
 
 import TelegramIcon from "@/assets/telegram.svg"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
     Dialog,
     DialogContent,
@@ -22,9 +20,9 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { AvatarRead } from "@lib/api/avatars"
 import { logger } from "@lib/logger"
-import { getSocialNetworkStatus } from "@lib/profile-utils"
+import { getAvatarDisplayName } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
@@ -32,7 +30,6 @@ import { Loader2, Settings, X } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { ActivationDialog } from "./activation-dialog"
-import { getBadgeClassNamesByActivationSource } from "./avatars-utils"
 import { Proxy } from "./proxy"
 
 function LoadingInputField({
@@ -93,6 +90,7 @@ function LoadingInputField({
                 </div>
                 {error && <span className="text-sm text-red-500">{error}</span>}
             </div>
+            {error && <span className="text-sm text-red-500">{error}</span>}
         </div>
     )
 }
@@ -182,28 +180,40 @@ export function AvatarDrawer({
     refreshAvatar,
     onClose,
 }: {
-    avatar: AvatarModelWithProxy
-    avatarsList: AvatarModelWithProxy[]
-    updateField: (path: string, value: any) => Promise<void>
-    refreshAvatar: () => Promise<AvatarModelWithProxy>
+    avatar: AvatarRead
+    avatarsList: AvatarRead[]
+    updateField: (path: string, value: unknown) => Promise<void>
+    refreshAvatar: () => Promise<AvatarRead>
     onClose: () => void
 }) {
     // Unique geodata models
     const allGeocodes: string[] = avatarsList
         .map((av) => ({
-            home_city: av.home_city,
-            iso_3166_1_alpha_2_code: av.home_iso_3166_1_alpha_2_code,
-            iso_3166_2_subdivision_code: av.home_iso_3166_2_subdivision_code,
-            continent_code: av.home_continent_code,
-            key: `${av.home_city}, ${av.home_iso_3166_1_alpha_2_code} (${av.home_iso_3166_2_subdivision_code})`,
+            city: av.address?.city || "",
+            iso_3166_1_alpha_2_code: av.address?.iso_3166_1_alpha_2_code || "",
+            iso_3166_2_subdivision_code: av.address?.iso_3166_2_subdivision_code || "",
+            country: av.address?.country || "",
+            key: `${av.address?.city || "Unknown"}, ${av.address?.iso_3166_1_alpha_2_code || "--"} (${av.address?.iso_3166_2_subdivision_code || "--"})`,
         }))
-        // unique
-        .filter((geocode, index, self) => index === self.findIndex((g) => g.key === geocode.key))
+        .filter((geocode, index, self) => geocode.city && index === self.findIndex((g) => g.key === geocode.key))
         .sort((a, b) => a.iso_3166_1_alpha_2_code.localeCompare(b.iso_3166_1_alpha_2_code))
         .map(
             (geoCode) =>
-                `${geoCode.home_city}|${geoCode.iso_3166_1_alpha_2_code}|${geoCode.iso_3166_2_subdivision_code}|${geoCode.continent_code}`,
+                `${geoCode.city}|${geoCode.iso_3166_1_alpha_2_code}|${geoCode.iso_3166_2_subdivision_code}|${geoCode.country}`,
         )
+
+    const displayName = getAvatarDisplayName(avatar)
+
+    const handleNameUpdate = async (value: string) => {
+        const trimmed = value.trim()
+        if (!trimmed) {
+            await Promise.all([updateField("first_name", ""), updateField("last_name", "")])
+            return
+        }
+        const [first, ...rest] = trimmed.split(/\s+/)
+        await updateField("first_name", first)
+        await updateField("last_name", rest.join(" "))
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex">
@@ -217,12 +227,12 @@ export function AvatarDrawer({
                     <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                             <span className="text-primary text-lg font-semibold">
-                                {(avatar.data?.eliza_character as any)?.name?.charAt(0) || "A"}
+                                {displayName.charAt(0) || "A"}
                             </span>
                         </div>
                         <div>
                             <h1 className="text-xl font-bold">
-                                {(avatar.data?.eliza_character as any)?.name || "Unnamed Avatar"}
+                                {displayName}
                             </h1>
                             <p className="text-muted-foreground text-sm">Avatar Details</p>
                         </div>
@@ -239,7 +249,7 @@ export function AvatarDrawer({
                                     <DialogTitle>Avatar Settings</DialogTitle>
                                     <DialogDescription>
                                         Configure additional settings for this avatar. Make changes
-                                        and click save when you're done.
+                                        and click save when you&apos;re done.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
@@ -249,9 +259,7 @@ export function AvatarDrawer({
                                         </Label>
                                         <Input
                                             id="nickname"
-                                            defaultValue={
-                                                (avatar.data?.eliza_character as any)?.name || ""
-                                            }
+                                            defaultValue={displayName}
                                             className="col-span-3"
                                         />
                                     </div>
@@ -293,11 +301,6 @@ export function AvatarDrawer({
                                         {avatar.id}
                                     </code>
                                 </BasicFieldSection>
-                                <BasicFieldSection label="PIR ID" oneline>
-                                    <code className="bg-muted rounded px-2 py-1 text-sm">
-                                        {avatar.pir_id}
-                                    </code>
-                                </BasicFieldSection>
                             </div>
                         </div>
 
@@ -314,26 +317,26 @@ export function AvatarDrawer({
                                 label="Name"
                                 isLoading={false}
                                 error={null}
-                                value={(avatar.data.eliza_character as any)?.name || ""}
-                                updateField={(value) => updateField("eliza_character.name", value)}
+                                value={displayName}
+                                updateField={handleNameUpdate}
                             />
 
                             <LoadingSelectField
                                 id="geocode"
-                                value={`${avatar.home_city}|${avatar.home_iso_3166_1_alpha_2_code}|${avatar.home_iso_3166_2_subdivision_code}|${avatar.home_continent_code}`}
-                                label="Geocode"
+                                value={`${avatar.address?.city || ""}|${avatar.address?.iso_3166_1_alpha_2_code || ""}|${avatar.address?.iso_3166_2_subdivision_code || ""}|${avatar.address?.country || ""}`}
+                                label="Location"
                                 choices={allGeocodes}
                                 updateField={async (value) => {
-                                    const parts = value.split("|")
-                                    const [homeCity, geocode, subdivision, continent] = parts
+                                    const [city, isoCode, subdivision, country] = value.split("|")
                                     logger.info(
-                                        `Updating home address to city: ${homeCity}, ISO: ${geocode}, subdivision: ${subdivision}...`,
+                                        `Updating address to city: ${city}, ISO: ${isoCode}, subdivision: ${subdivision}...`,
                                     )
-                                    await updateField("addresses.home", {
-                                        city: homeCity,
-                                        iso_3166_1_alpha_2_code: geocode,
+                                    await updateField("address", {
+                                        ...avatar.address,
+                                        city,
+                                        iso_3166_1_alpha_2_code: isoCode,
                                         iso_3166_2_subdivision_code: subdivision,
-                                        continent_code: continent,
+                                        country,
                                     })
                                     logger.info("Successfully updated address.")
                                     logger.info(`Assigning proxy to profile ID: ${avatar.id}...`)
@@ -342,12 +345,11 @@ export function AvatarDrawer({
                                     await refreshAvatar()
                                 }}
                                 choiceRenderer={(choice) => {
-                                    const parts = choice.split("|")
-                                    const [homeCity, geocode] = parts
-                                    const flag = geocode && getUnicodeFlagIcon(geocode)
+                                    const [city, isoCode] = choice.split("|")
+                                    const flag = isoCode && getUnicodeFlagIcon(isoCode)
                                     return (
                                         <span>
-                                            {flag} {homeCity} ({geocode})
+                                            {flag} {city} ({isoCode})
                                         </span>
                                     )
                                 }}
@@ -359,7 +361,9 @@ export function AvatarDrawer({
 
                             <BasicFieldSection label="Date of Birth">
                                 <span className="bg-muted rounded px-2 py-1 text-sm">
-                                    {new Date(avatar.data?.date_of_birth as string).toDateString()}
+                                    {avatar.birth_date
+                                        ? new Date(avatar.birth_date).toDateString()
+                                        : "Unknown"}
                                 </span>
                             </BasicFieldSection>
 
@@ -368,37 +372,10 @@ export function AvatarDrawer({
                                 label="Phone Number"
                                 isLoading={false}
                                 error={null}
-                                value={(avatar.data?.phone_number as string) || ""}
+                                value={avatar.phone_number || ""}
                                 updateField={(value) => updateField("phone_number", value)}
                             />
 
-                            <LoadingSelectField
-                                id="activation_source"
-                                value={
-                                    (
-                                        avatar.data?.social_network_accounts as any
-                                    )?.telegram?.activation_source?.toUpperCase() || "NONE"
-                                }
-                                label="Activation Source"
-                                choices={["WEB1", "WEB2", "UNKNOWN"]}
-                                updateField={(value) =>
-                                    updateField(
-                                        "social_network_accounts.telegram.activation_source",
-                                        value.toLowerCase(),
-                                    )
-                                }
-                                choiceRenderer={(choice) => (
-                                    <Badge
-                                        variant="outline"
-                                        className={cn(
-                                            "font-bold tracking-wide",
-                                            getBadgeClassNamesByActivationSource(choice),
-                                        )}
-                                    >
-                                        {choice}
-                                    </Badge>
-                                )}
-                            />
                         </div>
 
                         <Separator />
@@ -406,31 +383,19 @@ export function AvatarDrawer({
                         {/* Social Networks Section */}
                         <div className="space-y-4">
                             <h2 className="text-foreground text-lg font-semibold">
-                                Social Networks
+                                Social Accounts
                             </h2>
-                            {(() => {
-                                const socialStatus = getSocialNetworkStatus(avatar)
-                                const networks = Object.entries(socialStatus)
-
-                                if (networks.length === 0) {
-                                    return (
-                                        <div className="py-8 text-center">
-                                            <div className="text-muted-foreground text-sm">
-                                                No social networks configured
-                                            </div>
-                                        </div>
-                                    )
-                                }
-
-                                return (
-                                    <div className="space-y-3">
-                                        {networks.map(([network, isActive]) => (
+                            {avatar.social_media_accounts && avatar.social_media_accounts.length > 0 ? (
+                                <div className="space-y-3">
+                                    {avatar.social_media_accounts.map((account) => {
+                                        const isActive = account.active === true
+                                        return (
                                             <div
-                                                key={network}
+                                                key={`${account.platform}-${account.username}`}
                                                 className="bg-card flex items-center justify-between rounded-lg border p-4"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    {network === "telegram" && (
+                                                    {account.platform === "telegram" && (
                                                         <div
                                                             className={cn(
                                                                 "flex size-8 items-center justify-center",
@@ -448,7 +413,10 @@ export function AvatarDrawer({
                                                     )}
                                                     <div className="flex flex-col">
                                                         <span className="font-medium capitalize">
-                                                            {network}
+                                                            {account.platform}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            @{account.username}
                                                         </span>
                                                         <span
                                                             className={`text-sm ${isActive ? "text-green-600" : "text-red-600"}`}
@@ -457,34 +425,26 @@ export function AvatarDrawer({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Checkbox
-                                                        checked={isActive}
-                                                        onCheckedChange={async (checked) => {
-                                                            const newStatus = checked
-                                                                ? "active"
-                                                                : "inactive"
-                                                            await updateField(
-                                                                `social_network_accounts.${network}.active`,
-                                                                checked,
-                                                            )
+                                                {!isActive && account.platform === "telegram" && (
+                                                    <ActivationDialog
+                                                        network={account.platform}
+                                                        avatarId={avatar.id}
+                                                        onActivationComplete={async () => {
+                                                            await refreshAvatar()
                                                         }}
                                                     />
-                                                    {!isActive && (
-                                                        <ActivationDialog
-                                                            network={network}
-                                                            avatarId={avatar.id}
-                                                            onActivationComplete={async () => {
-                                                                await refreshAvatar()
-                                                            }}
-                                                        />
-                                                    )}
-                                                </div>
+                                                )}
                                             </div>
-                                        ))}
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="py-8 text-center">
+                                    <div className="text-muted-foreground text-sm">
+                                        No social networks configured
                                     </div>
-                                )
-                            })()}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import { read_server_env, ServerEnv } from "@lib/server-env"
-import { AvatarModelWithProxy } from "./api/avatars/types.gen"
+import { AvatarRead } from "./api/avatars/types.gen"
 import { CombinedAvatar, zCombinedAvatar } from "./api/models"
 import { Scenario, ScenarioWithResult } from "./api/operator/types.gen"
 import { ScenarioRead } from "./api/orchestrator/types.gen"
@@ -44,7 +44,7 @@ export class ServiceClient {
     async assignWeb1Account(allProfiles: CombinedAvatar[]): Promise<Web1Account | null> {
         const accounts = await this.listWeb1Accounts()
         const allProfilePhoneNumbers = new Set(
-            allProfiles.map((profile) => profile.avatar.data.phone_number),
+            allProfiles.map((profile) => profile.avatar.phone_number),
         )
         const selectedAccount = accounts.find(
             (account) =>
@@ -75,9 +75,34 @@ export class ServiceClient {
         return response.json()
     }
 
-    async getAvatars(): Promise<Array<AvatarModelWithProxy>> {
-        const response = await fetch(`${this.env.serverUrl}/api/avatars/avatars`)
-        return response.json()
+    async getAvatars(): Promise<Array<AvatarRead>> {
+        const url = `${this.env.serverUrl}/api/avatars/avatars`
+        logger.info(`[DEBUG] ServiceClient.getAvatars - fetching from URL: ${url}`)
+        logger.info(`[DEBUG] ServiceClient.getAvatars - serverUrl: ${this.env.serverUrl}`)
+        
+        try {
+            const response = await fetch(url)
+            logger.info(`[DEBUG] ServiceClient.getAvatars - Response status: ${response.status}`)
+            logger.info(`[DEBUG] ServiceClient.getAvatars - Response ok: ${response.ok}`)
+            
+            if (!response.ok) {
+                const errorText = await response.text()
+                logger.error(`[DEBUG] ServiceClient.getAvatars - Error response: ${errorText}`)
+                throw new Error(`Failed to fetch avatars: ${response.status} ${response.statusText} - ${errorText}`)
+            }
+            
+            const data = await response.json()
+            logger.info(`[DEBUG] ServiceClient.getAvatars - Data length: ${Array.isArray(data) ? data.length : 'not an array'}`)
+            return data
+        } catch (error) {
+            logger.error(`[DEBUG] ServiceClient.getAvatars - Exception: ${error}`)
+            logger.error(`[DEBUG] ServiceClient.getAvatars - Error type: ${error instanceof Error ? error.constructor.name : typeof error}`)
+            logger.error(`[DEBUG] ServiceClient.getAvatars - Error message: ${error instanceof Error ? error.message : String(error)}`)
+            if (error instanceof Error && 'cause' in error) {
+                logger.error(`[DEBUG] ServiceClient.getAvatars - Error cause: ${JSON.stringify(error.cause)}`)
+            }
+            throw error
+        }
     }
 
     async getOrchestratorScenarioById(scenarioId: string): Promise<ScenarioRead | null> {

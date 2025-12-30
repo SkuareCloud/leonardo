@@ -16,7 +16,7 @@ export class ServerSettings {
 
     private constructor() {
         this.instanceId = Math.random().toString(36).substr(2, 9)
-        logger.info("Creating new ServerSettings instance with ID:", this.instanceId)
+        logger.info(`Creating new ServerSettings instance with ID: ${this.instanceId}`)
         this.operatorSettings = {
             operatorSlot: 1,
             maxSlots: 1,
@@ -42,22 +42,12 @@ export class ServerSettings {
     }
 
     public getOperatorSettings(): OperatorSettings {
-        logger.info(
-            "Getting operator settings from instance",
-            this.instanceId + ":",
-            this.operatorSettings,
-        )
+        logger.info(`Getting operator settings from instance ${this.instanceId}: ${JSON.stringify(this.operatorSettings)}`)
         return this.operatorSettings
     }
 
     public setOperatorSettings(settings: OperatorSettings): void {
-        logger.info(
-            "Setting operator settings in instance",
-            this.instanceId + " from:",
-            this.operatorSettings,
-            "to:",
-            settings,
-        )
+        logger.info(`Setting operator settings in instance ${this.instanceId} from: ${JSON.stringify(this.operatorSettings)} to: ${JSON.stringify(settings)}`)
         this.operatorSettings = { ...this.operatorSettings, ...settings }
     }
 

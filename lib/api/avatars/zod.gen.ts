@@ -2,250 +2,1294 @@
 
 import { z } from 'zod';
 
-export const zAvatarBase = z.object({
-    data: z.object({})
-});
-
-export const zProxyType = z.enum([
-    'socks4',
-    'socks4a',
-    'socks5',
-    'socks5h',
-    'https',
-    'http'
+/**
+ * Type
+ */
+export const zType = z.enum([
+    'send_message',
+    'send_bulk_messages',
+    'join_group',
+    'leave_group',
+    'reply_to_message',
+    'forward_message',
+    'behavioural',
+    'read_messages',
+    'resolve_phone',
+    'interact_with_tweet',
+    'scroll_feed',
+    'close_browser',
+    'publish_post'
 ]);
 
-export const zProxy = z.object({
-    name: z.string(),
-    type: zProxyType,
-    ip_address: z.union([
-        z.string().ip(),
-        z.null()
-    ]).optional(),
-    fqdn: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    port: z.number().int(),
-    username: z.string(),
-    password: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    remarks: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    last_ping_remarks: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    id: z.string().uuid(),
-    ip_api_data: z.union([
-        z.object({}),
-        z.null()
-    ]),
-    status: z.string(),
-    city: z.union([
-        z.string(),
-        z.null()
-    ]),
-    iso_3166_1_alpha_2_code: z.union([
-        z.string(),
-        z.null()
-    ]),
-    iso_3166_2_subdivision_code: z.union([
-        z.string(),
-        z.null()
-    ]),
-    continent_code: z.union([
-        z.string(),
-        z.null()
-    ]),
-    timezone: z.union([
-        z.string(),
-        z.null()
-    ]),
-    status_is_success: z.boolean()
+/**
+ * Platform
+ */
+export const zPlatform = z.enum([
+    'telegram',
+    'twitter'
+]);
+
+/**
+ * ScrollFeedArgs
+ */
+export const zScrollFeedArgs = z.object({
+    url: z.string().optional(),
+    scroll_count: z.number().int().optional(),
+    wait_time_after_scroll_in_seconds: z.number().int().optional()
 });
 
-export const zAvatarModelWithProxy = z.object({
-    id: z.string().uuid(),
-    data: z.object({}),
-    pir_id: z.string().uuid(),
-    home_continent_code: z.string(),
-    home_iso_3166_1_alpha_2_code: z.string(),
-    home_iso_3166_2_subdivision_code: z.string(),
-    home_city: z.string(),
-    proxy: z.union([
-        zProxy,
-        z.null()
+/**
+ * ChatType
+ */
+export const zChatType = z.enum([
+    'User',
+    'Group',
+    'Channel',
+    'Bot',
+    'Unknown'
+]);
+
+/**
+ * ChatInfo
+ */
+export const zChatInfo = z.object({
+    id: z.number().int().optional(),
+    name: z.string().optional(),
+    phone_number: z.string().optional(),
+    title: z.string().optional(),
+    type: zChatType.optional(),
+    description: z.string().optional(),
+    read_inbox_max_id: z.number().int().optional(),
+    read_outbox_max_id: z.number().int().optional(),
+    unread_count: z.number().int().optional(),
+    unread_mentions_count: z.number().int().optional(),
+    unread_reactions_count: z.number().int().optional()
+});
+
+/**
+ * Attachment
+ */
+export const zAttachment = z.object({
+    url: z.string(),
+    name: z.string().optional(),
+    mime_type: z.string().optional()
+});
+
+/**
+ * InputMessage
+ */
+export const zInputMessage = z.object({
+    text: z.string().optional(),
+    attachments: z.array(zAttachment).optional()
+});
+
+/**
+ * SendMessageArgs
+ */
+export const zSendMessageArgsInput = z.object({
+    chat: zChatInfo,
+    input_message_content: zInputMessage
+});
+
+/**
+ * SendBulkMessagesArgs
+ */
+export const zSendBulkMessagesArgsInput = z.object({
+    chat: zChatInfo,
+    messages: z.array(z.string()),
+    interval: z.number().optional()
+});
+
+/**
+ * JoinGroupArgs
+ */
+export const zJoinGroupArgsInput = z.object({
+    chat: zChatInfo.optional(),
+    join_discussion_group_if_availble: z.boolean().optional(),
+    invite_link: z.string().optional()
+});
+
+/**
+ * LeaveGroupArgs
+ */
+export const zLeaveGroupArgsInput = z.object({
+    chat: zChatInfo
+});
+
+/**
+ * MessageInfo
+ */
+export const zMessageInfo = z.object({
+    timestamp: z.string(),
+    peer_id: z.string().optional(),
+    from_id: z.string().optional(),
+    text_hash: z.string().optional(),
+    message_id: z.string().optional(),
+    viewer_id: z.string().optional()
+});
+
+/**
+ * ReplyToMessageArgs
+ */
+export const zReplyToMessageArgsInput = z.object({
+    chat: zChatInfo.optional(),
+    message_info: zMessageInfo.optional(),
+    input_message_content: zInputMessage,
+    message_link: z.string().optional()
+});
+
+/**
+ * ForwardMessageArgs
+ */
+export const zForwardMessageArgsInput = z.object({
+    from_chat: zChatInfo.optional(),
+    message_info: zMessageInfo.optional(),
+    target_chat: zChatInfo,
+    message: zInputMessage.optional(),
+    message_link: z.string().optional()
+});
+
+/**
+ * SyncPersonalDetailsArgs
+ */
+export const zSyncPersonalDetailsArgs = z.object({
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    bio: z.string().optional(),
+    username: z.string().optional()
+});
+
+/**
+ * BehaviouralArgs
+ */
+export const zBehaviouralArgs = z.object({
+    wait_time: z.number().int().optional(),
+    sync_context: z.boolean().optional(),
+    get_chats: z.boolean().optional(),
+    sync_personal_details: zSyncPersonalDetailsArgs.optional(),
+    disable_auto_download_media: z.boolean().optional(),
+    delete_all_active_sessions: z.boolean().optional(),
+    get_unread_messages: z.boolean().optional()
+});
+
+/**
+ * ReadMessagesArgs
+ */
+export const zReadMessagesArgsInput = z.object({
+    chat: zChatInfo,
+    amount_messages: z.number().int().optional(),
+    read_all_in_end: z.boolean().optional()
+});
+
+/**
+ * ResolvePhoneArgs
+ */
+export const zResolvePhoneArgs = z.object({
+    phone_number: z.string()
+});
+
+/**
+ * TweetContent
+ */
+export const zTweetContent = z.object({
+    text: z.string(),
+    media: z.array(z.string()).optional()
+});
+
+/**
+ * TweetInteraction
+ */
+export const zTweetInteraction = z.object({
+    like: z.boolean().optional(),
+    retweet: z.boolean().optional(),
+    bookmark: z.boolean().optional(),
+    reply: zTweetContent.optional(),
+    quote: zTweetContent.optional()
+});
+
+/**
+ * InteractWithTweetArgs
+ */
+export const zInteractWithTweetArgsInput = z.object({
+    url: z.string(),
+    interaction: zTweetInteraction
+});
+
+/**
+ * InteractWithTweetByTweetIdArgs
+ */
+export const zInteractWithTweetByTweetIdArgsInput = z.object({
+    tweet_id: z.number().int(),
+    interaction: zTweetInteraction
+});
+
+/**
+ * CloseBrowserArgs
+ */
+export const zCloseBrowserArgs = z.object({});
+
+/**
+ * ActionStatusCode
+ */
+export const zActionStatusCode = z.enum([
+    'success',
+    'failed',
+    'cancelled',
+    'fail_fast',
+    'running',
+    'pending'
+]);
+
+/**
+ * ActionErrorCode
+ */
+export const zActionErrorCode = z.enum([
+    'chat_not_found',
+    'general_error',
+    'account_muted',
+    'send_message_error',
+    'message_deleted',
+    'sending_attachment_error',
+    'did_not_find_message_after_sending',
+    'username_not_valid',
+    'failed_to_download_attachment',
+    'join_group_chat_type_user',
+    'account_in_slow_mode',
+    'timeout',
+    'tweet_does_not_exist',
+    'tweet_is_unavailable',
+    'tweet_page_load_failed'
+]);
+
+/**
+ * ActionStatus
+ */
+export const zActionStatus = z.object({
+    status_code: zActionStatusCode,
+    error: z.string().optional(),
+    error_code: zActionErrorCode.optional()
+});
+
+/**
+ * Url
+ */
+export const zUrl = z.object({
+    indices: z.array(z.number().int()),
+    link: z.string(),
+    text: z.string()
+});
+
+/**
+ * Hashtag
+ */
+export const zHashtag = z.object({
+    indices: z.array(z.number().int()),
+    text: z.string()
+});
+
+/**
+ * Cashtag
+ */
+export const zCashtag = z.object({
+    indices: z.array(z.number().int()),
+    text: z.string()
+});
+
+/**
+ * Mention
+ */
+export const zMention = z.object({
+    indices: z.array(z.number().int()),
+    text: z.string()
+});
+
+/**
+ * Entities
+ */
+export const zEntities = z.object({
+    urls: z.array(zUrl).optional(),
+    hashtags: z.array(zHashtag).optional(),
+    cashtags: z.array(zCashtag).optional(),
+    mentions: z.array(zMention).optional()
+});
+
+/**
+ * PublicMetrics
+ */
+export const zPublicMetrics = z.object({
+    retweet_count: z.number().int().optional(),
+    reply_count: z.number().int().optional(),
+    like_count: z.number().int().optional(),
+    quote_count: z.number().int().optional(),
+    bookmark_count: z.number().int().optional(),
+    impression_count: z.number().int().optional()
+});
+
+/**
+ * Tweet
+ */
+export const zTweetInput = z.object({
+    tweet_id: z.number().int(),
+    author_id: z.number().int().optional(),
+    author_name: z.string().optional(),
+    author_username: z.string().optional(),
+    creation_date: z.string().optional(),
+    text: z.string(),
+    entities: zEntities.optional(),
+    public_metrics: zPublicMetrics.optional(),
+    geo: z.object({}).optional(),
+    in_reply_to_status_id: z.number().int().optional(),
+    in_reply_to_user_id: z.number().int().optional(),
+    quoted_status_id: z.number().int().optional(),
+    is_quote_status: z.boolean().optional(),
+    retweeted: z.boolean().optional(),
+    possibly_sensitive: z.boolean().optional(),
+    lang: z.string().optional(),
+    referenced_tweets: z.array(z.object({})).optional(),
+    public_metrics_samples: z.array(zPublicMetrics).optional()
+});
+
+/**
+ * ScrollFeedResponseContent
+ */
+export const zScrollFeedResponseContentInput = z.object({
+    tweets_collected: z.array(zTweetInput)
+});
+
+/**
+ * TweetInteractionStatus
+ */
+export const zTweetInteractionStatus = z.enum([
+    'success',
+    'failed',
+    'already_done'
+]);
+
+/**
+ * TweetInteractionResult
+ */
+export const zTweetInteractionResult = z.object({
+    like: zTweetInteractionStatus.optional(),
+    retweet: zTweetInteractionStatus.optional(),
+    bookmark: zTweetInteractionStatus.optional(),
+    reply: zTweetInteractionStatus.optional(),
+    reply_tweet_id: z.number().int().optional(),
+    quote: zTweetInteractionStatus.optional(),
+    quote_tweet_id: z.number().int().optional()
+});
+
+/**
+ * InteractWithTweetResponseContent
+ */
+export const zInteractWithTweetResponseContentInput = z.object({
+    interaction_result: zTweetInteractionResult
+});
+
+/**
+ * SendMessageResponseContent
+ */
+export const zSendMessageResponseContent = z.object({
+    message_info: zMessageInfo
+});
+
+/**
+ * ReplyToMessageResponseContent
+ */
+export const zReplyToMessageResponseContent = z.object({
+    message_info: zMessageInfo
+});
+
+/**
+ * LeaveGroupResponseContent
+ */
+export const zLeaveGroupResponseContent = z.object({});
+
+/**
+ * ChannelInfo
+ */
+export const zChannelInfo = z.object({
+    id: z.number().int().optional(),
+    name: z.string().optional(),
+    phone_number: z.string().optional(),
+    title: z.string().optional(),
+    type: zChatType.optional(),
+    description: z.string().optional(),
+    read_inbox_max_id: z.number().int().optional(),
+    read_outbox_max_id: z.number().int().optional(),
+    unread_count: z.number().int().optional(),
+    unread_mentions_count: z.number().int().optional(),
+    unread_reactions_count: z.number().int().optional(),
+    subscribers: z.number().int().optional()
+});
+
+/**
+ * GroupInfo
+ */
+export const zGroupInfo = z.object({
+    id: z.number().int().optional(),
+    name: z.string().optional(),
+    phone_number: z.string().optional(),
+    title: z.string().optional(),
+    type: zChatType.optional(),
+    description: z.string().optional(),
+    read_inbox_max_id: z.number().int().optional(),
+    read_outbox_max_id: z.number().int().optional(),
+    unread_count: z.number().int().optional(),
+    unread_mentions_count: z.number().int().optional(),
+    unread_reactions_count: z.number().int().optional(),
+    members: z.number().int().optional(),
+    online: z.number().int().optional()
+});
+
+/**
+ * JoinGroupResponseContent
+ */
+export const zJoinGroupResponseContentInput = z.object({
+    chat_info: z.union([
+        zChannelInfo,
+        zGroupInfo
+    ]),
+    discussion_group_chat_info: z.union([
+        zChannelInfo,
+        zGroupInfo
     ])
 });
 
-export const zValidationError = z.object({
-    loc: z.array(z.unknown()),
-    msg: z.string(),
-    type: z.string()
+/**
+ * ForwardMessageResponseContent
+ */
+export const zForwardMessageResponseContent = z.object({
+    message_info: zMessageInfo
 });
 
-export const zHttpValidationError = z.object({
-    detail: z.array(zValidationError).optional()
+/**
+ * BehaviouralResponseContent
+ */
+export const zBehaviouralResponseContentInput = z.object({
+    current_context: z.unknown().optional(),
+    chats: z.array(z.union([
+        zGroupInfo,
+        zChannelInfo
+    ])).optional(),
+    personal_details_synced: z.boolean().optional(),
+    auto_download_media_disabled: z.boolean().optional(),
+    all_active_sessions_deleted: z.boolean().optional(),
+    unread_messages: z.array(zChatInfo).optional()
 });
 
-export const zPir = z.object({
-    parent_pir_id: z.union([
-        z.string().uuid(),
-        z.null()
-    ]).optional(),
-    name: z.string(),
-    id: z.string().uuid()
+/**
+ * SendBulkMessagesResponseContent
+ */
+export const zSendBulkMessagesResponseContent = z.object({
+    message_infos: z.array(zMessageInfo)
 });
 
-export const zPatchAvatar = z.object({
-    path: z.array(z.string()),
-    new_value: z.union([
-        z.unknown(),
-        z.null()
-    ]).optional()
+/**
+ * ReadMessagesResponseContent
+ */
+export const zReadMessagesResponseContent = z.object({
+    messages_read: z.number().int()
 });
 
-export const zPirBase = z.object({
-    parent_pir_id: z.union([
-        z.string().uuid(),
-        z.null()
-    ]).optional(),
-    name: z.string()
+/**
+ * UserInfo
+ */
+export const zUserInfo = z.object({
+    id: z.number().int().optional(),
+    name: z.string().optional(),
+    phone_number: z.string().optional(),
+    title: z.string().optional(),
+    type: zChatType.optional(),
+    description: z.string().optional(),
+    read_inbox_max_id: z.number().int().optional(),
+    read_outbox_max_id: z.number().int().optional(),
+    unread_count: z.number().int().optional(),
+    unread_mentions_count: z.number().int().optional(),
+    unread_reactions_count: z.number().int().optional(),
+    subtitle: z.string().optional()
 });
 
-export const zProxyBase = z.object({
-    name: z.string(),
-    type: zProxyType,
-    ip_address: z.union([
-        z.string().ip(),
-        z.null()
-    ]).optional(),
-    fqdn: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    port: z.number().int(),
-    username: z.string(),
-    password: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    remarks: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    last_ping_remarks: z.union([
-        z.string(),
-        z.null()
-    ]).optional()
+/**
+ * ResolvePhoneResponseContent
+ */
+export const zResolvePhoneResponseContentInput = z.object({
+    user_info: zUserInfo.optional(),
+    error: z.string().optional()
 });
 
+/**
+ * CloseBrowserResponseContent
+ */
+export const zCloseBrowserResponseContent = z.object({
+    closed: z.boolean().optional()
+});
+
+/**
+ * ActionCreate
+ */
+export const zActionCreate = z.object({
+    avatar_id: z.string().uuid().optional(),
+    action_type: zType,
+    platform: zPlatform,
+    action_description: z.string(),
+    request_payload: z.union([
+        zScrollFeedArgs,
+        zSendMessageArgsInput,
+        zSendBulkMessagesArgsInput,
+        zJoinGroupArgsInput,
+        zLeaveGroupArgsInput,
+        zReplyToMessageArgsInput,
+        zForwardMessageArgsInput,
+        zBehaviouralArgs,
+        zReadMessagesArgsInput,
+        zResolvePhoneArgs,
+        zInteractWithTweetArgsInput,
+        zInteractWithTweetByTweetIdArgsInput,
+        zCloseBrowserArgs
+    ]).optional(),
+    status: zActionStatus,
+    response_content: z.union([
+        zScrollFeedResponseContentInput,
+        zInteractWithTweetResponseContentInput,
+        zSendMessageResponseContent,
+        zReplyToMessageResponseContent,
+        zLeaveGroupResponseContent,
+        zJoinGroupResponseContentInput,
+        zForwardMessageResponseContent,
+        zBehaviouralResponseContentInput,
+        zSendBulkMessagesResponseContent,
+        zReadMessagesResponseContent,
+        zResolvePhoneResponseContentInput,
+        zCloseBrowserResponseContent
+    ]).optional(),
+    start_time: z.string().datetime(),
+    end_time: z.string().datetime().optional()
+});
+
+/**
+ * SendMessageArgs
+ */
+export const zSendMessageArgsOutput = z.object({
+    chat: zChatInfo,
+    input_message_content: zInputMessage
+});
+
+/**
+ * SendBulkMessagesArgs
+ */
+export const zSendBulkMessagesArgsOutput = z.object({
+    chat: zChatInfo,
+    messages: z.array(z.string()),
+    interval: z.number().optional()
+});
+
+/**
+ * JoinGroupArgs
+ */
+export const zJoinGroupArgsOutput = z.object({
+    chat: zChatInfo.optional(),
+    join_discussion_group_if_availble: z.boolean().optional(),
+    invite_link: z.string().optional()
+});
+
+/**
+ * LeaveGroupArgs
+ */
+export const zLeaveGroupArgsOutput = z.object({
+    chat: zChatInfo
+});
+
+/**
+ * ReplyToMessageArgs
+ */
+export const zReplyToMessageArgsOutput = z.object({
+    chat: zChatInfo.optional(),
+    message_info: zMessageInfo.optional(),
+    input_message_content: zInputMessage,
+    message_link: z.string().optional()
+});
+
+/**
+ * ForwardMessageArgs
+ */
+export const zForwardMessageArgsOutput = z.object({
+    from_chat: zChatInfo.optional(),
+    message_info: zMessageInfo.optional(),
+    target_chat: zChatInfo,
+    message: zInputMessage.optional(),
+    message_link: z.string().optional()
+});
+
+/**
+ * ReadMessagesArgs
+ */
+export const zReadMessagesArgsOutput = z.object({
+    chat: zChatInfo,
+    amount_messages: z.number().int().optional(),
+    read_all_in_end: z.boolean().optional()
+});
+
+/**
+ * InteractWithTweetArgs
+ */
+export const zInteractWithTweetArgsOutput = z.object({
+    url: z.string(),
+    interaction: zTweetInteraction
+});
+
+/**
+ * InteractWithTweetByTweetIdArgs
+ */
+export const zInteractWithTweetByTweetIdArgsOutput = z.object({
+    tweet_id: z.number().int(),
+    interaction: zTweetInteraction
+});
+
+/**
+ * Tweet
+ */
+export const zTweetOutput = z.object({
+    tweet_id: z.number().int(),
+    author_id: z.number().int().optional(),
+    author_name: z.string().optional(),
+    author_username: z.string().optional(),
+    creation_date: z.string().optional(),
+    text: z.string(),
+    entities: zEntities.optional(),
+    public_metrics: zPublicMetrics.optional(),
+    geo: z.object({}).optional(),
+    in_reply_to_status_id: z.number().int().optional(),
+    in_reply_to_user_id: z.number().int().optional(),
+    quoted_status_id: z.number().int().optional(),
+    is_quote_status: z.boolean().optional(),
+    retweeted: z.boolean().optional(),
+    possibly_sensitive: z.boolean().optional(),
+    lang: z.string().optional(),
+    referenced_tweets: z.array(z.object({})).optional(),
+    public_metrics_samples: z.array(zPublicMetrics).optional()
+});
+
+/**
+ * ScrollFeedResponseContent
+ */
+export const zScrollFeedResponseContentOutput = z.object({
+    tweets_collected: z.array(zTweetOutput)
+});
+
+/**
+ * InteractWithTweetResponseContent
+ */
+export const zInteractWithTweetResponseContentOutput = z.object({
+    interaction_result: zTweetInteractionResult
+});
+
+/**
+ * JoinGroupResponseContent
+ */
+export const zJoinGroupResponseContentOutput = z.object({
+    chat_info: z.union([
+        zChannelInfo,
+        zGroupInfo
+    ]),
+    discussion_group_chat_info: z.union([
+        zChannelInfo,
+        zGroupInfo
+    ])
+});
+
+/**
+ * BehaviouralResponseContent
+ */
+export const zBehaviouralResponseContentOutput = z.object({
+    current_context: z.unknown().optional(),
+    chats: z.array(z.union([
+        zGroupInfo,
+        zChannelInfo
+    ])).optional(),
+    personal_details_synced: z.boolean().optional(),
+    auto_download_media_disabled: z.boolean().optional(),
+    all_active_sessions_deleted: z.boolean().optional(),
+    unread_messages: z.array(zChatInfo).optional()
+});
+
+/**
+ * ResolvePhoneResponseContent
+ */
+export const zResolvePhoneResponseContentOutput = z.object({
+    user_info: zUserInfo.optional(),
+    error: z.string().optional()
+});
+
+/**
+ * ActionRead
+ */
+export const zActionRead = z.object({
+    id: z.string().uuid(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+    avatar_id: z.string().uuid().optional(),
+    action_type: zType,
+    platform: zPlatform,
+    action_description: z.string(),
+    request_payload: z.union([
+        zScrollFeedArgs,
+        zSendMessageArgsOutput,
+        zSendBulkMessagesArgsOutput,
+        zJoinGroupArgsOutput,
+        zLeaveGroupArgsOutput,
+        zReplyToMessageArgsOutput,
+        zForwardMessageArgsOutput,
+        zBehaviouralArgs,
+        zReadMessagesArgsOutput,
+        zResolvePhoneArgs,
+        zInteractWithTweetArgsOutput,
+        zInteractWithTweetByTweetIdArgsOutput,
+        zCloseBrowserArgs
+    ]).optional(),
+    status: zActionStatus,
+    response_content: z.union([
+        zScrollFeedResponseContentOutput,
+        zInteractWithTweetResponseContentOutput,
+        zSendMessageResponseContent,
+        zReplyToMessageResponseContent,
+        zLeaveGroupResponseContent,
+        zJoinGroupResponseContentOutput,
+        zForwardMessageResponseContent,
+        zBehaviouralResponseContentOutput,
+        zSendBulkMessagesResponseContent,
+        zReadMessagesResponseContent,
+        zResolvePhoneResponseContentOutput,
+        zCloseBrowserResponseContent
+    ]).optional(),
+    start_time: z.string().datetime(),
+    end_time: z.string().datetime().optional()
+});
+
+/**
+ * ActivityTimeParameters
+ */
+export const zActivityTimeParameters = z.object({
+    A1: z.number().gte(0).lte(1).optional(),
+    mu1: z.number().gte(0).lte(12).optional(),
+    sigma1: z.number().gte(1).lte(3).optional(),
+    A2: z.number().gte(0).lte(1).optional(),
+    mu2: z.number().gte(12).lte(24).optional(),
+    sigma2: z.number().gte(1).lte(4).optional(),
+    baseline: z.number().gte(0).lte(1).optional(),
+    target_actions_per_day: z.number().int().gte(0).lte(100).optional()
+});
+
+/**
+ * Address
+ */
 export const zAddress = z.object({
-    continent_code: z.string().length(2),
-    iso_3166_1_alpha_2_code: z.string().regex(/^[A-Z]{2}$/),
-    iso_3166_2_subdivision_code: z.string().regex(/^[A-Z]{2}-[A-Z0-9]{1,3}$/),
-    city: z.string().min(1).max(128)
+    street: z.string().optional(),
+    city: z.string(),
+    state: z.string().optional(),
+    country: z.string(),
+    timezone: z.string(),
+    postal_code: z.string().optional(),
+    iso_3166_1_alpha_2_code: z.string(),
+    iso_3166_2_subdivision_code: z.string()
 });
 
-export const zApi = z.object({
-    api_id: z.number().int(),
-    api_hash: z.string().min(1)
+/**
+ * AddressUpdate
+ */
+export const zAddressUpdate = z.object({
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    country: z.string().optional(),
+    timezone: z.string().optional(),
+    postal_code: z.string().optional(),
+    iso_3166_1_alpha_2_code: z.string().optional(),
+    iso_3166_2_subdivision_code: z.string().optional()
 });
 
-export const zTelegram = z.object({
-    activation_source: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    active: z.union([
-        z.boolean(),
-        z.null()
-    ]).optional(),
-    activity_rate: z.union([
-        z.number().int().gte(0).lte(15),
-        z.null()
-    ]).optional(),
-    api: z.union([
-        zApi,
-        z.null()
-    ]).optional()
+/**
+ * Email
+ */
+export const zEmail = z.object({
+    username: z.string(),
+    password: z.string()
 });
 
-export const zSocialNetworkAccounts = z.object({
-    telegram: z.union([
-        zTelegram,
-        z.null()
-    ]).optional()
-});
-
-export const zGender = z.enum([
-    'Male',
-    'Female'
+/**
+ * SocialPlatform
+ */
+export const zSocialPlatform = z.enum([
+    'x',
+    'telegram'
 ]);
 
-export const zAvatarData = z.object({
-    pir_id: z.string().uuid(),
-    eliza_character: z.object({}),
-    gender: zGender,
-    date_of_birth: z.string().date(),
+/**
+ * SocialMediaAccountCreate
+ */
+export const zSocialMediaAccountCreate = z.object({
+    platform: zSocialPlatform,
+    username: z.string(),
+    password: z.string(),
+    active: z.boolean().optional().default(false),
+    profile_image_url: z.string().optional(),
+    subject_image_url: z.string().optional()
+});
+
+/**
+ * AvatarCreate
+ */
+export const zAvatarCreateInput = z.object({
+    first_name: z.string(),
+    last_name: z.string(),
+    gender: z.string(),
+    language: z.string(),
+    birth_date: z.string().date(),
+    address: zAddress,
+    bio: z.string(),
+    interests: z.array(z.string()).optional(),
+    habits: z.array(z.string()).optional(),
     phone_number: z.string(),
-    email: z.string().email(),
-    addresses: z.object({}),
-    social_network_accounts: z.union([
-        zSocialNetworkAccounts,
-        z.null()
-    ]).optional()
+    image_url: z.string(),
+    emails: z.array(zEmail).optional(),
+    social_media_accounts: z.array(zSocialMediaAccountCreate).optional()
 });
 
-export const zAvatarsAvatarsGetResponse = z.array(zAvatarModelWithProxy);
+/**
+ * AvatarCreate
+ */
+export const zAvatarCreateOutput = z.object({
+    first_name: z.string(),
+    last_name: z.string(),
+    gender: z.string(),
+    language: z.string(),
+    birth_date: z.string().date(),
+    address: zAddress,
+    bio: z.string(),
+    interests: z.array(z.string()).optional(),
+    habits: z.array(z.string()).optional(),
+    phone_number: z.string(),
+    image_url: z.string(),
+    emails: z.array(zEmail).optional(),
+    social_media_accounts: z.array(zSocialMediaAccountCreate).optional()
+});
 
-export const zQueryAvatarsAvatarsQueryGetResponse = z.array(zAvatarModelWithProxy);
-
-export const zDeleteAvatarAvatarsAvatarIdDeleteResponse = z.void();
-
-export const zGetAvatarAvatarsAvatarIdGetResponse = zAvatarModelWithProxy;
-
-export const zPatchAvatarAvatarsAvatarIdPatchResponse = z.void();
-
-export const zReplaceAvatarAvatarsAvatarIdPutResponse = z.union([
-    z.unknown(),
-    z.void()
+/**
+ * AvatarStateEnum
+ */
+export const zAvatarStateEnum = z.enum([
+    'available',
+    'active',
+    'pending',
+    'invalid'
 ]);
 
-export const zAssignSpecificProxyToAvatarAvatarsAvatarIdProxyProxyIdPostResponse = zProxy;
+/**
+ * AvatarState
+ */
+export const zAvatarState = z.object({
+    id: z.string().uuid().optional(),
+    created_at: z.string().datetime().optional(),
+    updated_at: z.string().datetime().optional(),
+    state: zAvatarStateEnum.optional(),
+    avatar_id: z.string().uuid()
+});
 
-export const zUnassignProxyForAvatarAvatarsAvatarIdProxyDeleteResponse = z.void();
+/**
+ * SocialMediaAccountRead
+ */
+export const zSocialMediaAccountRead = z.object({
+    platform: zSocialPlatform,
+    username: z.string(),
+    password: z.string(),
+    active: z.boolean().optional().default(false),
+    profile_image_url: z.string().optional(),
+    subject_image_url: z.string().optional()
+});
 
-export const zGetAvatarProxyAvatarsAvatarIdProxyGetResponse = zProxy;
-
-export const zAssignProxyToAvatarAvatarsAvatarIdProxyPostResponse = zProxy;
-
-export const zGetPirsPirsGetResponse = z.array(zPir);
-
-export const zDeletePirPirsPirIdDeleteResponse = z.void();
-
-export const zGetPirPirsPirIdGetResponse = zPir;
-
-export const zGetProxiesProxiesGetResponse = z.array(zProxy);
-
-export const zQueryProxyProxiesQueryGetResponse = z.array(zProxy);
-
-export const zDeleteProxyProxiesProxyIdDeleteResponse = z.void();
-
-export const zGetProxyProxiesProxyIdGetResponse = zProxy;
-
-export const zReplaceProxyProxiesProxyIdPutResponse = z.union([
-    z.unknown(),
-    z.void()
+/**
+ * Status
+ */
+export const zStatus = z.enum([
+    'active',
+    'expired',
+    'invalid'
 ]);
 
-export const zUpdateProxyStatusProxiesProxyIdStatusPutResponse = zProxy;
+/**
+ * Version
+ */
+export const zVersion = z.enum([
+    'IPV4',
+    'IPV6'
+]);
 
-export const zPingProxyProxiesProxyIdPingPutResponse = zProxy;
+/**
+ * ProxyType
+ */
+export const zProxyType = z.enum([
+    'HTTP',
+    'HTTPS',
+    'SOCKS5'
+]);
 
-export const zDeleteApiKeyKeysUserNameDeleteResponse = z.void();
+/**
+ * ProxyRead
+ */
+export const zProxyRead = z.object({
+    id: z.string().uuid(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+    name: z.string(),
+    status: zStatus.optional(),
+    version: zVersion,
+    proxy_type: zProxyType,
+    port: z.number().int(),
+    ip_address: z.string().optional(),
+    fqdn: z.string().optional(),
+    username: z.string(),
+    password: z.string(),
+    continent_code: z.string().optional(),
+    iso_3166_1_alpha_2_code: z.string().optional(),
+    iso_3166_2_subdivision_code: z.string().optional(),
+    city: z.string().optional(),
+    expired_date: z.string().date(),
+    batch_id: z.string().uuid(),
+    last_pinged: z.string().datetime().optional(),
+    extra_data: z.object({}).optional(),
+    proxy_full_url: z.string().optional()
+});
+
+/**
+ * AvatarRead
+ */
+export const zAvatarRead = z.object({
+    activity_time_parameters: zActivityTimeParameters.optional(),
+    force_awake: z.boolean().optional().default(false),
+    force_shutdown: z.boolean().optional().default(false),
+    strategy: z.string().optional(),
+    strategy_expiration: z.string().datetime().optional(),
+    first_name: z.string(),
+    last_name: z.string(),
+    gender: z.string(),
+    language: z.string(),
+    birth_date: z.string().date(),
+    address: zAddress,
+    bio: z.string(),
+    interests: z.array(z.string()).optional(),
+    habits: z.array(z.string()).optional(),
+    phone_number: z.string(),
+    image_url: z.string(),
+    emails: z.array(zEmail).optional(),
+    id: z.string().uuid(),
+    avatar_state: zAvatarState,
+    social_media_accounts: z.array(zSocialMediaAccountRead),
+    proxy: zProxyRead.optional()
+});
+
+/**
+ * AvatarUpdate
+ */
+export const zAvatarUpdate = z.object({
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    phone_number: z.string().optional(),
+    image_url: z.string().optional(),
+    birth_date: z.string().date().optional(),
+    address: zAddressUpdate.optional(),
+    emails: z.array(zEmail).optional(),
+    bio: z.string().optional(),
+    interests: z.array(z.string()).optional(),
+    habits: z.array(z.string()).optional(),
+    strategy: z.string().optional(),
+    strategy_expiration: z.string().datetime().optional()
+});
+
+export const zGetAvatarsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Getavatars
+ * Successful Response
+ */
+export const zGetAvatarsResponse = z.array(zAvatarRead);
+
+export const zCreateAvatarData = z.object({
+    body: zAvatarCreateInput,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateAvatarResponse = zAvatarRead;
+
+export const zGenerateAvatarData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        payload: z.string()
+    })
+});
+
+/**
+ * Successful Response
+ */
+export const zGenerateAvatarResponse = zAvatarCreateOutput;
+
+export const zAvailableAvatarsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.object({
+        limit: z.number().int().optional().default(100),
+        offset: z.number().int().optional().default(0)
+    }).optional()
+});
+
+/**
+ * Response Availableavatars
+ * Successful Response
+ */
+export const zAvailableAvatarsResponse = z.array(z.string().uuid());
+
+export const zForcedStoppedAvatarsData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Forcedstoppedavatars
+ * Successful Response
+ */
+export const zForcedStoppedAvatarsResponse = z.array(z.string().uuid());
+
+export const zDeleteAvatarData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteAvatarResponse = z.void();
+
+export const zGetAvatarData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetAvatarResponse = zAvatarRead;
+
+export const zUpdateAvatarData = z.object({
+    body: zAvatarUpdate,
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateAvatarResponse = zAvatarRead;
+
+export const zWakingUpProbData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.object({
+        interval_in_seconds: z.number().int()
+    })
+});
+
+/**
+ * Response Wakingupprob
+ * Successful Response
+ */
+export const zWakingUpProbResponse = z.number();
+
+export const zUpdateAvatarStateData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid(),
+        state: zAvatarStateEnum
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateAvatarStateResponse = zAvatarRead;
+
+export const zGetAvatarStateData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetAvatarStateResponse = zAvatarStateEnum;
+
+export const zDeleteAvatarStateData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        state_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteAvatarStateResponse = z.void();
+
+export const zForceShutdownAvatarData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zForceShutdownAvatarResponse = z.void();
+
+export const zForceAwakeAvatarData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zForceAwakeAvatarResponse = z.void();
+
+export const zCreateActionData = z.object({
+    body: zActionCreate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zCreateActionResponse = zActionRead;
+
+export const zQueryActionsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.object({
+        action_type: zType,
+        count: z.number().int().optional().default(10),
+        status_code: z.union([
+            zActionStatusCode,
+            z.null()
+        ]).optional(),
+        platform: z.union([
+            zPlatform,
+            z.null()
+        ]).optional()
+    })
+});
+
+/**
+ * Response Queryactions
+ * Successful Response
+ */
+export const zQueryActionsResponse = z.array(zActionRead);
+
+export const zGetActionData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        action_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetActionResponse = zActionRead;
+
+export const zGetAvatarActionsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.object({
+        limit: z.number().int().gte(1).lte(1000).optional().default(100),
+        offset: z.number().int().gte(0).optional().default(0)
+    }).optional()
+});
+
+/**
+ * Response Getavataractions
+ * Successful Response
+ */
+export const zGetAvatarActionsResponse = z.array(zActionRead);
+
+export const zGetAvatarActionsTodayData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Getavataractionstoday
+ * Successful Response
+ */
+export const zGetAvatarActionsTodayResponse = z.array(zActionRead);
+
+export const zGetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.object({
+        content_type: z.enum([
+            'reply',
+            'post'
+        ]).optional(),
+        count: z.number().int().optional().default(10)
+    }).optional()
+});
+
+/**
+ * Response Get Avatar Previous Content Actions Actions  Avatar Id  Previous Content Get
+ * Successful Response
+ */
+export const zGetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetResponse = z.array(z.string());
+
+export const zBoomBoomGetData = z.object({
+    body: z.never().optional(),
+    path: z.never().optional(),
+    query: z.never().optional()
+});

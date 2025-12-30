@@ -117,6 +117,7 @@ export function AllocateProfilesGroupsMissionBuilder({
                             <CategorySelector
                                 categories={activeCharacterCategories}
                                 label="Avatar categories"
+                                required
                                 onChangeValue={(value) => setCharacterCategories(value)}
                             />
                         </div>

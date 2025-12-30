@@ -1,9 +1,10 @@
 import { DataTable } from "@/components/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { ScenarioRead } from "@lib/api/orchestrator/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
+import { getAvatarDisplayName } from "@lib/profile-utils"
 import { cn } from "@lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table"
@@ -95,7 +96,7 @@ export function OrchestratorScenariosList({
 }: {
     missionId: string
     initialScenarios: ScenarioRead[]
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
 }) {
     const router = useRouter()
     const {
@@ -114,9 +115,7 @@ export function OrchestratorScenariosList({
 
     const data = (scenarios || initialScenarios || []).map((scenario) => {
         const avatar = avatars.find((avatar) => avatar.id === scenario.character_id)
-        const profileName =
-            ((avatar as any)?.data?.eliza_character?.name as string | undefined) ||
-            "Unknown Avatar"
+        const profileName = avatar ? getAvatarDisplayName(avatar) : "Unknown Avatar"
         return {
             scenarioId: scenario.id,
             profileId: scenario.character_id,

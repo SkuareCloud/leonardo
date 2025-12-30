@@ -3,11 +3,10 @@
 import { TreeNode } from "@/components/tree"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CategoryWithChatCount } from "@lib/api/models"
-import { CategoryRead, ChatView } from "@lib/api/orchestrator"
+import { CategoryRead, CategoryWithChatCount, ChatView } from "@lib/api/models"
 import { Handle, Position } from "@xyflow/react"
 import { FileDown, Loader2 } from "lucide-react"
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { toast } from "sonner"
 import { ChatsList, ChatsListHandle } from "./chats-list"
 
@@ -54,15 +53,28 @@ function generateTree(categoriesWithChatCount: CategoryWithChatCount[]): TreeNod
     return buildNode(rootCategory) as TreeNode<ChatNodeData>
 }
 
+type ChatsStats = {
+    totalCount: number
+    isSearchMode: boolean
+}
+
 export function ChatsView({
-    chats,
+    initialChats,
     allCategories,
+    initialPageSize,
+    initialTotalCount,
 }: {
-    chats: ChatView[]
+    initialChats: ChatView[]
     allCategories: CategoryRead[]
+    initialPageSize: number
+    initialTotalCount?: number
 }) {
     const chatsListRef = useRef<ChatsListHandle>(null)
     const [isExporting, setIsExporting] = useState(false)
+    const [stats, setStats] = useState<ChatsStats>({
+        totalCount: initialTotalCount ?? initialChats.length,
+        isSearchMode: false,
+    })
 
     const handleExport = async () => {
         if (!chatsListRef.current) {
@@ -79,11 +91,17 @@ export function ChatsView({
         }
     }
 
+    const handleStatsChange = useCallback((nextStats: ChatsStats) => {
+        setStats(nextStats)
+    }, [])
+
     return (
         <div className="flex w-full flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-sm text-muted-foreground">
-                    Showing {chats.length} total chat{chats.length === 1 ? "" : "s"}
+                    {stats.isSearchMode
+                        ? `Showing ${stats.totalCount} search result${stats.totalCount === 1 ? "" : "s"}`
+                        : `Showing ${stats.totalCount} total chat${stats.totalCount === 1 ? "" : "s"}`}
                 </div>
                 <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
                     {isExporting ? (
@@ -99,7 +117,14 @@ export function ChatsView({
                     )}
                 </Button>
             </div>
-            <ChatsList ref={chatsListRef} chats={chats} allCategories={allCategories} />
+            <ChatsList
+                ref={chatsListRef}
+                chats={initialChats}
+                allCategories={allCategories}
+                initialPageSize={initialPageSize}
+                initialTotalCount={initialTotalCount}
+                onStatsChange={handleStatsChange}
+            />
         </div>
     )
 }

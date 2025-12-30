@@ -1119,10 +1119,6 @@ export const zChatCreate = z.object({
     text_summary: z.union([
         z.string(),
         z.null()
-    ]).optional(),
-    embedding_summary: z.union([
-        z.array(z.number()),
-        z.null()
     ]).optional()
 });
 
@@ -1301,10 +1297,6 @@ export const zChatRead = z.object({
     system_chat_members: z.array(z.string().uuid()).optional().default([]),
     text_summary: z.union([
         z.string(),
-        z.null()
-    ]).optional(),
-    embedding_summary: z.union([
-        z.array(z.number()),
         z.null()
     ]).optional()
 });
@@ -2036,7 +2028,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-11-20T07:58:30.548441Z'),
+    trigger_time: z.string().datetime().optional().default('2025-12-03T05:00:26.879560Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -2058,7 +2050,7 @@ export const zFindUsersByPhoneMissionInput = z.object({
     time_between_scenarios: z.number().int().optional().default(10),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-11-20T07:58:30.451149Z')
+    start_time: z.string().datetime().optional().default('2025-12-03T05:00:26.771502Z')
 });
 
 /**
@@ -2133,7 +2125,7 @@ export const zHttpValidationError = z.object({
  */
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-11-20T07:58:30.452571Z'),
+    trigger_time: z.string().datetime().optional().default('2025-12-03T05:00:26.773040Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -2158,7 +2150,7 @@ export const zMassDmMissionInput = z.object({
     batch_size: z.number().int().optional().default(20),
     batch_interval: z.number().int().optional().default(10),
     message: zInputMessage,
-    start_time: z.string().datetime().optional().default('2025-11-20T07:58:30.449715Z')
+    start_time: z.string().datetime().optional().default('2025-12-03T05:00:26.769923Z')
 });
 
 /**
@@ -2401,7 +2393,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-11-20T07:58:30.555655Z'),
+    start_time: z.string().datetime().optional().default('2025-12-03T05:00:26.886419Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
@@ -2506,6 +2498,14 @@ export const zScenarioUpdate = z.object({
         z.null()
     ]).optional(),
     end_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional(),
+    trigger_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional(),
+    updated_at: z.union([
         z.string().datetime(),
         z.null()
     ]).optional(),
@@ -2998,8 +2998,62 @@ export const zGetChatsViewChatsViewChatsGetData = z.object({
     body: z.never().optional(),
     path: z.never().optional(),
     query: z.object({
-        skip: z.number().int().optional().default(0),
-        limit: z.number().int().optional().default(100)
+        chat_type: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        platform_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        linked_chat_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        title: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        about: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        linked_chat_username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        text_summary: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        min_participants_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        max_participants_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        min_members_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        max_members_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        has_category: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        sort_by: z.string().optional().default('participants_count'),
+        sort_order: z.string().optional().default('desc'),
+        skip: z.number().int().gte(0).optional().default(0),
+        limit: z.number().int().gte(1).lte(1000).optional().default(100)
     }).optional()
 });
 
@@ -3094,8 +3148,63 @@ export const zSearchChatsByTopicsChatsSearchChatsGetData = z.object({
     path: z.never().optional(),
     query: z.object({
         query: z.string(),
-        topk: z.number().int().optional().default(100),
-        threshold: z.number().optional().default(1)
+        threshold: z.number().gte(0).optional().default(1),
+        chat_type: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        platform_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        linked_chat_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        title: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        about: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        linked_chat_username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        text_summary: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        min_participants_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        max_participants_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        min_members_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        max_members_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        has_category: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        sort_by: z.string().optional().default('participants_count'),
+        sort_order: z.string().optional().default('desc'),
+        skip: z.number().int().gte(0).optional().default(0),
+        limit: z.number().int().gte(1).lte(1000).optional().default(100)
     })
 });
 
@@ -3103,7 +3212,7 @@ export const zSearchChatsByTopicsChatsSearchChatsGetData = z.object({
  * Response Search Chats By Topics Chats Search Chats  Get
  * Successful Response
  */
-export const zSearchChatsByTopicsChatsSearchChatsGetResponse = z.array(zChatRead);
+export const zSearchChatsByTopicsChatsSearchChatsGetResponse = z.array(zChatView);
 
 export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetData = z.object({
     body: z.never().optional(),
@@ -3111,8 +3220,63 @@ export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGe
     query: z.object({
         category_name: z.string(),
         query: z.string(),
-        topk: z.number().int().optional().default(100),
-        threshold: z.number().optional().default(1)
+        threshold: z.number().gte(0).optional().default(1),
+        chat_type: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        platform_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        linked_chat_id: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        title: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        about: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        linked_chat_username: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        text_summary: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        min_participants_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        max_participants_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        min_members_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        max_members_count: z.union([
+            z.number().int(),
+            z.null()
+        ]).optional(),
+        has_category: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
+        sort_by: z.string().optional().default('participants_count'),
+        sort_order: z.string().optional().default('desc'),
+        skip: z.number().int().gte(0).optional().default(0),
+        limit: z.number().int().gte(1).lte(1000).optional().default(100)
     })
 });
 
@@ -3120,7 +3284,7 @@ export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGe
  * Response Search Chats By Topics And Add To Category Chats Search Chats Add To Category  Get
  * Successful Response
  */
-export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponse = z.array(zChatRead);
+export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponse = z.array(zChatView);
 
 export const zGetExplorerChatsChatsExplorerChatsGetData = z.object({
     body: z.never().optional(),
@@ -3151,6 +3315,18 @@ export const zGetExplorerChatsFromPostgresChatsExplorerChatsFromPostgresGetData 
  * Successful Response
  */
 export const zGetExplorerChatsFromPostgresChatsExplorerChatsFromPostgresGetResponse = z.string();
+
+export const zUpdateChatsSummaryEmbeddingsChatsUpdateChatsSummaryEmbeddingsPostData = z.object({
+    body: z.array(z.string().uuid()),
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+/**
+ * Response Update Chats Summary Embeddings Chats Update Chats Summary Embeddings  Post
+ * Successful Response
+ */
+export const zUpdateChatsSummaryEmbeddingsChatsUpdateChatsSummaryEmbeddingsPostResponse = z.object({});
 
 export const zSubmitScenarioScenarioPostOperatorScenarioPostData = z.object({
     body: zScenarioResultInput,

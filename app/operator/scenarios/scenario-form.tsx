@@ -11,9 +11,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { Attachment, Scenario } from "@lib/api/operator/types.gen"
 import { logger } from "@lib/logger"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
+import { getAvatarDisplayName } from "@lib/profile-utils"
 import { useOperatorStore } from "@lib/store-provider"
 import { ChevronDown, PlusIcon, Search, TrashIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -53,12 +55,12 @@ interface AvatarModel {
 }
 
 interface ScenarioFormProps {
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
     initialScenario?: Scenario
 }
 
 export function ScenarioForm({ avatars: avatarsProp, initialScenario }: ScenarioFormProps) {
-    const [avatars, setAvatars] = useState<AvatarModelWithProxy[]>(avatarsProp)
+    const [avatars, setAvatars] = useState<AvatarRead[]>(avatarsProp)
     const [selectedAvatar, setSelectedAvatar] = useState<string>(initialScenario?.profile?.id || "")
     const [actions, setActions] = useState<ActionFormData[]>(
         initialScenario?.actions.map((action) => ({
@@ -82,25 +84,19 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
     const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
     const operatorSlot = useOperatorStore((state) => state.operatorSlot)
     useEffect(() => {
-        if (initialScenario && avatars.length == 0) {
-            setAvatars([
-                {
-                    id: initialScenario.profile?.id || "",
-                    data: {
-                        eliza_character: {
-                            name: "<NAME MISSING NOW>",
-                        },
-                    },
-                    pir_id: "",
-                    home_continent_code: "",
-                    home_iso_3166_1_alpha_2_code: "",
-                    home_iso_3166_2_subdivision_code: "",
-                    home_city: "",
-                    proxy: null,
-                },
-            ])
+        if (!initialScenario || avatars.length > 0 || !initialScenario.profile?.id) {
+            return
         }
-    }, [])
+        const client = new ServiceBrowserClient()
+        client
+            .getProfile(initialScenario.profile.id)
+            .then((avatar) => {
+                setAvatars([avatar])
+            })
+            .catch((error) => {
+                logger.error("Failed to fetch avatar for scenario form:", error)
+            })
+    }, [initialScenario, avatars.length])
 
     // Filter avatars based on search term
     const filteredAvatars = useMemo(() => {
@@ -108,7 +104,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
 
         const searchTerm = avatarSearch.toLowerCase()
         return avatars.filter((avatar) => {
-            const avatarName = (avatar.data.eliza_character as any)?.name || ""
+            const avatarName = getAvatarDisplayName(avatar)
             const avatarId = avatar.id
 
             return (
@@ -285,10 +281,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                                 filteredAvatars.map((avatar) => (
                                     <SelectItem key={avatar.id} value={avatar.id}>
                                         <div className="flex flex-col">
-                                            <span>
-                                                {(avatar.data.eliza_character as any)?.name ||
-                                                    "Unknown Avatar"}
-                                            </span>
+                                            <span>{getAvatarDisplayName(avatar)}</span>
                                             <span className="text-muted-foreground text-xs">
                                                 ID: {avatar.id}
                                             </span>

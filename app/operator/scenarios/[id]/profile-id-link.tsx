@@ -1,6 +1,6 @@
 "use client"
 
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { SquareArrowUpRightIcon } from "lucide-react"
 import { useState } from "react"
@@ -9,12 +9,12 @@ import { AvatarDrawer } from "../../../avatars/avatars/avatar-drawer"
 
 interface ProfileIdLinkProps {
     profileId: string
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
 }
 
 export function ProfileIdLink({ profileId, avatars }: ProfileIdLinkProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-    const [selectedAvatar, setSelectedAvatar] = useState<AvatarModelWithProxy | null>(null)
+    const [selectedAvatar, setSelectedAvatar] = useState<AvatarRead | null>(null)
     const [isLoading, setIsLoading] = useState(false)
 
     const handleClick = async () => {
@@ -40,7 +40,7 @@ export function ProfileIdLink({ profileId, avatars }: ProfileIdLinkProps) {
         }
     }
 
-    const updateField = async (path: string, value: any) => {
+    const updateField = async (path: string, value: unknown) => {
         if (!selectedAvatar) return
 
         const serviceClient = new ServiceBrowserClient()

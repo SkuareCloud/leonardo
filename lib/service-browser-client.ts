@@ -1,5 +1,6 @@
-import { AvatarModelWithProxy } from "./api/avatars"
+import { AvatarRead } from "./api/avatars"
 import {
+    ChatView,
     CombinedAvatar,
     MediaItem,
     MediaUploadPayload,
@@ -33,11 +34,11 @@ export class ServiceBrowserClient {
 
     async getProfile(profileId: string) {
         const resp = await fetch(`/api/avatars/avatar?profileId=${profileId}`)
-        const json = (await resp.json()) as AvatarModelWithProxy
+        const json = (await resp.json()) as AvatarRead
         return json
     }
 
-    async updateProfile(profileId: string, path: string, value: string) {
+    async updateProfile(profileId: string, path: string, value: unknown) {
         const resp = await fetch(`/api/avatars/avatars`, {
             method: "PATCH",
             headers: {
@@ -234,6 +235,77 @@ export class ServiceBrowserClient {
         return resp.json()
     }
 
+    async getOrchestratorChatsPage({
+        pageIndex = 0,
+        pageSize = 50,
+        writable = false,
+        categoryName = null,
+        username = "",
+        title = "",
+        chatType = "",
+        platform = "",
+        minParticipants = "",
+        maxParticipants = "",
+        linkedChatUsername = "",
+    }: {
+        pageIndex?: number
+        pageSize?: number
+        writable?: boolean
+        categoryName?: string | null
+        username?: string
+        title?: string
+        chatType?: string
+        platform?: string
+        minParticipants?: string
+        maxParticipants?: string
+        linkedChatUsername?: string
+    } = {}): Promise<{ chats: ChatView[]; totalCount?: number; hasMore?: boolean }> {
+        const params = new URLSearchParams()
+        const skip = pageIndex * pageSize
+        if (skip > 0) {
+            params.set("skip", skip.toString())
+        }
+        if (pageSize > 0) {
+            params.set("limit", pageSize.toString())
+        }
+        if (writable) {
+            params.set("writable", "true")
+        }
+        if (categoryName) {
+            params.set("category_name", categoryName)
+        }
+        if (username) {
+            params.set("username", username)
+        }
+        if (title) {
+            params.set("title", title)
+        }
+        if (chatType) {
+            params.set("chat_type", chatType)
+        }
+        if (platform) {
+            params.set("platform", platform)
+        }
+        if (minParticipants) {
+            params.set("min_participants", minParticipants)
+        }
+        if (maxParticipants) {
+            params.set("max_participants", maxParticipants)
+        }
+        if (linkedChatUsername) {
+            params.set("linked_chat_username", linkedChatUsername)
+        }
+        const query = params.toString()
+        const url = query ? `/api/orchestrator/chats?${query}` : `/api/orchestrator/chats`
+        console.log('[API] Fetching chats with URL:', url)
+        const resp = await fetch(url)
+        if (!resp.ok) {
+            throw new Error(`Failed to load chats: ${resp.statusText}`)
+        }
+        const payload = await resp.json()
+        return this.normalizeChatPageResponse(payload)
+    }
+
     async planMission(missionId: string): Promise<ScenarioRead[]> {
         const resp = await fetch(`/api/orchestrator/missions/plan?id=${missionId}`, {
             method: "POST",
@@ -336,6 +408,46 @@ export class ServiceBrowserClient {
         if (!resp.ok) {
             throw new Error(`Failed to delete media: ${resp.statusText}`)
         }
+    }
+
+    private normalizeChatPageResponse(payload: unknown): {
+        chats: ChatView[]
+        totalCount?: number
+        hasMore?: boolean
+    } {
+        if (Array.isArray(payload)) {
+            return { chats: payload }
+        }
+        if (payload && typeof payload === "object") {
+            const data = payload as Record<string, unknown>
+            
+            // Check for new pagination format first
+            if (data.pagination && typeof data.pagination === "object") {
+                const pagination = data.pagination as Record<string, unknown>
+                const chats = Array.isArray(data.chats) ? data.chats : []
+                return {
+                    chats: chats as ChatView[],
+                    hasMore: typeof pagination.hasMore === "boolean" ? pagination.hasMore : undefined,
+                }
+            }
+            
+            // Fallback to old format
+            const candidates = ["chats", "items", "results", "data"]
+            for (const key of candidates) {
+                const value = data[key]
+                if (Array.isArray(value)) {
+                    const totalKey = ["total", "total_count", "totalCount", "count"].find(
+                        (candidate) => typeof data[candidate] === "number",
+                    )
+                    return {
+                        chats: value as ChatView[],
+                        totalCount: totalKey ? (data[totalKey] as number) : undefined,
+                    }
+                }
+            }
+            return { chats: [] }
+        }
+        return { chats: [] }
     }
 
     private async fileToBase64(file: File) {

@@ -5,10 +5,11 @@ import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { DataTable } from "@/components/table"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { useOperatorStore } from "@lib/store-provider"
 import { cn } from "@lib/utils"
+import { getAvatarDisplayName } from "@lib/profile-utils"
 import { useQuery } from "@tanstack/react-query"
 import { ColumnDef } from "@tanstack/react-table"
 import { Loader2 } from "lucide-react"
@@ -91,7 +92,7 @@ const columns: ColumnDef<ScenarioDataRow>[] = [
     },
 ]
 
-export function ScenariosList({ avatarsData }: { avatarsData: AvatarModelWithProxy[] }) {
+export function ScenariosList({ avatarsData }: { avatarsData: AvatarRead[] }) {
     return (
         <QueryClientWrapper>
             <ScenariosListInner avatarsData={avatarsData} />
@@ -100,11 +101,9 @@ export function ScenariosList({ avatarsData }: { avatarsData: AvatarModelWithPro
 }
 
 const ScenariosListInner = ({
-    // scenarios: initialScenarios,
     avatarsData,
 }: {
-    // scenarios: { [key: string]: ScenarioWithResult }
-    avatarsData: AvatarModelWithProxy[]
+    avatarsData: AvatarRead[]
 }) => {
     const router = useRouter()
     const operatorSlot = useOperatorStore((state) => state.operatorSlot)
@@ -150,12 +149,7 @@ const ScenariosListInner = ({
             const avatar = avatarsData.find(
                 (avatar) => avatar.id === scenarioWithResult.scenario.profile.id,
             )
-            const profileName =
-                avatar?.data.eliza_character &&
-                typeof avatar.data.eliza_character === "object" &&
-                avatar.data.eliza_character !== null
-                    ? (avatar.data.eliza_character as any).name || "Unknown Avatar"
-                    : "Unknown Avatar"
+            const profileName = avatar ? getAvatarDisplayName(avatar) : "Unknown Avatar"
 
             return {
                 scenarioId,

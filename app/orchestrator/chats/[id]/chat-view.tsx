@@ -2,9 +2,8 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { AvatarRead } from "@lib/api/avatars"
 import { CategoryRead, ChatRead } from "@lib/api/orchestrator"
-import { useState } from "react"
 import { AvatarsList } from "../../../avatars/avatars/avatars-list"
 
 export function ChatView({
@@ -16,9 +15,9 @@ export function ChatView({
     chat: ChatRead
     allCategories: CategoryRead[]
     chatCategories: CategoryRead[]
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
 }) {
-    const [categories, setCategories] = useState<CategoryRead[]>(chatCategories)
+    const categories = chatCategories
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

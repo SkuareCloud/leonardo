@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/page-header"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { ServiceClient } from "@lib/service-client"
 import { OperatorSlotDisplay } from "../components/operator-slot-display"
 import { ScenarioFormModal } from "./scenario-form-modal"
@@ -7,7 +7,7 @@ import ScenariosList from "./scenarios"
 
 export default async function Page() {
     const serviceClient = new ServiceClient()
-    const avatars: AvatarModelWithProxy[] = await serviceClient.getAvatars()
+    const avatars: AvatarRead[] = await serviceClient.getAvatars()
 
     return (
         <div className="container mx-auto py-6">

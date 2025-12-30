@@ -18,48 +18,49 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart"
-import { AvatarModelWithProxy } from "@lib/api/avatars"
+import { AvatarRead } from "@lib/api/avatars"
 
 const chartConfig = {
-    unknown: {
-        label: "Unknown",
+    available: {
+        label: "Available",
         color: "var(--chart-1)",
     },
-    web1: {
-        label: "WEB1",
+    active: {
+        label: "Active",
         color: "var(--chart-2)",
     },
-    web2: {
-        label: "WEB2",
+    pending: {
+        label: "Pending",
         color: "var(--chart-3)",
+    },
+    invalid: {
+        label: "Invalid",
+        color: "var(--chart-4)",
+    },
+    unknown: {
+        label: "Unknown",
+        color: "var(--chart-5)",
     },
 } satisfies ChartConfig
 
-export function AvatarsStats({ avatars }: { avatars: AvatarModelWithProxy[] }) {
-    const activationSourcesHistogram = avatars.reduce(
-        (acc, avatar) => {
-            const source = (
-                (avatar.data.social_network_accounts as any)?.telegram?.activation_source as string
-            ).toLowerCase()
-            if (source) {
-                acc[source] = (acc[source] || 0) + 1
-            }
-            return acc
-        },
-        {} as Record<string, number>,
-    )
+export function AvatarsStats({ avatars }: { avatars: AvatarRead[] }) {
+    const stateHistogram = avatars.reduce((acc, avatar) => {
+        const state = avatar.avatar_state?.state?.toLowerCase() || "unknown"
+        acc[state] = (acc[state] || 0) + 1
+        return acc
+    }, {} as Record<string, number>)
 
-    const chartData = Object.entries(activationSourcesHistogram).map(([source, count]) => ({
-        source,
+    const chartData = Object.entries(stateHistogram).map(([state, count]) => ({
+        source: state,
         count,
-        fill: chartConfig[source as keyof typeof chartConfig]?.color || "var(--chart-1)",
+        fill: chartConfig[state as keyof typeof chartConfig]?.color || "var(--chart-1)",
     }))
 
     return (
         <Card className="-0 flex w-84 flex-col">
             <CardHeader className="items-center pb-0">
-                <CardTitle>Avatars by activation source</CardTitle>
-                <CardDescription>Total number of avatars by activation source</CardDescription>
+                <CardTitle>Avatars by state</CardTitle>
+                <CardDescription>Total number of avatars by state</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0">
                 <ChartContainer

@@ -231,6 +231,7 @@ export function RandomDistributionMissionBuilder({
                                 <CategorySelector
                                     categories={activeProfileCategories}
                                     label="Avatar categories"
+                                    required
                                     onChangeValue={(value) => setProfileCategories(value)}
                                 />
                             </div>

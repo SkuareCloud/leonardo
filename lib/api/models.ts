@@ -1,10 +1,11 @@
 import { z } from "zod"
-import { zAvatarModelWithProxy } from "./avatars/zod.gen"
+import { zAvatarRead } from "./avatars/zod.gen"
 import { zProfileWorkerView } from "./operator/zod.gen"
 import {
   ActionRead,
   CategoryRead,
   ChatRead,
+  ChatType,
   EchoMissionInput,
   MissionCreate,
   MissionExposure,
@@ -26,7 +27,7 @@ export type MissionType = (typeof MissionTypes)[number]
 
 export const zCombinedAvatar = z.object({
   profile_worker_view: zProfileWorkerView.optional(),
-  avatar: zAvatarModelWithProxy.optional(),
+  avatar: zAvatarRead.optional(),
 })
 export type CombinedAvatar = z.infer<typeof zCombinedAvatar>
 
@@ -115,3 +116,14 @@ export interface MissionStatistics {
 export type MissionFailureReason = ActionRead & {
   status?: ModelsOperatorActivityScenarioScenarioStatus | null
 }
+
+export type ChatView = ChatRead & {
+  chat_type?: ChatType | null
+  categories?: string[]
+  system_chat_members?: string[]
+  linked_chat_username?: string | null
+  linked_chat_id?: number | null
+  text_summary?: string | null
+}
+
+export type { CategoryRead, ChatRead, ChatType }

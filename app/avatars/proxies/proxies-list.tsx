@@ -16,14 +16,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { Proxy } from "@lib/api/avatars/types.gen"
+import { ProxyRead } from "@lib/api/avatars/types.gen"
 import { ColumnDef } from "@tanstack/react-table"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
 import { CirclePlay, CircleStop, RefreshCcwIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
-const proxyColumns: ColumnDef<Proxy>[] = [
+const proxyColumns: ColumnDef<ProxyRead>[] = [
     {
         accessorKey: "name",
         header: "Name",
@@ -39,7 +39,7 @@ const proxyColumns: ColumnDef<Proxy>[] = [
         size: 100,
         cell: ({ row }) => {
             const proxy = row.original
-            return <span className="uppercase">{proxy.type}</span>
+            return <span className="uppercase">{proxy.proxy_type}</span>
         },
     },
     {
@@ -66,15 +66,16 @@ const proxyColumns: ColumnDef<Proxy>[] = [
         size: 100,
         cell: ({ row }) => {
             const proxy = row.original
+            const isActive = proxy.status === "active"
             return (
                 <Badge
                     className={cn(
-                        !proxy.status_is_success && "bg-red-50 text-red-800",
-                        proxy.status_is_success && "bg-green-100 text-green-800",
+                        !isActive && "bg-red-50 text-red-800",
+                        isActive && "bg-green-100 text-green-800",
                     )}
                 >
                     <div className="inline-flex flex-row items-center text-xs uppercase">
-                        {proxy.status_is_success ? "Active" : "Inactive"}
+                        {isActive ? "Active" : "Inactive"}
                     </div>
                 </Badge>
             )
@@ -163,7 +164,7 @@ const proxyColumns: ColumnDef<Proxy>[] = [
                         <RefreshCcwIcon className="size-3" />
                         Ping
                     </Button>
-                    {proxy.status_is_success ? (
+                    {proxy.status === "active" ? (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button

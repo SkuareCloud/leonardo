@@ -202,6 +202,7 @@ export function EchoMissionBuilder({
                 <CategorySelector
                     categories={activeProfileCategories}
                     label="Avatar categories"
+                    required
                     onChangeValue={(value) => setProfileCategories(value)}
                 />
 

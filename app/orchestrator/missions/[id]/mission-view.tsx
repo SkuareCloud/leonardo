@@ -4,7 +4,7 @@ import { QueryClientWrapper } from "@/components/mission-view-wrapper"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AvatarModelWithProxy } from "@lib/api/avatars/types.gen"
+import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { MissionRead, ScenarioRead } from "@lib/api/orchestrator/types.gen"
 import { ListIcon, PieChartIcon } from "lucide-react"
 import { useState } from "react"
@@ -58,7 +58,7 @@ export function MissionView({
     avatars,
 }: {
     mission: MissionRead
-    avatars: AvatarModelWithProxy[]
+    avatars: AvatarRead[]
 }) {
     const [plannedMission, setPlannedMission] = useState<{
         mission: MissionRead
