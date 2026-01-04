@@ -92,6 +92,26 @@ export class ServiceBrowserClient {
         }
     }
 
+    async addManyChatsToCategory(chatIds: string[], categoryId: string) {
+        logger.info(`Adding ${chatIds.length} chats to category ${categoryId}`)
+        const resp = await fetch(`/api/orchestrator/categories/${categoryId}/many_chats`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: JSON.stringify({ chat_ids: chatIds }),
+        })
+        if (!resp.ok) {
+            const errorData = await resp.json().catch(() => ({}))
+            throw new Error(
+                errorData.error || `Failed to add chats to category: ${resp.statusText}`,
+            )
+        }
+        logger.info(`Successfully added ${chatIds.length} chats to category ${categoryId}`)
+        return resp.json()
+    }
+
     async assignProxy(profileId: string) {
         const resp = await fetch(`/api/assign_proxy`, {
             method: "POST",
@@ -297,7 +317,7 @@ export class ServiceBrowserClient {
         }
         const query = params.toString()
         const url = query ? `/api/orchestrator/chats?${query}` : `/api/orchestrator/chats`
-        console.log('[API] Fetching chats with URL:', url)
+        console.log("[API] Fetching chats with URL:", url)
         const resp = await fetch(url)
         if (!resp.ok) {
             throw new Error(`Failed to load chats: ${resp.statusText}`)
@@ -333,6 +353,12 @@ export class ServiceBrowserClient {
 
     async getMissionSuccessfulChats(missionId: string): Promise<ChatRead[]> {
         const resp = await fetch(`/api/orchestrator/missions/successfull_chats/${missionId}`)
+        const json = (await resp.json()) as ChatRead[]
+        return json
+    }
+
+    async getMissionFailedChats(missionId: string): Promise<ChatRead[]> {
+        const resp = await fetch(`/api/orchestrator/missions/failed_chats/${missionId}`)
         const json = (await resp.json()) as ChatRead[]
         return json
     }
@@ -397,8 +423,8 @@ export class ServiceBrowserClient {
             throw new Error(`Failed to upload media: ${resp.statusText}`)
         }
         console.log(`Uploaded ${files.length} files.`)
-        const json = await resp.json()
-        return json
+
+        return true
     }
 
     async deleteMedia(key: string) {
@@ -420,17 +446,18 @@ export class ServiceBrowserClient {
         }
         if (payload && typeof payload === "object") {
             const data = payload as Record<string, unknown>
-            
+
             // Check for new pagination format first
             if (data.pagination && typeof data.pagination === "object") {
                 const pagination = data.pagination as Record<string, unknown>
                 const chats = Array.isArray(data.chats) ? data.chats : []
                 return {
                     chats: chats as ChatView[],
-                    hasMore: typeof pagination.hasMore === "boolean" ? pagination.hasMore : undefined,
+                    hasMore:
+                        typeof pagination.hasMore === "boolean" ? pagination.hasMore : undefined,
                 }
             }
-            
+
             // Fallback to old format
             const candidates = ["chats", "items", "results", "data"]
             for (const key of candidates) {

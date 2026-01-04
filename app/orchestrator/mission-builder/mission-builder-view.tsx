@@ -14,18 +14,11 @@ import {
     zFluffMissionInput,
     zMassDmMissionInput,
     zPuppetShowInput,
-    zRandomDistributionMissionInput
+    zRandomDistributionMissionInput,
 } from "@lib/api/orchestrator/zod.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
-import {
-    DicesIcon,
-    Loader2,
-    PlusIcon,
-    PodcastIcon,
-    RabbitIcon,
-    ShuffleIcon
-} from "lucide-react"
+import { DicesIcon, Loader2, PlusIcon, PodcastIcon, RabbitIcon, ShuffleIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React from "react"
 import { toast } from "sonner"
@@ -134,8 +127,10 @@ export function MissionBuilderView({
                                             if (!selectedMissionType) return
 
                                             if (selectedMissionType === "ResolvePhoneMission") {
-                                                const payloadAny = missionCreateRequest?.payload as any
-                                                const csvFile: File | undefined = payloadAny?.csv_file
+                                                const payloadAny =
+                                                    missionCreateRequest?.payload as any
+                                                const csvFile: File | undefined =
+                                                    payloadAny?.csv_file
                                                 if (!csvFile) {
                                                     toast.error("CSV file is required")
                                                     setError("CSV file is required")
@@ -159,7 +154,8 @@ export function MissionBuilderView({
                                                         )
                                                     toast.success("Resolve phone mission submitted")
                                                     const missionId =
-                                                        Array.isArray(scenarios) && scenarios.length > 0
+                                                        Array.isArray(scenarios) &&
+                                                        scenarios.length > 0
                                                             ? scenarios[0]?.mission_id
                                                             : undefined
                                                     // Update description if provided
@@ -183,7 +179,9 @@ export function MissionBuilderView({
                                                         )
                                                     }
                                                 } catch (error) {
-                                                    toast.error("Failed to submit mission: " + error)
+                                                    toast.error(
+                                                        "Failed to submit mission: " + error,
+                                                    )
                                                     setError(
                                                         error instanceof Error
                                                             ? error.message
@@ -211,140 +209,167 @@ export function MissionBuilderView({
                                                 return
                                             }
 
-                                        // validate specific mission payload
-                                        if (selectedMissionType === "EchoMission") {
-                                            const validatedPayload = zEchoMissionInput.safeParse(
-                                                missionCreateRequest.payload,
-                                            )
-                                            if (validatedPayload.error) {
-                                                toast.error(
-                                                    "Invalid payload: " +
-                                                        validatedPayload.error.message,
-                                                )
-                                                setError(validatedPayload.error.message)
+                                            // validate avatar categories for missions that require them
+                                            const payloadWithCategories =
+                                                missionCreateRequest.payload as {
+                                                    characters_categories?: string[]
+                                                }
+                                            if (
+                                                !payloadWithCategories?.characters_categories ||
+                                                payloadWithCategories.characters_categories
+                                                    .length === 0
+                                            ) {
+                                                toast.error("Avatar categories is required")
+                                                setError("Avatar categories is required")
                                                 return
                                             }
-                                        } else if (
-                                            selectedMissionType === "AllocateProfilesGroupsMission"
-                                        ) {
-                                            const validatedPayload =
-                                                zAllocateProfilesGroupsMissionInput.safeParse(
-                                                    missionCreateRequest.payload,
-                                                )
-                                            if (validatedPayload.error) {
-                                                toast.error(
-                                                    "Invalid payload: " +
-                                                        validatedPayload.error.message,
-                                                )
-                                                setError(validatedPayload.error.message)
-                                                return
-                                            }
-                                        } else if (selectedMissionType === "PuppetShowMission") {
-                                            const validatedPayload = zPuppetShowInput.safeParse(
-                                                missionCreateRequest.payload,
-                                            )
-                                            if (validatedPayload.error) {
-                                                toast.error(
-                                                    "Invalid payload: " +
-                                                        validatedPayload.error.message,
-                                                )
-                                                setError(validatedPayload.error.message)
-                                                return
-                                            }
-                                        } else if (selectedMissionType === "FluffMission") {
-                                            const validatedPayload = zFluffMissionInput.safeParse(
-                                                missionCreateRequest.payload,
-                                            )
-                                            if (validatedPayload.error) {
-                                                toast.error(
-                                                    "Invalid payload: " +
-                                                        validatedPayload.error.message,
-                                                )
-                                                setError(validatedPayload.error.message)
-                                                return
-                                            }
-                                        } else if (
-                                            selectedMissionType === "RandomDistributionMission"
-                                        ) {
-                                            const validatedPayload =
-                                                zRandomDistributionMissionInput.safeParse(
-                                                    missionCreateRequest.payload,
-                                                )
-                                            if (validatedPayload.error) {
-                                                toast.error(
-                                                    "Invalid payload: " +
-                                                        validatedPayload.error.message,
-                                                )
-                                                setError(validatedPayload.error.message)
-                                                return
-                                            }
-                                        } else if (selectedMissionType === "MassDmMission") {
-                                            const validatedPayload = zMassDmMissionInput.safeParse(
-                                                missionCreateRequest.payload,
-                                            )
-                                            if (validatedPayload.error) {
-                                                toast.error(
-                                                    "Invalid payload: " +
-                                                        validatedPayload.error.message,
-                                                )
-                                                setError(validatedPayload.error.message)
-                                                return
-                                            }
-                                            const payloadAny = missionCreateRequest.payload as any
-                                            const hasText =
-                                                payloadAny?.message?.text &&
-                                                payloadAny.message.text.trim().length > 0
-                                            const hasAttachments =
-                                                Array.isArray(payloadAny?.message?.attachments) &&
-                                                payloadAny.message.attachments.length > 0
-                                            if (!hasText && !hasAttachments) {
-                                                toast.error("Message content is required")
-                                                setError("Message content is required")
-                                                return
-                                            }
-                                        }
 
-                                        const serviceBrowserClient = new ServiceBrowserClient()
-                                        try {
-                                            const response =
-                                                await serviceBrowserClient.submitMission(
-                                                    missionCreateRequest as MissionCreate,
+                                            // validate specific mission payload
+                                            if (selectedMissionType === "EchoMission") {
+                                                const validatedPayload =
+                                                    zEchoMissionInput.safeParse(
+                                                        missionCreateRequest.payload,
+                                                    )
+                                                if (validatedPayload.error) {
+                                                    toast.error(
+                                                        "Invalid payload: " +
+                                                            validatedPayload.error.message,
+                                                    )
+                                                    setError(validatedPayload.error.message)
+                                                    return
+                                                }
+                                            } else if (
+                                                selectedMissionType ===
+                                                "AllocateProfilesGroupsMission"
+                                            ) {
+                                                const validatedPayload =
+                                                    zAllocateProfilesGroupsMissionInput.safeParse(
+                                                        missionCreateRequest.payload,
+                                                    )
+                                                if (validatedPayload.error) {
+                                                    toast.error(
+                                                        "Invalid payload: " +
+                                                            validatedPayload.error.message,
+                                                    )
+                                                    setError(validatedPayload.error.message)
+                                                    return
+                                                }
+                                            } else if (
+                                                selectedMissionType === "PuppetShowMission"
+                                            ) {
+                                                const validatedPayload = zPuppetShowInput.safeParse(
+                                                    missionCreateRequest.payload,
                                                 )
-                                            if (response) {
-                                                toast.success("Mission submitted successfully")
-                                                router.push(`/orchestrator/missions/${response.id}`)
-                                            } else {
-                                                toast.error("Failed to submit mission")
+                                                if (validatedPayload.error) {
+                                                    toast.error(
+                                                        "Invalid payload: " +
+                                                            validatedPayload.error.message,
+                                                    )
+                                                    setError(validatedPayload.error.message)
+                                                    return
+                                                }
+                                            } else if (selectedMissionType === "FluffMission") {
+                                                const validatedPayload =
+                                                    zFluffMissionInput.safeParse(
+                                                        missionCreateRequest.payload,
+                                                    )
+                                                if (validatedPayload.error) {
+                                                    toast.error(
+                                                        "Invalid payload: " +
+                                                            validatedPayload.error.message,
+                                                    )
+                                                    setError(validatedPayload.error.message)
+                                                    return
+                                                }
+                                            } else if (
+                                                selectedMissionType === "RandomDistributionMission"
+                                            ) {
+                                                const validatedPayload =
+                                                    zRandomDistributionMissionInput.safeParse(
+                                                        missionCreateRequest.payload,
+                                                    )
+                                                if (validatedPayload.error) {
+                                                    toast.error(
+                                                        "Invalid payload: " +
+                                                            validatedPayload.error.message,
+                                                    )
+                                                    setError(validatedPayload.error.message)
+                                                    return
+                                                }
+                                            } else if (selectedMissionType === "MassDmMission") {
+                                                const validatedPayload =
+                                                    zMassDmMissionInput.safeParse(
+                                                        missionCreateRequest.payload,
+                                                    )
+                                                if (validatedPayload.error) {
+                                                    toast.error(
+                                                        "Invalid payload: " +
+                                                            validatedPayload.error.message,
+                                                    )
+                                                    setError(validatedPayload.error.message)
+                                                    return
+                                                }
+                                                const payloadAny =
+                                                    missionCreateRequest.payload as any
+                                                const hasText =
+                                                    payloadAny?.message?.text &&
+                                                    payloadAny.message.text.trim().length > 0
+                                                const hasAttachments =
+                                                    Array.isArray(
+                                                        payloadAny?.message?.attachments,
+                                                    ) && payloadAny.message.attachments.length > 0
+                                                if (!hasText && !hasAttachments) {
+                                                    toast.error("Message content is required")
+                                                    setError("Message content is required")
+                                                    return
+                                                }
                                             }
-                                            const plannedMissionScenarios =
-                                                await new ServiceBrowserClient().planMission(
-                                                    response.id,
-                                                )
-                                            if (plannedMissionScenarios) {
-                                                toast.success("Mission planned successfully")
-                                                router.push(`/orchestrator/missions/${response.id}`)
-                                            } else {
-                                                toast.error("Failed to plan mission")
+
+                                            const serviceBrowserClient = new ServiceBrowserClient()
+                                            try {
+                                                const response =
+                                                    await serviceBrowserClient.submitMission(
+                                                        missionCreateRequest as MissionCreate,
+                                                    )
+                                                if (response) {
+                                                    toast.success("Mission submitted successfully")
+                                                    router.push(
+                                                        `/orchestrator/missions/${response.id}`,
+                                                    )
+                                                } else {
+                                                    toast.error("Failed to submit mission")
+                                                }
+                                                const plannedMissionScenarios =
+                                                    await new ServiceBrowserClient().planMission(
+                                                        response.id,
+                                                    )
+                                                if (plannedMissionScenarios) {
+                                                    toast.success("Mission planned successfully")
+                                                    router.push(
+                                                        `/orchestrator/missions/${response.id}`,
+                                                    )
+                                                } else {
+                                                    toast.error("Failed to plan mission")
+                                                }
+                                                await new Promise((resolve) => {
+                                                    setTimeout(resolve, 2000)
+                                                })
+                                                router.refresh()
+                                            } catch (error) {
+                                                const errorMessage =
+                                                    error instanceof Error
+                                                        ? error.message
+                                                        : String(error)
+                                                // Extract the innermost error message if it's wrapped
+                                                const match = errorMessage.match(/"([^"]+)"$/)
+                                                const cleanMessage = match ? match[1] : errorMessage
+                                                toast.error(cleanMessage)
+                                                setError(cleanMessage)
                                             }
-                                            await new Promise((resolve) => {
-                                                setTimeout(resolve, 2000)
-                                            })
-                                            router.refresh()
-                                        } catch (error) {
-                                            const errorMessage =
-                                                error instanceof Error ? error.message : String(error)
-                                            // Extract the innermost error message if it's wrapped
-                                            const match = errorMessage.match(
-                                                /"([^"]+)"$/,
-                                            )
-                                            const cleanMessage = match ? match[1] : errorMessage
-                                            toast.error(cleanMessage)
-                                            setError(cleanMessage)
+                                        } finally {
+                                            setIsSubmittingMission(false)
                                         }
-                                    } finally {
-                                        setIsSubmittingMission(false)
-                                    }
-                                }}
+                                    }}
                                 >
                                     {isSubmittingMission ? (
                                         <>
@@ -370,43 +395,45 @@ export function MissionBuilderView({
                     </TooltipProvider>
                 </div>
             </PageHeader>
-            <ul className="mb-16 flex w-full flex-row gap-8">
-                {Object.entries(MissionMetadata).map(([type, data]) => {
-                    return (
-                        <li key={type}>
-                            <Card
-                                className={cn(
-                                    "relative flex h-42 w-[280px] flex-col gap-2 border-2 px-4 py-1 text-left text-[16px] select-none",
-                                    data.supported &&
-                                        "scale-100 cursor-pointer transition-all select-none hover:scale-105 hover:bg-gray-50 active:scale-95",
-                                    !data.supported &&
-                                        "bg-[repeating-linear-gradient(45deg,theme(colors.yellow.50/10),theme(colors.yellow.50/10)_10px,transparent_10px,transparent_20px)]",
-                                    selectedMissionType === type && "border-blue-400",
-                                )}
-                                onClick={() => {
-                                    if (!data.supported) return
-                                    return setSelectedMissionType(type as MissionType)
-                                }}
-                            >
-                                {!data.supported && (
-                                    <div className="absolute top-2 right-2 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium tracking-wide text-yellow-900 uppercase">
-                                        Unsupported
-                                    </div>
-                                )}
-                                <CardHeader className="flex flex-row p-2 text-left">
-                                    <CardTitle className="flex flex-col gap-2 pt-4">
-                                        <data.icon className="mb-2 size-4" />
-                                        <div>{data.name}</div>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardDescription className="px-2 text-left">
-                                    {data.description}
-                                </CardDescription>
-                            </Card>
-                        </li>
-                    )
-                })}
-            </ul>
+            <div className="scrollbar-hide mb-16 w-full overflow-x-auto">
+                <ul className="flex w-max flex-row gap-8 p-2">
+                    {Object.entries(MissionMetadata).map(([type, data]) => {
+                        return (
+                            <li key={type}>
+                                <Card
+                                    className={cn(
+                                        "relative flex h-42 w-[280px] flex-col gap-2 border-2 px-4 py-1 text-left text-[16px] select-none",
+                                        data.supported &&
+                                            "scale-100 cursor-pointer transition-all select-none hover:scale-105 hover:bg-gray-50 active:scale-95",
+                                        !data.supported &&
+                                            "bg-[repeating-linear-gradient(45deg,theme(colors.yellow.50/10),theme(colors.yellow.50/10)_10px,transparent_10px,transparent_20px)]",
+                                        selectedMissionType === type && "border-blue-400",
+                                    )}
+                                    onClick={() => {
+                                        if (!data.supported) return
+                                        return setSelectedMissionType(type as MissionType)
+                                    }}
+                                >
+                                    {!data.supported && (
+                                        <div className="absolute top-2 right-2 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium tracking-wide text-yellow-900 uppercase">
+                                            Unsupported
+                                        </div>
+                                    )}
+                                    <CardHeader className="flex flex-row p-2 text-left">
+                                        <CardTitle className="flex flex-col gap-2 pt-4">
+                                            <data.icon className="mb-2 size-4" />
+                                            <div>{data.name}</div>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardDescription className="px-2 text-left">
+                                        {data.description}
+                                    </CardDescription>
+                                </Card>
+                            </li>
+                        )
+                    })}
+                </ul>
+            </div>
             {selectedMissionType && (
                 <Card>
                     <CardContent>

@@ -4,12 +4,21 @@ import { MediaItem, MessageWithMedia } from "@lib/api/models"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { cn } from "@lib/utils"
 import EmojiPicker, { Theme } from "emoji-picker-react"
-import { SmileIcon, XIcon } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { PlusIcon, SmileIcon, XIcon } from "lucide-react"
+import { useRef, useState } from "react"
+import { toast } from "sonner"
 import { ChatBubble } from "./chat-bubble"
+import { Dropzone } from "./dropzone"
 import { Button } from "./ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "./ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Textarea } from "./ui/textarea"
 
 function MessagePreview({
@@ -59,24 +68,9 @@ export function MessageBuilder({
     const [messages, setMessages] = useState<MessageWithMedia[]>([])
     const [activeMessageText, setActiveMessageText] = useState<string | null>(null)
     const [activeMessageMedia, setActiveMessageMedia] = useState<MediaItem | null>(null)
-    const [media, setMedia] = useState<MediaItem[]>([])
-    const [isLoadingMedia, setIsLoadingMedia] = useState(false)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-    const activeMessageMediaKey = activeMessageMedia?.name
-        ? activeMessageMedia.name.split("/").pop()
-        : null
-
-    useEffect(() => {
-        setIsLoadingMedia(true)
-        new ServiceBrowserClient()
-            .getMedia()
-            .then((media) => {
-                setMedia(media)
-            })
-            .finally(() => setIsLoadingMedia(false))
-    }, [])
 
     function addMessage() {
         const newMessages: MessageWithMedia[] = [
@@ -177,54 +171,112 @@ export function MessageBuilder({
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <Select
-                            value={activeMessageMediaKey ?? undefined}
-                            onOpenChange={async () => {
-                                if (!media) {
-                                    const fetchedMedia = await new ServiceBrowserClient().getMedia()
-                                    setMedia(fetchedMedia)
-                                }
-                            }}
-                            onValueChange={(item) => {
-                                const mediaItems = media.filter((currItem) =>
-                                    currItem.key.endsWith(item),
-                                )
-                                if (!mediaItems || mediaItems.length <= 0) {
-                                    return
-                                }
-                                const mediaItem = mediaItems[0]
-                                setActiveMessageMedia(mediaItem)
-                            }}
-                        >
-                            <SelectTrigger className="min-h-12 w-[80%]">
-                                <SelectValue placeholder="Select media">
-                                    {activeMessageMediaKey}
-                                    {activeMessageMedia?.uri && (
-                                        <img
-                                            src={activeMessageMedia?.uri}
-                                            alt="media"
-                                            className="h-8 w-8 rounded-lg object-cover"
-                                        />
-                                    )}
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {isLoadingMedia && (
-                                    <SelectItem value="loading">Loading...</SelectItem>
-                                )}
-                                {!isLoadingMedia &&
-                                    media.map((item) => (
-                                        <SelectItem key={item.name} value={item.name}>
-                                            {item.name}
-                                            <img
-                                                src={item.uri}
-                                                alt="media"
-                                                className="h-8 w-8 rounded-lg object-cover"
-                                            />
-                                        </SelectItem>
-                                    ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2">
+                            {activeMessageMedia ? (
+                                <div className="flex items-center gap-2">
+                                    <img
+                                        src={activeMessageMedia.uri}
+                                        alt="media"
+                                        className="h-12 w-12 rounded-lg object-cover"
+                                    />
+                                    <span className="max-w-[120px] truncate text-sm">
+                                        {activeMessageMedia.name}
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setActiveMessageMedia(null)}
+                                        className="h-6 w-6 p-0"
+                                    >
+                                        <XIcon className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Dialog
+                                    open={isUploadDialogOpen}
+                                    onOpenChange={setIsUploadDialogOpen}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95"
+                                        >
+                                            <PlusIcon className="mr-1 h-4 w-4" />
+                                            Upload Media
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Upload media</DialogTitle>
+                                            <DialogDescription asChild>
+                                                <div>
+                                                    <Dropzone
+                                                        onUpload={async (files) => {
+                                                            if (files.length === 0) {
+                                                                console.log(
+                                                                    "[MessageBuilder] No files to upload",
+                                                                )
+                                                                return
+                                                            }
+                                                            console.log(
+                                                                "[MessageBuilder] Uploading files:",
+                                                                files.map((f) => f.name),
+                                                            )
+                                                            try {
+                                                                console.log(
+                                                                    "[MessageBuilder] Calling uploadMedia...",
+                                                                )
+                                                                await new ServiceBrowserClient().uploadMedia(
+                                                                    files,
+                                                                )
+                                                                console.log(
+                                                                    "[MessageBuilder] Upload complete, fetching media list...",
+                                                                )
+                                                                // Fetch the uploaded media to get its URI
+                                                                const allMedia =
+                                                                    await new ServiceBrowserClient().getMedia()
+                                                                console.log(
+                                                                    "[MessageBuilder] All media:",
+                                                                    allMedia.map((m) => m.name),
+                                                                )
+                                                                // Find the just-uploaded file by name
+                                                                const uploadedFile = allMedia.find(
+                                                                    (m) =>
+                                                                        m.name === files[0].name ||
+                                                                        m.name.endsWith(
+                                                                            files[0].name,
+                                                                        ),
+                                                                )
+                                                                console.log(
+                                                                    "[MessageBuilder] Found uploaded file:",
+                                                                    uploadedFile,
+                                                                )
+                                                                if (uploadedFile) {
+                                                                    setActiveMessageMedia(
+                                                                        uploadedFile,
+                                                                    )
+                                                                }
+                                                                setIsUploadDialogOpen(false)
+                                                                toast.success("Media uploaded")
+                                                            } catch (error) {
+                                                                console.error(
+                                                                    "[MessageBuilder] Upload failed:",
+                                                                    error,
+                                                                )
+                                                                toast.error(
+                                                                    `Failed to upload media: ${error instanceof Error ? error.message : "Unknown error"}`,
+                                                                )
+                                                            }
+                                                        }}
+                                                        size="compact"
+                                                    />
+                                                </div>
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                    </DialogContent>
+                                </Dialog>
+                            )}
+                        </div>
                     </ChatBubble>
                 </div>
             )}

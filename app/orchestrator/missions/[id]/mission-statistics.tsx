@@ -13,12 +13,14 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { ChartConfig, ChartContainer, ChartLegend, ChartTooltip } from "@/components/ui/chart"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { MissionFailureReason, MissionStatistics as MissionStatisticsType } from "@lib/api/models"
 import { CategoryRead, ChatRead, MissionRead } from "@lib/api/orchestrator/types.gen"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, MessageCircle, Settings, Users, X } from "lucide-react"
-import { useState } from "react"
+import { Loader2, MessageCircle, Users, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { CategorySelector } from "../../mission-builder/category-selector"
 
@@ -260,10 +262,7 @@ function MissionFailureReasonsChart({
                     ? `Status: ${action.status.status_code}`
                     : ""
             const actionError =
-                primaryError ||
-                statusError ||
-                fallbackStatusCode ||
-                "Unknown failure reason"
+                primaryError || statusError || fallbackStatusCode || "Unknown failure reason"
             acc[actionError] = (acc[actionError] || 0) + 1
             return acc
         },
@@ -365,8 +364,17 @@ function MissionSuccessfulChats({
     refreshing: boolean
     allCategories?: CategoryRead[]
 }) {
-    const [managingCategories, setManagingCategories] = useState<string | null>(null)
     const [chatCategories, setChatCategories] = useState<Record<string, CategoryRead[]>>({})
+    const [selectedChatIds, setSelectedChatIds] = useState<Set<string>>(new Set())
+    const [bulkCategoryInput, setBulkCategoryInput] = useState("")
+    const [isApplyingBulkCategory, setIsApplyingBulkCategory] = useState(false)
+
+    // Get the single selected chat (for individual management mode)
+    const singleSelectedChat = useMemo(() => {
+        if (selectedChatIds.size !== 1) return null
+        const chatId = Array.from(selectedChatIds)[0]
+        return successfulChats.find((chat) => chat.id === chatId) ?? null
+    }, [selectedChatIds, successfulChats])
 
     // Fetch categories for a specific chat
     const fetchChatCategories = async (chatId: string) => {
@@ -381,6 +389,13 @@ function MissionSuccessfulChats({
             return []
         }
     }
+
+    // Auto-fetch categories when a single chat is selected
+    useEffect(() => {
+        if (singleSelectedChat && !chatCategories[singleSelectedChat.id]) {
+            fetchChatCategories(singleSelectedChat.id)
+        }
+    }, [singleSelectedChat, chatCategories])
 
     // Convert category names to CategoryRead objects for display
     const getCategoryObjects = (chat: ChatRead): CategoryRead[] => {
@@ -398,7 +413,58 @@ function MissionSuccessfulChats({
         return []
     }
 
-    const handleCategoryChange = async (
+    const handleSelectChat = (chatId: string, checked: boolean) => {
+        setSelectedChatIds((prev) => {
+            const updated = new Set(prev)
+            if (checked) {
+                updated.add(chatId)
+            } else {
+                updated.delete(chatId)
+            }
+            return updated
+        })
+    }
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedChatIds(new Set(successfulChats.map((chat) => chat.id)))
+        } else {
+            setSelectedChatIds(new Set())
+        }
+    }
+
+    const isAllSelected = useMemo(() => {
+        return (
+            successfulChats.length > 0 &&
+            successfulChats.every((chat) => selectedChatIds.has(chat.id))
+        )
+    }, [successfulChats, selectedChatIds])
+
+    const findCategoryByNameOrId = (input: string): CategoryRead | null => {
+        if (!allCategories) return null
+        const normalized = input.toLowerCase().trim()
+        return (
+            allCategories.find(
+                (cat) => cat.id === input || cat.name?.toLowerCase() === normalized,
+            ) ?? null
+        )
+    }
+
+    const ensureCategoryByName = async (name: string): Promise<CategoryRead | null> => {
+        const trimmed = name.trim()
+        if (!trimmed) return null
+
+        // First try to find existing category
+        const existing = findCategoryByNameOrId(trimmed)
+        if (existing) return existing
+
+        // Category doesn't exist - inform user they need to create it first
+        toast.error(`Category "${trimmed}" not found. Please use an existing category name.`)
+        return null
+    }
+
+    // Handle category change for a single chat (using CategorySelector)
+    const handleSingleChatCategoryChange = async (
         chatId: string,
         selectedCategories: { id: string; label: string }[],
     ) => {
@@ -432,6 +498,48 @@ function MissionSuccessfulChats({
         }
     }
 
+    const handleBulkApplyCategory = async () => {
+        if (selectedChatIds.size === 0) {
+            toast.error("Select at least one chat to update.")
+            return
+        }
+        if (!bulkCategoryInput.trim()) {
+            toast.error("Enter or select a category name.")
+            return
+        }
+
+        setIsApplyingBulkCategory(true)
+        try {
+            const category = await ensureCategoryByName(bulkCategoryInput)
+            if (!category) {
+                return
+            }
+
+            const client = new ServiceBrowserClient()
+            const chatIds = Array.from(selectedChatIds)
+
+            // Use bulk endpoint
+            await client.addManyChatsToCategory(chatIds, category.id)
+
+            // Refresh categories for all affected chats
+            await Promise.all(chatIds.map((chatId) => fetchChatCategories(chatId)))
+
+            toast.success(
+                `Assigned ${category.name} to ${chatIds.length} chat${chatIds.length === 1 ? "" : "s"}.`,
+            )
+            setBulkCategoryInput("")
+            setSelectedChatIds(new Set())
+        } catch (error) {
+            toast.error(
+                `Failed to update categories: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
+            )
+        } finally {
+            setIsApplyingBulkCategory(false)
+        }
+    }
+
     if (!successfulChats || !Array.isArray(successfulChats) || successfulChats.length === 0) {
         return (
             <Card className="flex w-[500px] flex-col">
@@ -451,6 +559,8 @@ function MissionSuccessfulChats({
         )
     }
 
+    const bulkCategoryOptionsId = "bulk-category-options"
+
     return (
         <Card className="flex w-[500px] flex-col">
             <CardHeader className="items-center pb-0">
@@ -466,11 +576,117 @@ function MissionSuccessfulChats({
                         <span>Refreshing...</span>
                     </div>
                 )}
+
+                {/* Category controls */}
+                {allCategories && (
+                    <div className="bg-muted/40 mb-4 rounded-lg border p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                            <Checkbox
+                                checked={isAllSelected}
+                                onCheckedChange={handleSelectAll}
+                                id="select-all-chats"
+                            />
+                            <label
+                                htmlFor="select-all-chats"
+                                className="cursor-pointer text-sm font-medium"
+                            >
+                                Select all ({successfulChats.length})
+                            </label>
+                            {selectedChatIds.size > 0 && (
+                                <Badge variant="secondary" className="ml-2">
+                                    {selectedChatIds.size} selected
+                                </Badge>
+                            )}
+                            {selectedChatIds.size > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedChatIds(new Set())}
+                                    className="ml-auto"
+                                >
+                                    <X className="mr-1 h-3 w-3" />
+                                    Clear
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Single chat selected - show full category management */}
+                        {singleSelectedChat && (
+                            <div className="bg-background mt-3 rounded-lg border p-3">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <Users className="text-muted-foreground h-4 w-4" />
+                                    <span className="font-medium">
+                                        {singleSelectedChat.username ||
+                                            singleSelectedChat.platform_id ||
+                                            singleSelectedChat.id}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                        — Manage categories
+                                    </span>
+                                </div>
+                                <CategorySelector
+                                    categories={allCategories}
+                                    label=""
+                                    existingCategories={getCategoryObjects(singleSelectedChat)}
+                                    onChangeValue={(selected) =>
+                                        handleSingleChatCategoryChange(
+                                            singleSelectedChat.id,
+                                            selected,
+                                        )
+                                    }
+                                />
+                            </div>
+                        )}
+
+                        {/* Multiple chats selected - show bulk add only */}
+                        {selectedChatIds.size > 1 && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <Input
+                                    placeholder="Category name"
+                                    value={bulkCategoryInput}
+                                    onChange={(e) => setBulkCategoryInput(e.target.value)}
+                                    list={bulkCategoryOptionsId}
+                                    className="w-40"
+                                />
+                                <datalist id={bulkCategoryOptionsId}>
+                                    {allCategories
+                                        .filter((category) => !!category.name)
+                                        .map((category) => (
+                                            <option key={category.id} value={category.name ?? ""} />
+                                        ))}
+                                </datalist>
+                                <Button
+                                    size="sm"
+                                    onClick={handleBulkApplyCategory}
+                                    disabled={!bulkCategoryInput.trim() || isApplyingBulkCategory}
+                                >
+                                    {isApplyingBulkCategory ? (
+                                        <>
+                                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        "Add category"
+                                    )}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div className="max-h-[400px] space-y-2 overflow-y-auto">
                     {(successfulChats || []).map((chat, index) => (
                         <div key={chat.id || index} className="bg-muted/50 rounded-lg p-3">
                             <div className="mb-2 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
+                                    {allCategories && (
+                                        <Checkbox
+                                            checked={selectedChatIds.has(chat.id)}
+                                            onCheckedChange={(checked) =>
+                                                handleSelectChat(chat.id, checked === true)
+                                            }
+                                        />
+                                    )}
                                     <div className="flex items-center gap-2">
                                         <Users className="text-muted-foreground h-4 w-4" />
                                         <span className="max-w-[200px] truncate font-medium">
@@ -483,24 +699,6 @@ function MissionSuccessfulChats({
                                         {chat.participants_count &&
                                             `${chat.participants_count} participants`}
                                     </div>
-                                    {allCategories && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={async () => {
-                                                if (managingCategories === chat.id) {
-                                                    setManagingCategories(null)
-                                                } else {
-                                                    setManagingCategories(chat.id)
-                                                    if (!chatCategories[chat.id]) {
-                                                        await fetchChatCategories(chat.id)
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <Settings className="h-3 w-3" />
-                                        </Button>
-                                    )}
                                 </div>
                             </div>
 
@@ -509,7 +707,7 @@ function MissionSuccessfulChats({
                                 const currentCategories = getCategoryObjects(chat)
                                 return (
                                     currentCategories.length > 0 && (
-                                        <div className="mb-2 flex flex-wrap gap-1">
+                                        <div className="mb-2 ml-7 flex flex-wrap gap-1">
                                             {currentCategories.map((category) => (
                                                 <Badge
                                                     key={category.id}
@@ -523,33 +721,378 @@ function MissionSuccessfulChats({
                                     )
                                 )
                             })()}
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+            <CardFooter className="flex-col gap-2 text-sm"></CardFooter>
+        </Card>
+    )
+}
 
-                            {/* Category management */}
-                            {managingCategories === chat.id && allCategories && (
-                                <div className="bg-background mt-2 rounded-lg border p-2">
-                                    <div className="mb-2 text-sm font-medium">
-                                        Manage Categories
-                                    </div>
-                                    <CategorySelector
-                                        categories={allCategories}
-                                        label=""
-                                        existingCategories={getCategoryObjects(chat)}
-                                        onChangeValue={(selected) =>
-                                            handleCategoryChange(chat.id, selected)
-                                        }
-                                    />
-                                    <div className="mt-2 flex justify-end">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setManagingCategories(null)}
-                                        >
-                                            <X className="mr-1 h-3 w-3" />
-                                            Close
-                                        </Button>
+function MissionFailedChats({
+    failedChats,
+    refreshing,
+    allCategories,
+}: {
+    failedChats: ChatRead[]
+    refreshing: boolean
+    allCategories?: CategoryRead[]
+}) {
+    const [chatCategories, setChatCategories] = useState<Record<string, CategoryRead[]>>({})
+    const [selectedChatIds, setSelectedChatIds] = useState<Set<string>>(new Set())
+    const [bulkCategoryInput, setBulkCategoryInput] = useState("")
+    const [isApplyingBulkCategory, setIsApplyingBulkCategory] = useState(false)
+
+    // Get the single selected chat (for individual management mode)
+    const singleSelectedChat = useMemo(() => {
+        if (selectedChatIds.size !== 1) return null
+        const chatId = Array.from(selectedChatIds)[0]
+        return failedChats.find((chat) => chat.id === chatId) ?? null
+    }, [selectedChatIds, failedChats])
+
+    // Fetch categories for a specific chat
+    const fetchChatCategories = async (chatId: string) => {
+        try {
+            const categories = await new ServiceBrowserClient().getOrchestratorChatCategories(
+                chatId,
+            )
+            setChatCategories((prev) => ({ ...prev, [chatId]: categories }))
+            return categories
+        } catch (error) {
+            console.error(`Failed to fetch categories for chat ${chatId}:`, error)
+            return []
+        }
+    }
+
+    // Auto-fetch categories when a single chat is selected
+    useEffect(() => {
+        if (singleSelectedChat && !chatCategories[singleSelectedChat.id]) {
+            fetchChatCategories(singleSelectedChat.id)
+        }
+    }, [singleSelectedChat, chatCategories])
+
+    // Convert category names to CategoryRead objects for display
+    const getCategoryObjects = (chat: ChatRead): CategoryRead[] => {
+        if (chatCategories[chat.id]) {
+            return chatCategories[chat.id]
+        }
+
+        // Fallback to chat.categories if available and we have allCategories to map names to objects
+        if (chat.categories && allCategories) {
+            return chat.categories
+                .map((categoryName) => allCategories.find((cat) => cat.name === categoryName))
+                .filter(Boolean) as CategoryRead[]
+        }
+
+        return []
+    }
+
+    const handleSelectChat = (chatId: string, checked: boolean) => {
+        setSelectedChatIds((prev) => {
+            const updated = new Set(prev)
+            if (checked) {
+                updated.add(chatId)
+            } else {
+                updated.delete(chatId)
+            }
+            return updated
+        })
+    }
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedChatIds(new Set(failedChats.map((chat) => chat.id)))
+        } else {
+            setSelectedChatIds(new Set())
+        }
+    }
+
+    const isAllSelected = useMemo(() => {
+        return failedChats.length > 0 && failedChats.every((chat) => selectedChatIds.has(chat.id))
+    }, [failedChats, selectedChatIds])
+
+    const findCategoryByNameOrId = (input: string): CategoryRead | null => {
+        if (!allCategories) return null
+        const normalized = input.toLowerCase().trim()
+        return (
+            allCategories.find(
+                (cat) => cat.id === input || cat.name?.toLowerCase() === normalized,
+            ) ?? null
+        )
+    }
+
+    const ensureCategoryByName = async (name: string): Promise<CategoryRead | null> => {
+        const trimmed = name.trim()
+        if (!trimmed) return null
+
+        // First try to find existing category
+        const existing = findCategoryByNameOrId(trimmed)
+        if (existing) return existing
+
+        // Category doesn't exist - inform user they need to create it first
+        toast.error(`Category "${trimmed}" not found. Please use an existing category name.`)
+        return null
+    }
+
+    // Handle category change for a single chat (using CategorySelector)
+    const handleSingleChatCategoryChange = async (
+        chatId: string,
+        selectedCategories: { id: string; label: string }[],
+    ) => {
+        try {
+            const currentCategories = chatCategories[chatId] || []
+            const currentCategoryIds = currentCategories.map((c) => c.id)
+            const selectedCategoryIds = selectedCategories.map((c) => c.id)
+
+            const newCategoryIds = selectedCategoryIds.filter(
+                (id) => !currentCategoryIds.includes(id),
+            )
+            const removedCategoryIds = currentCategoryIds.filter(
+                (id) => !selectedCategoryIds.includes(id),
+            )
+
+            // Update categories
+            if (newCategoryIds.length > 0 || removedCategoryIds.length > 0) {
+                await new ServiceBrowserClient().updateChatCategories(
+                    chatId,
+                    newCategoryIds,
+                    removedCategoryIds,
+                )
+
+                // Refresh categories for this chat
+                await fetchChatCategories(chatId)
+                toast.success("Chat categories updated successfully")
+            }
+        } catch (error) {
+            console.error("Failed to update chat categories:", error)
+            toast.error("Failed to update chat categories")
+        }
+    }
+
+    const handleBulkApplyCategory = async () => {
+        if (selectedChatIds.size === 0) {
+            toast.error("Select at least one chat to update.")
+            return
+        }
+        if (!bulkCategoryInput.trim()) {
+            toast.error("Enter or select a category name.")
+            return
+        }
+
+        setIsApplyingBulkCategory(true)
+        try {
+            const category = await ensureCategoryByName(bulkCategoryInput)
+            if (!category) {
+                return
+            }
+
+            const client = new ServiceBrowserClient()
+            const chatIds = Array.from(selectedChatIds)
+
+            // Use bulk endpoint
+            await client.addManyChatsToCategory(chatIds, category.id)
+
+            // Refresh categories for all affected chats
+            await Promise.all(chatIds.map((chatId) => fetchChatCategories(chatId)))
+
+            toast.success(
+                `Assigned ${category.name} to ${chatIds.length} chat${chatIds.length === 1 ? "" : "s"}.`,
+            )
+            setBulkCategoryInput("")
+            setSelectedChatIds(new Set())
+        } catch (error) {
+            toast.error(
+                `Failed to update categories: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
+            )
+        } finally {
+            setIsApplyingBulkCategory(false)
+        }
+    }
+
+    if (!failedChats || !Array.isArray(failedChats) || failedChats.length === 0) {
+        return (
+            <Card className="flex w-[500px] flex-col">
+                <CardHeader className="items-center pb-0">
+                    <CardTitle className="flex items-center gap-2">
+                        <MessageCircle className="text-destructive h-5 w-5" />
+                        Failed Chats
+                    </CardTitle>
+                    <CardDescription>No failed chats found</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 pb-0">
+                    <div className="text-muted-foreground flex h-[200px] items-center justify-center">
+                        No failed chats available
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    const bulkCategoryOptionsId = "bulk-category-options-failed"
+
+    return (
+        <Card className="flex w-[500px] flex-col">
+            <CardHeader className="items-center pb-0">
+                <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="text-destructive h-5 w-5" />
+                    Failed Chats ({(failedChats || []).length})
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 pb-0">
+                {refreshing && (
+                    <div className="mb-4 flex flex-row items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Refreshing...</span>
+                    </div>
+                )}
+
+                {/* Category controls */}
+                {allCategories && (
+                    <div className="bg-muted/40 mb-4 rounded-lg border p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                            <Checkbox
+                                checked={isAllSelected}
+                                onCheckedChange={handleSelectAll}
+                                id="select-all-failed-chats"
+                            />
+                            <label
+                                htmlFor="select-all-failed-chats"
+                                className="cursor-pointer text-sm font-medium"
+                            >
+                                Select all ({failedChats.length})
+                            </label>
+                            {selectedChatIds.size > 0 && (
+                                <Badge variant="secondary" className="ml-2">
+                                    {selectedChatIds.size} selected
+                                </Badge>
+                            )}
+                            {selectedChatIds.size > 0 && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedChatIds(new Set())}
+                                    className="ml-auto"
+                                >
+                                    <X className="mr-1 h-3 w-3" />
+                                    Clear
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Single chat selected - show full category management */}
+                        {singleSelectedChat && (
+                            <div className="bg-background mt-3 rounded-lg border p-3">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <Users className="text-muted-foreground h-4 w-4" />
+                                    <span className="font-medium">
+                                        {singleSelectedChat.username ||
+                                            singleSelectedChat.platform_id ||
+                                            singleSelectedChat.id}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">
+                                        — Manage categories
+                                    </span>
+                                </div>
+                                <CategorySelector
+                                    categories={allCategories}
+                                    label=""
+                                    existingCategories={getCategoryObjects(singleSelectedChat)}
+                                    onChangeValue={(selected) =>
+                                        handleSingleChatCategoryChange(
+                                            singleSelectedChat.id,
+                                            selected,
+                                        )
+                                    }
+                                />
+                            </div>
+                        )}
+
+                        {/* Multiple chats selected - show bulk add only */}
+                        {selectedChatIds.size > 1 && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <Input
+                                    placeholder="Category name"
+                                    value={bulkCategoryInput}
+                                    onChange={(e) => setBulkCategoryInput(e.target.value)}
+                                    list={bulkCategoryOptionsId}
+                                    className="w-40"
+                                />
+                                <datalist id={bulkCategoryOptionsId}>
+                                    {allCategories
+                                        .filter((category) => !!category.name)
+                                        .map((category) => (
+                                            <option key={category.id} value={category.name ?? ""} />
+                                        ))}
+                                </datalist>
+                                <Button
+                                    size="sm"
+                                    onClick={handleBulkApplyCategory}
+                                    disabled={!bulkCategoryInput.trim() || isApplyingBulkCategory}
+                                >
+                                    {isApplyingBulkCategory ? (
+                                        <>
+                                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        "Add category"
+                                    )}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="max-h-[400px] space-y-2 overflow-y-auto">
+                    {(failedChats || []).map((chat, index) => (
+                        <div key={chat.id || index} className="bg-muted/50 rounded-lg p-3">
+                            <div className="mb-2 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {allCategories && (
+                                        <Checkbox
+                                            checked={selectedChatIds.has(chat.id)}
+                                            onCheckedChange={(checked) =>
+                                                handleSelectChat(chat.id, checked === true)
+                                            }
+                                        />
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <Users className="text-muted-foreground h-4 w-4" />
+                                        <span className="max-w-[200px] truncate font-medium">
+                                            {chat.username || chat.platform_id || chat.id}
+                                        </span>
                                     </div>
                                 </div>
-                            )}
+                                <div className="flex items-center gap-2">
+                                    <div className="text-muted-foreground text-xs">
+                                        {chat.participants_count &&
+                                            `${chat.participants_count} participants`}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Show current categories */}
+                            {(() => {
+                                const currentCategories = getCategoryObjects(chat)
+                                return (
+                                    currentCategories.length > 0 && (
+                                        <div className="mb-2 ml-7 flex flex-wrap gap-1">
+                                            {currentCategories.map((category) => (
+                                                <Badge
+                                                    key={category.id}
+                                                    variant="outline"
+                                                    className="text-xs"
+                                                >
+                                                    {category.name}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    )
+                                )
+                            })()}
                         </div>
                     ))}
                 </div>
@@ -591,6 +1134,16 @@ export function MissionStatistics({ mission }: { mission: MissionRead }) {
     })
 
     const {
+        isPending: isFailedChatsPending,
+        error: failedChatsError,
+        data: failedChats,
+    } = useQuery({
+        queryKey: ["mission-failed-chats", mission.id],
+        queryFn: () => new ServiceBrowserClient().getMissionFailedChats(mission.id),
+        refetchInterval: 10000, // poll every 10 seconds
+    })
+
+    const {
         isPending: isCategoriesPending,
         error: categoriesError,
         data: allCategories,
@@ -619,6 +1172,13 @@ export function MissionStatistics({ mission }: { mission: MissionRead }) {
                     <MissionSuccessfulChats
                         successfulChats={successfulChats}
                         refreshing={isSuccessfulChatsPending}
+                        allCategories={allCategories}
+                    />
+                )}
+                {failedChats && (
+                    <MissionFailedChats
+                        failedChats={failedChats}
+                        refreshing={isFailedChatsPending}
                         allCategories={allCategories}
                     />
                 )}

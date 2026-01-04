@@ -138,19 +138,19 @@ export function RandomDistributionMissionBuilder({
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-8 p-2">
-                {/* Messages and Chat Selection Side by Side */}
-                <div className="flex flex-row gap-4">
+                {/* Messages and Selection Sections */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {/* Messages Section */}
-                    <div className="flex-1">
+                    <div className="lg:row-span-2">
                         <MessageBuilder onUpdateMessages={(messages) => setMessages(messages)} />
                     </div>
 
                     {/* Chat Selection Section */}
-                    <div className="flex-1">
-                        <div className="rounded-2xl bg-gradient-to-br from-blue-50/50 to-blue-100/50 px-4 py-3 text-gray-900 shadow-sm">
+                    <div className="h-fit">
+                        <div className="rounded-2xl bg-gradient-to-br from-blue-50/50 to-blue-100/50 px-4 py-3 text-gray-900 shadow-sm dark:from-blue-950/30 dark:to-blue-900/30 dark:text-gray-100">
                             <div className="flex flex-col gap-3">
                                 <div className="flex w-full justify-center">
-                                    <Label className="text-base text-gray-700 md:text-sm">
+                                    <Label className="text-base text-gray-700 md:text-sm dark:text-gray-200">
                                         Chat Selection
                                     </Label>
                                 </div>
@@ -168,7 +168,7 @@ export function RandomDistributionMissionBuilder({
                                         />
                                         <Label
                                             htmlFor="all-chats"
-                                            className="text-base text-gray-700 md:text-sm"
+                                            className="text-base text-gray-700 md:text-sm dark:text-gray-200"
                                         >
                                             Write to all chats
                                         </Label>
@@ -186,7 +186,7 @@ export function RandomDistributionMissionBuilder({
                                         />
                                         <Label
                                             htmlFor="select-chats"
-                                            className="text-base text-gray-700 md:text-sm"
+                                            className="text-base text-gray-700 md:text-sm dark:text-gray-200"
                                         >
                                             Select chats
                                         </Label>
@@ -195,7 +195,7 @@ export function RandomDistributionMissionBuilder({
 
                                 {/* Conditional selectors based on mode */}
                                 {chatSelectionMode === "select" && (
-                                    <div className="mt-4 flex w-full flex-row gap-4">
+                                    <div className="mt-4 flex w-full flex-col gap-4 sm:flex-row">
                                         <div className="flex-1">
                                             <CategorySelector
                                                 categories={activeChatCategories}
@@ -215,6 +215,25 @@ export function RandomDistributionMissionBuilder({
                             </div>
                         </div>
                     </div>
+
+                    {/* Avatar Categories Section */}
+                    <div className="h-fit">
+                        <div className="rounded-2xl bg-gradient-to-br from-purple-50/50 to-purple-100/50 px-4 py-3 text-gray-900 shadow-sm dark:from-purple-950/30 dark:to-purple-900/30 dark:text-gray-100">
+                            <div className="flex flex-col gap-3">
+                                <div className="flex w-full justify-center">
+                                    <Label className="text-base text-gray-700 md:text-sm dark:text-gray-200">
+                                        Avatar Categories
+                                    </Label>
+                                </div>
+                                <CategorySelector
+                                    categories={activeProfileCategories}
+                                    label="Select avatar categories"
+                                    required
+                                    onChangeValue={(value) => setProfileCategories(value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <Collapsible open={isAdvancedOptionsOpen} onOpenChange={setIsAdvancedOptionsOpen}>
@@ -226,16 +245,6 @@ export function RandomDistributionMissionBuilder({
                     </CollapsibleTrigger>
                     <CollapsibleContent className="animate-in slide-in-from-top-2 mt-4 duration-300">
                         <div className="flex flex-col gap-8 rounded-lg border-2 border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-purple-50/50 p-6 backdrop-blur-sm dark:border-blue-800 dark:from-blue-950/30 dark:to-purple-950/30">
-                            {/* Avatar Categories Section */}
-                            <div className="flex flex-col gap-4">
-                                <CategorySelector
-                                    categories={activeProfileCategories}
-                                    label="Avatar categories"
-                                    required
-                                    onChangeValue={(value) => setProfileCategories(value)}
-                                />
-                            </div>
-
                             <InputWithLabel
                                 label="Global messages amount"
                                 type="number"

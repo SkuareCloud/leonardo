@@ -35,7 +35,7 @@ import {
     useImperativeHandle,
     useMemo,
     useRef,
-    useState
+    useState,
 } from "react"
 import { toast } from "sonner"
 import { CategorySelector } from "../mission-builder/category-selector"
@@ -78,7 +78,9 @@ const chatColumns: ColumnDef<ChatRow>[] = [
             const chat = row.original
             return (
                 <div className="flex flex-col text-center">
-                    <span className="font-medium text-center">{chat.username || chat.platform_id}</span>
+                    <span className="text-center font-medium">
+                        {chat.username || chat.platform_id}
+                    </span>
                     {/* {chat.username && <span className="text-sm text-gray-500">@{chat.username}</span>} */}
                 </div>
             )
@@ -92,9 +94,11 @@ const chatColumns: ColumnDef<ChatRow>[] = [
             const chat = row.original
             return (
                 <div className="flex flex-col items-center text-center whitespace-pre-wrap">
-                    <span className="font-medium text-center flex-wrap">{chat.title || "Untitled"}</span>
+                    <span className="flex-wrap text-center font-medium">
+                        {chat.title || "Untitled"}
+                    </span>
                     {chat.username && (
-                        <span className="text-sm text-gray-500 text-center">@{chat.username}</span>
+                        <span className="text-center text-sm text-gray-500">@{chat.username}</span>
                     )}
                 </div>
             )
@@ -170,11 +174,18 @@ const chatColumns: ColumnDef<ChatRow>[] = [
         accessorKey: "system_chat_members",
         header: "System members count",
         size: 100,
+        sortingFn: (rowA, rowB) => {
+            const membersA = rowA.original.system_chat_members
+            const membersB = rowB.original.system_chat_members
+            return (membersA?.length || 0) - (membersB?.length || 0)
+        },
         cell: ({ row }) => {
             const chat = row.original
             return (
                 <div className="flex flex-col text-center">
-                    <span className="font-medium text-center">{chat.system_chat_members?.length || 0}</span>
+                    <span className="text-center font-medium">
+                        {chat.system_chat_members?.length || 0}
+                    </span>
                 </div>
             )
         },
@@ -187,7 +198,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
             const chat = row.original
             return (
                 <div className="flex flex-col text-center">
-                    <span className="font-medium text-center">
+                    <span className="text-center font-medium">
                         {chat.linked_chat_username ||
                             (chat.linked_chat_id ? chat.linked_chat_id.toString() : "None")}
                     </span>
@@ -202,7 +213,7 @@ const chatColumns: ColumnDef<ChatRow>[] = [
         cell: ({ row }) => {
             const chat = row.original
             return (
-                <span className="font-medium whitespace-pre-wrap break-words">
+                <span className="font-medium break-words whitespace-pre-wrap">
                     {chat.text_summary || "No summary"}
                 </span>
             )
@@ -278,11 +289,13 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
     const router = useRouter()
     const bulkCategoryOptionsId = "chat-bulk-category-options"
     const filterCategoryOptionsId = "chat-filter-category-options"
-    
+
     // Load cached filters on mount
     const cachedFilters = loadFilterCache()
-    
-    const [activeCategory, setActiveCategory] = useState<string | null>(cachedFilters?.activeCategory ?? null)
+
+    const [activeCategory, setActiveCategory] = useState<string | null>(
+        cachedFilters?.activeCategory ?? null,
+    )
     const [chatData, setChatData] = useState<ChatView[]>(chats)
     const [categories, setCategories] = useState<CategoryRead[]>(allCategories)
     const [searchQuery, setSearchQuery] = useState("")
@@ -291,7 +304,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         cachedFilters?.pagination ?? {
             pageIndex: 0,
             pageSize: initialPageSize,
-        }
+        },
     )
     const [hasNextPage, setHasNextPage] = useState(() => {
         if (typeof initialTotalCount === "number") {
@@ -303,8 +316,8 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         typeof initialTotalCount === "number"
             ? initialTotalCount
             : chats.length < initialPageSize
-                ? chats.length
-                : null
+              ? chats.length
+              : null
     const [totalCount, setTotalCount] = useState<number | null>(derivedInitialTotal)
     const [isPageLoading, setIsPageLoading] = useState(false)
     const [isSearchingChats, setIsSearchingChats] = useState(false)
@@ -317,24 +330,34 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
     // Filter parameters - initialize from cache if available
     const [filterUsername, setFilterUsername] = useState(cachedFilters?.filters.username ?? "")
     const [filterTitle, setFilterTitle] = useState(cachedFilters?.filters.title ?? "")
-    const [filterChatType, setFilterChatType] = useState<string>(cachedFilters?.filters.chatType ?? "")
+    const [filterChatType, setFilterChatType] = useState<string>(
+        cachedFilters?.filters.chatType ?? "",
+    )
     const [filterPlatform, setFilterPlatform] = useState(cachedFilters?.filters.platform ?? "")
-    const [filterMinParticipants, setFilterMinParticipants] = useState(cachedFilters?.filters.minParticipants ?? "")
-    const [filterMaxParticipants, setFilterMaxParticipants] = useState(cachedFilters?.filters.maxParticipants ?? "")
-    const [filterLinkedChatUsername, setFilterLinkedChatUsername] = useState(cachedFilters?.filters.linkedChatUsername ?? "")
-    const [filterCategoryName, setFilterCategoryName] = useState(cachedFilters?.filters.categoryName ?? "")
+    const [filterMinParticipants, setFilterMinParticipants] = useState(
+        cachedFilters?.filters.minParticipants ?? "",
+    )
+    const [filterMaxParticipants, setFilterMaxParticipants] = useState(
+        cachedFilters?.filters.maxParticipants ?? "",
+    )
+    const [filterLinkedChatUsername, setFilterLinkedChatUsername] = useState(
+        cachedFilters?.filters.linkedChatUsername ?? "",
+    )
+    const [filterCategoryName, setFilterCategoryName] = useState(
+        cachedFilters?.filters.categoryName ?? "",
+    )
     const [showFilters, setShowFilters] = useState(false)
     const [isAddingBulkCategory, setIsAddingBulkCategory] = useState(false)
     const [isRemovingBulkCategory, setIsRemovingBulkCategory] = useState(false)
     const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
     const [isSelectingAllFiltered, setIsSelectingAllFiltered] = useState(false)
     const [categorySelectValue, setCategorySelectValue] = useState(
-        cachedFilters?.activeCategory ? cachedFilters.activeCategory : "All"
+        cachedFilters?.activeCategory ? cachedFilters.activeCategory : "All",
     )
     const serviceClientRef = useRef(new ServiceBrowserClient())
     // Persistent selection state that survives page changes - initialize from cache
     const [persistentSelectedIds, setPersistentSelectedIds] = useState<Set<string>>(
-        new Set(cachedFilters?.selectedIds || [])
+        new Set(cachedFilters?.selectedIds || []),
     )
     // Row selection state for the table (using chat IDs as keys)
     const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
@@ -354,32 +377,40 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
     }, [chatData, persistentSelectedIds])
 
     // Handle row selection changes - update persistent selection
-    const handleRowSelectionChange = useCallback((updater: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => {
-        setRowSelection((prevSelection) => {
-            const newSelection = typeof updater === 'function' ? updater(prevSelection) : updater
-            
-            // Update persistent selection
-            setPersistentSelectedIds((prevIds) => {
-                const newSet = new Set(prevIds)
-                
-                // First, remove all current page selections from persistent set
-                chatData.forEach((chat) => {
-                    newSet.delete(chat.id)
+    const handleRowSelectionChange = useCallback(
+        (
+            updater:
+                | Record<string, boolean>
+                | ((prev: Record<string, boolean>) => Record<string, boolean>),
+        ) => {
+            setRowSelection((prevSelection) => {
+                const newSelection =
+                    typeof updater === "function" ? updater(prevSelection) : updater
+
+                // Update persistent selection
+                setPersistentSelectedIds((prevIds) => {
+                    const newSet = new Set(prevIds)
+
+                    // First, remove all current page selections from persistent set
+                    chatData.forEach((chat) => {
+                        newSet.delete(chat.id)
+                    })
+
+                    // Then add back the ones that are selected in the new selection
+                    Object.entries(newSelection).forEach(([id, isSelected]) => {
+                        if (isSelected) {
+                            newSet.add(id)
+                        }
+                    })
+
+                    return newSet
                 })
-                
-                // Then add back the ones that are selected in the new selection
-                Object.entries(newSelection).forEach(([id, isSelected]) => {
-                    if (isSelected) {
-                        newSet.add(id)
-                    }
-                })
-                
-                return newSet
+
+                return newSelection
             })
-            
-            return newSelection
-        })
-    }, [chatData])
+        },
+        [chatData],
+    )
 
     useEffect(() => {
         if (!isSearchMode) {
@@ -393,9 +424,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
 
     useEffect(() => {
         // Always use actual data length for accurate counts
-        const visibleCount = isSearchMode
-            ? chatData.length
-            : totalCount ?? chatData.length
+        const visibleCount = isSearchMode ? chatData.length : (totalCount ?? chatData.length)
         onStatsChange?.({
             totalCount: visibleCount,
             isSearchMode,
@@ -444,7 +473,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
             linkedChatUsername: filterLinkedChatUsername.trim() || undefined,
             categoryName: filterCategoryName.trim() || undefined,
         }
-        console.log('[Filters] getCurrentFilters returning:', filters)
+        console.log("[Filters] getCurrentFilters returning:", filters)
         return filters
     }
 
@@ -455,10 +484,10 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                 const filters = getCurrentFilters()
                 // If filterCategoryName is set (advanced filter), use it instead of the categoryName parameter
                 const effectiveCategoryName = filters.categoryName || categoryName || undefined
-                
+
                 // Remove categoryName from filters to avoid duplication
                 const { categoryName: _, ...filtersWithoutCategory } = filters
-                
+
                 const { chats: pageChats, hasMore } =
                     await serviceClientRef.current.getOrchestratorChatsPage({
                         pageIndex,
@@ -496,7 +525,9 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
             if (isSearchMode) {
                 return
             }
-            console.log(`[Pagination] Navigating to page ${next.pageIndex + 1} (pageSize: ${next.pageSize})`)
+            console.log(
+                `[Pagination] Navigating to page ${next.pageIndex + 1} (pageSize: ${next.pageSize})`,
+            )
             setPaginationState(next)
             void fetchChatsPage(next.pageIndex, next.pageSize, activeCategory)
         },
@@ -506,7 +537,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
     // Track if this is the initial mount to avoid unnecessary fetches
     const isInitialMount = useRef(true)
     const hasAppliedCache = useRef(!!cachedFilters)
-    
+
     // Update select value when active category changes
     useEffect(() => {
         if (!activeCategory) {
@@ -515,7 +546,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
             setCategorySelectValue(activeCategory)
         }
     }, [activeCategory])
-    
+
     // Apply cached filters on initial mount
     useEffect(() => {
         if (cachedFilters && hasAppliedCache.current) {
@@ -523,13 +554,13 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
             void fetchChatsPage(
                 cachedFilters.pagination.pageIndex,
                 cachedFilters.pagination.pageSize,
-                cachedFilters.activeCategory
+                cachedFilters.activeCategory,
             )
             hasAppliedCache.current = false // Mark as applied
         }
         isInitialMount.current = false
     }, [fetchChatsPage]) // Include fetchChatsPage to avoid stale closure
-    
+
     // Fetch new data when category changes (but not on initial mount with initial data)
     useEffect(() => {
         // Skip on initial mount (we already have initial data or cached filters)
@@ -540,11 +571,11 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         // Skip if in search mode - category changes should exit search mode, but we handle that separately
         // to avoid triggering this effect when ENTERING search mode
         if (isSearchMode) {
-            console.log('[Category] Skipping category refetch - in search mode')
+            console.log("[Category] Skipping category refetch - in search mode")
             return
         }
 
-        console.log('[Category] Category changed, refetching chats')
+        console.log("[Category] Category changed, refetching chats")
         setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
         void fetchChatsPage(0, paginationState.pageSize, activeCategory)
     }, [activeCategory, isSearchMode, fetchChatsPage, paginationState.pageSize])
@@ -558,7 +589,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
 
         // Skip if this is search mode
         if (isSearchMode) {
-            console.log('[Filters] Skipping filter refetch - in search mode')
+            console.log("[Filters] Skipping filter refetch - in search mode")
             return
         }
 
@@ -567,7 +598,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         const nextCategory = activeCategory
 
         const timeoutId = window.setTimeout(() => {
-            console.log('[Filters] Filters changed, refetching chats:', {
+            console.log("[Filters] Filters changed, refetching chats:", {
                 filterUsername,
                 filterTitle,
                 filterChatType,
@@ -575,7 +606,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                 filterMinParticipants,
                 filterMaxParticipants,
                 filterLinkedChatUsername,
-                filterCategoryName
+                filterCategoryName,
             })
             // When filters change, reset to first page and fetch with new filters
             setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
@@ -595,7 +626,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         isSearchMode,
         paginationState.pageSize,
         activeCategory,
-        fetchChatsPage
+        fetchChatsPage,
     ])
 
     const handleCategoryCreated = (newCategory: CategoryRead) => {
@@ -606,7 +637,9 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
     const syncChatCategoryState = (chatId: string, updatedCategoryNames: string[]) => {
         setChatData((prevChats) =>
             prevChats.map((prevChat) =>
-                prevChat.id === chatId ? { ...prevChat, categories: updatedCategoryNames } : prevChat,
+                prevChat.id === chatId
+                    ? { ...prevChat, categories: updatedCategoryNames }
+                    : prevChat,
             ),
         )
     }
@@ -796,7 +829,10 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                         chatData.find((chat) => chat.id === chatId)?.categories || []
                     const targetsToRemove = new Set(
                         [category.name, category.id, categoryInput]
-                            .filter((value): value is string => typeof value === "string" && value.length > 0)
+                            .filter(
+                                (value): value is string =>
+                                    typeof value === "string" && value.length > 0,
+                            )
                             .map((value) => value.toLowerCase()),
                     )
                     const updatedCategoryNames = existingCategories.filter((existing: string) => {
@@ -854,13 +890,13 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         setIsSearchingChats(true)
         try {
             const params = new URLSearchParams({ query })
-            
+
             // Only send category_name when in "Search & add to category" mode
             // This ensures we only call the add-to-category endpoint when explicitly requested
             if (isAddMode) {
                 params.set("category_name", searchCategoryName.trim())
             }
-            
+
             if (typeof topkNumber === "number") {
                 params.set("topk", topkNumber.toString())
             }
@@ -897,7 +933,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
             params.set("_t", Date.now().toString())
 
             const response = await fetch(`/api/orchestrator/chats/search?${params.toString()}`, {
-                cache: 'no-store',
+                cache: "no-store",
             })
             const rawPayload = await response.json().catch(() => [])
 
@@ -909,7 +945,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
 
             const payload = (rawPayload ?? []) as (ChatView | ChatRead)[]
             const normalizedResults = payload.map((chat) => convertToChatView(chat))
-            
+
             setChatData(normalizedResults)
             setIsSearchMode(true)
             setSearchResultCount(normalizedResults.length)
@@ -1019,7 +1055,10 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                     return `""`
                 }
                 const normalizedValue = typeof value === "string" ? value : String(value)
-                const sanitizedValue = normalizedValue.replace(/"/g, '""').replace(/\r?\n|\r/g, " ").trim()
+                const sanitizedValue = normalizedValue
+                    .replace(/"/g, '""')
+                    .replace(/\r?\n|\r/g, " ")
+                    .trim()
                 return `"${sanitizedValue}"`
             }
 
@@ -1138,7 +1177,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                 try {
                                     for (const newCategory of newCategories) {
                                         try {
-                                        await client.updateChatCategories(
+                                            await client.updateChatCategories(
                                                 chat.id,
                                                 [newCategory.id],
                                                 [],
@@ -1161,7 +1200,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                             )
                                         ) {
                                             try {
-                                            await client.updateChatCategories(
+                                                await client.updateChatCategories(
                                                     chat.id,
                                                     [],
                                                     [removedCategory.id],
@@ -1205,7 +1244,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                 )
             },
         },
-        ...chatColumns.slice(5), 
+        ...chatColumns.slice(5),
         {
             id: "actions",
             header: "Actions",
@@ -1269,20 +1308,21 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
         ? typeof totalCount === "number"
             ? Math.max(1, Math.ceil(totalCount / paginationState.pageSize))
             : hasNextPage
-                ? paginationState.pageIndex + 2 // Current page + at least one more
-                : paginationState.pageIndex + 1 // Only current page
+              ? paginationState.pageIndex + 2 // Current page + at least one more
+              : paginationState.pageIndex + 1 // Only current page
         : undefined
 
     const actualDataLength = filteredChats.length
-    const estimatedTotal = manualPaginationEnabled && hasNextPage
-        ? paginationState.pageIndex * paginationState.pageSize + actualDataLength
-        : actualDataLength
+    const estimatedTotal =
+        manualPaginationEnabled && hasNextPage
+            ? paginationState.pageIndex * paginationState.pageSize + actualDataLength
+            : actualDataLength
     const displayTotalItems = manualPaginationEnabled
-        ? totalCount ?? estimatedTotal
+        ? (totalCount ?? estimatedTotal)
         : chatData.length
-    
-    if (process.env.NODE_ENV === 'development') {
-        console.log('[Pagination Display]', {
+
+    if (process.env.NODE_ENV === "development") {
+        console.log("[Pagination Display]", {
             manualPaginationEnabled,
             hasNextPage,
             pageIndex: paginationState.pageIndex,
@@ -1297,7 +1337,6 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
 
     return (
         <div className="flex flex-col gap-4">
-
             <div className="flex flex-col gap-4">
                 <DataTable
                     columns={columnsWithCategorySelector}
@@ -1336,9 +1375,7 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                     <Select
                                         value={searchMode}
                                         onValueChange={(value) =>
-                                            setSearchMode(
-                                                value as "topics" | "topicsAddToCategory",
-                                            )
+                                            setSearchMode(value as "topics" | "topicsAddToCategory")
                                         }
                                     >
                                         <SelectTrigger className="w-48">
@@ -1405,11 +1442,13 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setShowFilters(!showFilters)}
-                                        className="w-full justify-between p-3 h-auto"
+                                        className="h-auto w-full justify-between p-3"
                                     >
                                         <div className="flex items-center gap-2">
                                             <Filter className="h-4 w-4" />
-                                            <span className="text-sm font-medium">Advanced Filters</span>
+                                            <span className="text-sm font-medium">
+                                                Advanced Filters
+                                            </span>
                                         </div>
                                         {showFilters ? (
                                             <ChevronUp className="h-4 w-4" />
@@ -1423,62 +1462,90 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                                 <Input
                                                     placeholder="Username"
                                                     value={filterUsername}
-                                                    onChange={(event) => setFilterUsername(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setFilterUsername(event.target.value)
+                                                    }
                                                     className="w-32"
                                                 />
                                                 <Input
                                                     placeholder="Title contains"
                                                     value={filterTitle}
-                                                    onChange={(event) => setFilterTitle(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setFilterTitle(event.target.value)
+                                                    }
                                                     className="w-36"
                                                 />
-                                    <Select
-                                        value={filterChatType}
-                                        onValueChange={(value) => setFilterChatType(value === "all" ? "" : value)}
-                                    >
-                                        <SelectTrigger className="w-32">
-                                            <SelectValue placeholder="Chat type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All types</SelectItem>
-                                            <SelectItem value="User">User</SelectItem>
-                                            <SelectItem value="Group">Group</SelectItem>
-                                            <SelectItem value="Channel">Channel</SelectItem>
-                                            <SelectItem value="Bot">Bot</SelectItem>
-                                            <SelectItem value="Unknown">Unknown</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                                <Select
+                                                    value={filterChatType}
+                                                    onValueChange={(value) =>
+                                                        setFilterChatType(
+                                                            value === "all" ? "" : value,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-32">
+                                                        <SelectValue placeholder="Chat type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">
+                                                            All types
+                                                        </SelectItem>
+                                                        <SelectItem value="User">User</SelectItem>
+                                                        <SelectItem value="Group">Group</SelectItem>
+                                                        <SelectItem value="Channel">
+                                                            Channel
+                                                        </SelectItem>
+                                                        <SelectItem value="Bot">Bot</SelectItem>
+                                                        <SelectItem value="Unknown">
+                                                            Unknown
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                                 <Input
                                                     placeholder="Platform"
                                                     value={filterPlatform}
-                                                    onChange={(event) => setFilterPlatform(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setFilterPlatform(event.target.value)
+                                                    }
                                                     className="w-28"
                                                 />
                                                 <Input
                                                     placeholder="Min participants"
                                                     value={filterMinParticipants}
-                                                    onChange={(event) => setFilterMinParticipants(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setFilterMinParticipants(event.target.value)
+                                                    }
                                                     className="w-32"
                                                     inputMode="numeric"
                                                 />
                                                 <Input
                                                     placeholder="Max participants"
                                                     value={filterMaxParticipants}
-                                                    onChange={(event) => setFilterMaxParticipants(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setFilterMaxParticipants(event.target.value)
+                                                    }
                                                     className="w-32"
                                                     inputMode="numeric"
                                                 />
                                                 <Input
                                                     placeholder="Linked chat username"
                                                     value={filterLinkedChatUsername}
-                                                    onChange={(event) => setFilterLinkedChatUsername(event.target.value)}
+                                                    onChange={(event) =>
+                                                        setFilterLinkedChatUsername(
+                                                            event.target.value,
+                                                        )
+                                                    }
                                                     className="w-44"
                                                 />
                                                 <div className="relative">
                                                     <Input
                                                         placeholder="Category name (optional)"
                                                         value={filterCategoryName}
-                                                        onChange={(event) => setFilterCategoryName(event.target.value)}
+                                                        onChange={(event) =>
+                                                            setFilterCategoryName(
+                                                                event.target.value,
+                                                            )
+                                                        }
                                                         list={filterCategoryOptionsId}
                                                         className="w-44"
                                                     />
@@ -1486,7 +1553,10 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                                         {categories
                                                             .filter((category) => !!category.name)
                                                             .map((category) => (
-                                                                <option key={category.id} value={category.name ?? ""} />
+                                                                <option
+                                                                    key={category.id}
+                                                                    value={category.name ?? ""}
+                                                                />
                                                             ))}
                                                     </datalist>
                                                 </div>
@@ -1503,8 +1573,15 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                                         setFilterLinkedChatUsername("")
                                                         setFilterCategoryName("")
                                                         // Reset to first page with cleared filters
-                                                        setPaginationState((prev) => ({ ...prev, pageIndex: 0 }))
-                                                        void fetchChatsPage(0, paginationState.pageSize, activeCategory)
+                                                        setPaginationState((prev) => ({
+                                                            ...prev,
+                                                            pageIndex: 0,
+                                                        }))
+                                                        void fetchChatsPage(
+                                                            0,
+                                                            paginationState.pageSize,
+                                                            activeCategory,
+                                                        )
                                                     }}
                                                 >
                                                     Clear Filters
@@ -1515,14 +1592,16 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                 </div>
 
                                 {selectedIds.length > 0 && (
-                                    <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/40 p-3">
+                                    <div className="bg-muted/40 flex flex-wrap items-center gap-3 rounded-md border p-3">
                                         <Badge variant="secondary">
                                             {selectedIds.length} selected
                                         </Badge>
                                         <Input
                                             placeholder="Category name"
                                             value={bulkCategoryInput}
-                                            onChange={(event) => setBulkCategoryInput(event.target.value)}
+                                            onChange={(event) =>
+                                                setBulkCategoryInput(event.target.value)
+                                            }
                                             list={bulkCategoryOptionsId}
                                             className="w-64"
                                         />
@@ -1530,7 +1609,10 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                             {categories
                                                 .filter((category) => !!category.name)
                                                 .map((category) => (
-                                                    <option key={category.id} value={category.name ?? ""} />
+                                                    <option
+                                                        key={category.id}
+                                                        value={category.name ?? ""}
+                                                    />
                                                 ))}
                                         </datalist>
                                         <Button
@@ -1591,51 +1673,76 @@ export const ChatsList = forwardRef<ChatsListHandle, ChatsListProps>(function Ch
                                                 setIsSelectingAllFiltered(true)
                                                 try {
                                                     const allMatchingIds = new Set<string>()
-                                                    
+
                                                     // Start from page 0 and fetch all pages
                                                     let currentPage = 0
                                                     let hasMore = true
-                                                    
+
                                                     while (hasMore) {
                                                         const filters = getCurrentFilters()
-                                                        const effectiveCategoryName = filters.categoryName || activeCategory || undefined
-                                                        const { categoryName: _, ...filtersWithoutCategory } = filters
-                                                        
-                                                        const { chats: pageChats, hasMore: pageHasMore } =
-                                                            await serviceClientRef.current.getOrchestratorChatsPage({
-                                                                pageIndex: currentPage,
-                                                                pageSize: 100, // Use larger page size for efficiency
-                                                                categoryName: effectiveCategoryName,
-                                                                ...filtersWithoutCategory,
-                                                            })
-                                                        
+                                                        const effectiveCategoryName =
+                                                            filters.categoryName ||
+                                                            activeCategory ||
+                                                            undefined
+                                                        const {
+                                                            categoryName: _,
+                                                            ...filtersWithoutCategory
+                                                        } = filters
+
+                                                        const {
+                                                            chats: pageChats,
+                                                            hasMore: pageHasMore,
+                                                        } =
+                                                            await serviceClientRef.current.getOrchestratorChatsPage(
+                                                                {
+                                                                    pageIndex: currentPage,
+                                                                    pageSize: 100, // Use larger page size for efficiency
+                                                                    categoryName:
+                                                                        effectiveCategoryName,
+                                                                    ...filtersWithoutCategory,
+                                                                },
+                                                            )
+
                                                         pageChats.forEach((chat) => {
                                                             allMatchingIds.add(chat.id)
                                                         })
-                                                        
+
                                                         hasMore = pageHasMore ?? false
                                                         currentPage++
-                                                        
+
                                                         // Safety limit to prevent infinite loops
                                                         if (currentPage > 1000) {
                                                             break
                                                         }
                                                     }
-                                                    
+
                                                     // Update persistent selection with all matching IDs
                                                     setPersistentSelectedIds((prev) => {
                                                         const newSet = new Set(prev)
-                                                        allMatchingIds.forEach((id) => newSet.add(id))
+                                                        allMatchingIds.forEach((id) =>
+                                                            newSet.add(id),
+                                                        )
                                                         return newSet
                                                     })
-                                                    
-                                                    toast.success(`Selected ${allMatchingIds.size} chat${allMatchingIds.size === 1 ? "" : "s"} matching current filters`)
-                                                    
+
+                                                    toast.success(
+                                                        `Selected ${allMatchingIds.size} chat${allMatchingIds.size === 1 ? "" : "s"} matching current filters`,
+                                                    )
+
                                                     // Reload current page to show updated selection
-                                                    await fetchChatsPage(paginationState.pageIndex, paginationState.pageSize, activeCategory)
+                                                    await fetchChatsPage(
+                                                        paginationState.pageIndex,
+                                                        paginationState.pageSize,
+                                                        activeCategory,
+                                                    )
                                                 } catch (error) {
-                                                    console.error("Failed to select all filtered chats:", error)
-                                                    toast.error("Failed to select all filtered chats")
+                                                    console.error(
+                                                        "Failed to select all filtered chats:",
+                                                        error,
+                                                    )
+                                                    toast.error(
+                                                        "Failed to select all filtered chats",
+                                                    )
                                                 } finally {
                                                     setIsSelectingAllFiltered(false)
                                                 }

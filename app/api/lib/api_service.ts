@@ -56,6 +56,7 @@ import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
     addCharacterToCategoryCharactersCharacterIdCategoriesCategoryIdPost,
     addChatToCategoryChatsChatIdCategoriesCategoryIdPost,
+    addManyChatsToCategoryCategoriesCategoryIdManyChatsPost,
     createCategoryCategoriesPost,
     createChatChatsPost,
     createMissionMissionsPost,
@@ -88,7 +89,7 @@ import {
     runMissionMissionsRunMissionMissionIdPost,
     searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGet,
     searchChatsByTopicsChatsSearchChatsGet,
-    searchChatsChatsSearchGet
+    searchChatsChatsSearchGet,
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { ServerSettings } from "@lib/server-settings"
@@ -110,7 +111,7 @@ export class ApiService {
         orchestratorApiKey: string | null = null,
         // operatorSlot: number = 1,
     ) {
-        logger.info('[DEBUG] ApiService constructor called')
+        logger.info("[DEBUG] ApiService constructor called")
         const env = read_server_env()
         const operatorSlot = ServerSettings.getInstance().getOperatorSettings().operatorSlot
         logger.info(`[DEBUG] operatorSlot: ${operatorSlot}`)
@@ -122,7 +123,9 @@ export class ApiService {
             throw new Error("Avatars API endpoint not defined")
         }
         const effectiveAvatarsApiKey = avatarsApiKey || env.avatarsApiKey
-        logger.info(`[DEBUG] effectiveAvatarsApiKey: ${effectiveAvatarsApiKey ? `${effectiveAvatarsApiKey.substring(0, 4)}...` : 'MISSING'}`)
+        logger.info(
+            `[DEBUG] effectiveAvatarsApiKey: ${effectiveAvatarsApiKey ? `${effectiveAvatarsApiKey.substring(0, 4)}...` : "MISSING"}`,
+        )
         if (!effectiveAvatarsApiKey) {
             throw new Error("Avatars API key not defined")
         }
@@ -144,12 +147,14 @@ export class ApiService {
             throw new Error("Orchestrator API endpoint not defined")
         }
         const effectiveOrchestratorApiKey = orchestratorApiKey || env.orchestratorApiKey
-        logger.info(`[DEBUG] effectiveOrchestratorApiKey: ${effectiveOrchestratorApiKey ? `${effectiveOrchestratorApiKey.substring(0, 4)}...` : 'MISSING'}`)
+        logger.info(
+            `[DEBUG] effectiveOrchestratorApiKey: ${effectiveOrchestratorApiKey ? `${effectiveOrchestratorApiKey.substring(0, 4)}...` : "MISSING"}`,
+        )
         if (!effectiveOrchestratorApiKey) {
             throw new Error("Orchestrator API key not defined")
         }
 
-        logger.info('[DEBUG] Setting up API clients...')
+        logger.info("[DEBUG] Setting up API clients...")
         operatorClient.setConfig({
             baseUrl: effectiveOperatorApiEndpoint,
         })
@@ -173,11 +178,11 @@ export class ApiService {
             },
         })
         this.mystiqueUserId = env.mystiqueUserId
-        logger.info('[DEBUG] API clients configured successfully')
+        logger.info("[DEBUG] API clients configured successfully")
 
         this.mediaS3Client = new S3Client({ region: env.mediaBucketRegion })
         this.operatorLogsS3Client = new S3Client({ region: env.mediaBucketRegion })
-        logger.info('[DEBUG] ApiService constructor completed')
+        logger.info("[DEBUG] ApiService constructor completed")
     }
 
     private async avatarsFetch<T = unknown>(
@@ -240,9 +245,9 @@ export class ApiService {
     async listProfiles(): Promise<CombinedAvatar[]> {
         logger.info("Listing all avatars...")
         const [allAvatarsResponse, runningAvatarsResponse] = await Promise.all([
-            getAvatarsRequest({ 
+            getAvatarsRequest({
                 client: avatarsClient,
-                query: { attach_proxy: true } as any 
+                query: { attach_proxy: true } as any,
             }),
             getAllCharactersCharactersGetOperator(),
         ])
@@ -287,12 +292,9 @@ export class ApiService {
     }
 
     async assignProxy(profileId: string) {
-        const response = await this.avatarsFetch<AvatarRead>(
-            `/avatars/${profileId}/proxy`,
-            {
-                method: "POST",
-            },
-        )
+        const response = await this.avatarsFetch<AvatarRead>(`/avatars/${profileId}/proxy`, {
+            method: "POST",
+        })
         if (!response) {
             throw new Error("Failed to assign proxy")
         }
@@ -464,17 +466,19 @@ export class ApiService {
             linkedChatUsername?: string
         },
     ): Promise<ChatRead[]> {
-        logger.info(`Getting orchestrator chats (limit: ${limit}, categoryName: ${categoryName}, filters: ${JSON.stringify(filters)})`)
-        
+        logger.info(
+            `Getting orchestrator chats (limit: ${limit}, categoryName: ${categoryName}, filters: ${JSON.stringify(filters)})`,
+        )
+
         const queryParams: any = {
             skip,
             limit,
         }
-        
+
         if (categoryName) {
             queryParams.has_category = categoryName
         }
-        
+
         // Add filter parameters
         if (filters) {
             if (filters.username) {
@@ -509,7 +513,7 @@ export class ApiService {
                 queryParams.linked_chat_username = filters.linkedChatUsername
             }
         }
-        
+
         let response
         if (writable) {
             response = await getAllWritableGroupsChatsCanSendMessageChatsGet({
@@ -618,14 +622,14 @@ export class ApiService {
         },
     ) {
         logger.info(`Searching chats by topics: ${query}`)
-        
+
         const queryParams: Record<string, unknown> = {
             query,
             // Use limit instead of topk (endpoint uses only one of them for pagination)
             ...(typeof topk === "number" && !Number.isNaN(topk) ? { limit: topk } : {}),
             ...(typeof threshold === "number" && !Number.isNaN(threshold) ? { threshold } : {}),
         }
-        
+
         // category_name is only used when adding chats to a category (not for filtering)
         if (categoryName) {
             queryParams.category_name = categoryName
@@ -832,6 +836,20 @@ export class ApiService {
             )
         }
         logger.info(`Successfully removed chat from category: ${chatId}`)
+        return response.data ?? null
+    }
+
+    async addManyChatsToCategory(chatIds: string[], categoryId: string) {
+        logger.info(`Adding ${chatIds.length} chats to category: ${categoryId}`)
+        const response = await addManyChatsToCategoryCategoriesCategoryIdManyChatsPost({
+            client: orchestratorClient,
+            path: { category_id: categoryId },
+            body: { chat_ids: chatIds },
+        })
+        if (response.error) {
+            throw new Error(`Failed to add chats to category: ${JSON.stringify(response.error)}`)
+        }
+        logger.info(`Successfully added ${chatIds.length} chats to category: ${categoryId}`)
         return response.data ?? null
     }
 
@@ -1200,9 +1218,7 @@ export class ApiService {
                 typeof response.error === "object" && response.error && "detail" in response.error
                     ? (response.error as { detail?: unknown }).detail
                     : response.error
-            throw new Error(
-                `Failed to plan orchestrator mission: ${JSON.stringify(detail)}`,
-            )
+            throw new Error(`Failed to plan orchestrator mission: ${JSON.stringify(detail)}`)
         }
         logger.info(`Successfully planned orchestrator mission: ${missionId}`)
         return response.data ?? []
@@ -1344,31 +1360,33 @@ export class ApiService {
 
     async getAvatars() {
         logger.info("Getting avatars with proxy information")
-        logger.info('[DEBUG] getAvatars called')
-        logger.info(`[DEBUG] avatarsClient baseUrl: ${(avatarsClient as any)._options?.baseUrl || 'not set'}`)
+        logger.info("[DEBUG] getAvatars called")
+        logger.info(
+            `[DEBUG] avatarsClient baseUrl: ${(avatarsClient as any)._options?.baseUrl || "not set"}`,
+        )
         logger.info(`[DEBUG] Calling avatars API at: ${this.env.avatarsApiEndpoint}`)
-        
+
         let response
         try {
             response = await avatarsClient.get({
-                url: '/avatars/',
+                url: "/avatars/",
                 query: { attach_proxy: true },
-                parseAs: 'json',
+                parseAs: "json",
             })
-            
-            logger.info(`[DEBUG] Response received: ${response.error ? 'ERROR' : 'SUCCESS'}`)
-            
+
+            logger.info(`[DEBUG] Response received: ${response.error ? "ERROR" : "SUCCESS"}`)
+
             if (response.error) {
                 logger.error(`[DEBUG] Avatar fetch error: ${JSON.stringify(response.error)}`)
                 throw new Error(`Failed to get avatars: ${JSON.stringify(response.error)}`)
             }
-            
+
             logger.info(`[DEBUG] Avatar count: ${(response.data as any[])?.length || 0}`)
         } catch (error) {
             logger.error(`[DEBUG] Exception in getAvatars: ${error}`)
             throw error
         }
-        
+
         // Transform the data to fix null values and invalid formats
         const avatars = (response.data as any[]) ?? []
         const cleanedAvatars = avatars.map((avatar: any) => {
@@ -1376,29 +1394,32 @@ export class ApiService {
                 ...avatar,
                 strategy: avatar.strategy ?? "",
                 strategy_expiration: avatar.strategy_expiration ?? "",
-                
-                avatar_state: avatar.avatar_state ? {
-                    ...avatar.avatar_state,
-                    created_at: avatar.avatar_state.created_at ? 
-                        new Date(avatar.avatar_state.created_at).toISOString() : 
-                        new Date().toISOString(),
-                    updated_at: avatar.avatar_state.updated_at ? 
-                        new Date(avatar.avatar_state.updated_at).toISOString() : 
-                        new Date().toISOString(),
-                } : avatar.avatar_state,
-                
+
+                avatar_state: avatar.avatar_state
+                    ? {
+                          ...avatar.avatar_state,
+                          created_at: avatar.avatar_state.created_at
+                              ? new Date(avatar.avatar_state.created_at).toISOString()
+                              : new Date().toISOString(),
+                          updated_at: avatar.avatar_state.updated_at
+                              ? new Date(avatar.avatar_state.updated_at).toISOString()
+                              : new Date().toISOString(),
+                      }
+                    : avatar.avatar_state,
+
                 // Fix social_media_accounts
-                social_media_accounts: avatar.social_media_accounts?.map((account: any) => ({
-                    ...account,
-                    profile_image_url: account.profile_image_url ?? "",
-                    subject_image_url: account.subject_image_url ?? "",
-                })) ?? [],
-                
+                social_media_accounts:
+                    avatar.social_media_accounts?.map((account: any) => ({
+                        ...account,
+                        profile_image_url: account.profile_image_url ?? "",
+                        subject_image_url: account.subject_image_url ?? "",
+                    })) ?? [],
+
                 // Fix proxy object
                 proxy: avatar.proxy ?? {},
             }
         })
-        
+
         return cleanedAvatars as AvatarRead[]
     }
 

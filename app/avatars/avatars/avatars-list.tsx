@@ -490,7 +490,9 @@ export function AvatarsList({
                     )
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({}))
-                        throw new Error(errorData.error || `Failed to add category to avatar ${avatarId}`)
+                        throw new Error(
+                            errorData.error || `Failed to add category to avatar ${avatarId}`,
+                        )
                     }
                 }),
             )
@@ -696,7 +698,7 @@ export function AvatarsList({
                             value={categorySelectValue}
                             onValueChange={(value) => {
                                 setCategorySelectValue(value)
-                                if (value === "All") {
+                                if (value === "All" || value === "Untagged") {
                                     setActiveCategory(null)
                                 } else {
                                     setActiveCategory(value)
@@ -708,27 +710,38 @@ export function AvatarsList({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="All">All</SelectItem>
+                                <SelectItem value="Untagged">Untagged</SelectItem>
                                 {categories.map((category) => (
-                                    <SelectItem key={category.id} value={category.name ?? category.id}>
+                                    <SelectItem
+                                        key={category.id}
+                                        value={category.name ?? category.id}
+                                    >
                                         {category.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="text-muted-foreground flex flex-row items-center gap-2 text-md">
+                    <div className="text-muted-foreground text-md flex flex-row items-center gap-2">
                         <Badge variant="secondary" className="font-normal">
-                            {profilesData.filter((profile) => {
-                                if (!activeCategory) {
-                                    return true
-                                }
-                                if (!profile.categories) {
-                                    return false
-                                }
-                                return profile.categories.some(
-                                    (category) => category.name === activeCategory,
-                                )
-                            }).length}{" "}
+                            {
+                                profilesData.filter((profile) => {
+                                    if (categorySelectValue === "Untagged") {
+                                        return (
+                                            !profile.categories || profile.categories.length === 0
+                                        )
+                                    }
+                                    if (!activeCategory) {
+                                        return true
+                                    }
+                                    if (!profile.categories) {
+                                        return false
+                                    }
+                                    return profile.categories.some(
+                                        (category) => category.name === activeCategory,
+                                    )
+                                }).length
+                            }{" "}
                             of {profilesData.length} avatars
                         </Badge>
                     </div>
@@ -752,6 +765,9 @@ export function AvatarsList({
                             setActiveRow(row)
                         }}
                         data={profilesData.filter((profile) => {
+                            if (categorySelectValue === "Untagged") {
+                                return !profile.categories || profile.categories.length === 0
+                            }
                             if (!activeCategory) {
                                 return true
                             }
@@ -762,166 +778,171 @@ export function AvatarsList({
                                 (category) => category.name === activeCategory,
                             )
                         })}
-                    header={({ table }) => {
-                        const selectedRows = table.getFilteredSelectedRowModel().rows
-                        return (
-                            <div className="flex flex-col gap-4">
-                                <div className="flex flex-row gap-2">
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input
-                                            id="name"
-                                            placeholder="Filter by name..."
-                                            value={
-                                                (table
-                                                    .getColumn("name")
-                                                    ?.getFilterValue() as string) ?? ""
-                                            }
-                                            onChange={(event) =>
-                                                table
-                                                    .getColumn("name")
-                                                    ?.setFilterValue(event.target.value)
-                                            }
-                                            className="w-[30ch]"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="profileId">Avatar ID</Label>
-                                        <Input
-                                            id="profileId"
-                                            placeholder="Filter by ID..."
-                                            value={
-                                                (table
-                                                    .getColumn("profileId")
-                                                    ?.getFilterValue() as string) ?? ""
-                                            }
-                                            onChange={(event) =>
-                                                table
-                                                    .getColumn("profileId")
-                                                    ?.setFilterValue(event.target.value)
-                                            }
-                                            className="w-[30ch]"
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="socialNetworks">Social Networks</Label>
-                                        <Select
-                                            onValueChange={(value) => {
-                                                if (value === "all") {
-                                                    table
-                                                        .getColumn("socialNetworks")
-                                                        ?.setFilterValue(undefined)
-                                                } else {
-                                                    table
-                                                        .getColumn("socialNetworks")
-                                                        ?.setFilterValue(value)
+                        header={({ table }) => {
+                            const selectedRows = table.getFilteredSelectedRowModel().rows
+                            return (
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex flex-row gap-2">
+                                        <div className="flex flex-col gap-2">
+                                            <Label htmlFor="name">Name</Label>
+                                            <Input
+                                                id="name"
+                                                placeholder="Filter by name..."
+                                                value={
+                                                    (table
+                                                        .getColumn("name")
+                                                        ?.getFilterValue() as string) ?? ""
                                                 }
-                                            }}
-                                            defaultValue={
-                                                table
-                                                    .getColumn("socialNetworks")
-                                                    ?.getFilterValue() as string
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Filter by social networks..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">All</SelectItem>
-                                                {socialNetworksArray.map((network) => (
-                                                    <SelectItem
-                                                        key={`${network}-active`}
-                                                        value={network}
-                                                    >
-                                                        {network}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                                onChange={(event) =>
+                                                    table
+                                                        .getColumn("name")
+                                                        ?.setFilterValue(event.target.value)
+                                                }
+                                                className="w-[30ch]"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <Label htmlFor="profileId">Avatar ID</Label>
+                                            <Input
+                                                id="profileId"
+                                                placeholder="Filter by ID..."
+                                                value={
+                                                    (table
+                                                        .getColumn("profileId")
+                                                        ?.getFilterValue() as string) ?? ""
+                                                }
+                                                onChange={(event) =>
+                                                    table
+                                                        .getColumn("profileId")
+                                                        ?.setFilterValue(event.target.value)
+                                                }
+                                                className="w-[30ch]"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <Label htmlFor="socialNetworks">Social Networks</Label>
+                                            <Select
+                                                onValueChange={(value) => {
+                                                    if (value === "all") {
+                                                        table
+                                                            .getColumn("socialNetworks")
+                                                            ?.setFilterValue(undefined)
+                                                    } else {
+                                                        table
+                                                            .getColumn("socialNetworks")
+                                                            ?.setFilterValue(value)
+                                                    }
+                                                }}
+                                                defaultValue={
+                                                    table
+                                                        .getColumn("socialNetworks")
+                                                        ?.getFilterValue() as string
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Filter by social networks..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All</SelectItem>
+                                                    {socialNetworksArray.map((network) => (
+                                                        <SelectItem
+                                                            key={`${network}-active`}
+                                                            value={network}
+                                                        >
+                                                            {network}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
+                                    {selectedRows.length > 0 && (
+                                        <div className="bg-muted/40 flex flex-wrap items-center gap-3 rounded-md border p-3">
+                                            <Badge variant="secondary">
+                                                {selectedRows.length} selected
+                                            </Badge>
+                                            <Input
+                                                placeholder="Category name"
+                                                value={bulkCategoryInput}
+                                                onChange={(event) =>
+                                                    setBulkCategoryInput(event.target.value)
+                                                }
+                                                list={bulkCategoryOptionsId}
+                                                className="w-64"
+                                            />
+                                            <datalist id={bulkCategoryOptionsId}>
+                                                {categories
+                                                    .filter((category) => !!category.name)
+                                                    .map((category) => (
+                                                        <option
+                                                            key={category.id}
+                                                            value={category.name ?? ""}
+                                                        />
+                                                    ))}
+                                            </datalist>
+                                            <Button
+                                                size="sm"
+                                                onClick={() =>
+                                                    handleBulkAssignCategories(
+                                                        selectedRows.map(
+                                                            (row) => row.original.profileId,
+                                                        ),
+                                                        () => table.resetRowSelection(),
+                                                    )
+                                                }
+                                                disabled={
+                                                    !bulkCategoryInput.trim() ||
+                                                    isApplyingBulkCategory ||
+                                                    isRemovingBulkCategory
+                                                }
+                                            >
+                                                {isApplyingBulkCategory ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Assigning
+                                                    </>
+                                                ) : (
+                                                    "Assign category"
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() =>
+                                                    handleBulkRemoveCategories(
+                                                        selectedRows.map(
+                                                            (row) => row.original.profileId,
+                                                        ),
+                                                        () => table.resetRowSelection(),
+                                                    )
+                                                }
+                                                disabled={
+                                                    !bulkCategoryInput.trim() ||
+                                                    isRemovingBulkCategory ||
+                                                    isApplyingBulkCategory
+                                                }
+                                            >
+                                                {isRemovingBulkCategory ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        Removing
+                                                    </>
+                                                ) : (
+                                                    "Remove category"
+                                                )}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => table.resetRowSelection()}
+                                            >
+                                                Clear selection
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
-                                {selectedRows.length > 0 && (
-                                    <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/40 p-3">
-                                        <Badge variant="secondary">
-                                            {selectedRows.length} selected
-                                        </Badge>
-                                        <Input
-                                            placeholder="Category name"
-                                            value={bulkCategoryInput}
-                                            onChange={(event) => setBulkCategoryInput(event.target.value)}
-                                            list={bulkCategoryOptionsId}
-                                            className="w-64"
-                                        />
-                                        <datalist id={bulkCategoryOptionsId}>
-                                            {categories
-                                                .filter((category) => !!category.name)
-                                                .map((category) => (
-                                                    <option key={category.id} value={category.name ?? ""} />
-                                                ))}
-                                        </datalist>
-                                        <Button
-                                            size="sm"
-                                            onClick={() =>
-                                                handleBulkAssignCategories(
-                                                    selectedRows.map(
-                                                        (row) => row.original.profileId,
-                                                    ),
-                                                    () => table.resetRowSelection(),
-                                                )
-                                            }
-                                            disabled={
-                                                !bulkCategoryInput.trim() ||
-                                                isApplyingBulkCategory ||
-                                                isRemovingBulkCategory
-                                            }
-                                        >
-                                            {isApplyingBulkCategory ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Assigning
-                                                </>
-                                            ) : (
-                                                "Assign category"
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() =>
-                                                handleBulkRemoveCategories(
-                                                    selectedRows.map(
-                                                        (row) => row.original.profileId,
-                                                    ),
-                                                    () => table.resetRowSelection(),
-                                                )
-                                            }
-                                            disabled={
-                                                !bulkCategoryInput.trim() ||
-                                                isRemovingBulkCategory ||
-                                                isApplyingBulkCategory
-                                            }
-                                        >
-                                            {isRemovingBulkCategory ? (
-                                                <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Removing
-                                                </>
-                                            ) : (
-                                                "Remove category"
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => table.resetRowSelection()}
-                                        >
-                                            Clear selection
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    }}
+                            )
+                        }}
                     />
                 </div>
             </div>

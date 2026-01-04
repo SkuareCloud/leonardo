@@ -3,14 +3,12 @@
 import {
     Crosshair,
     HardHat,
-    ImageIcon,
     LucideIcon,
     MessageCircleMore,
     MessagesSquare,
-    PackageIcon,
     ScrollText,
     SpeechIcon,
-    Users2Icon
+    Users2Icon,
 } from "lucide-react"
 import * as React from "react"
 
@@ -101,18 +99,6 @@ const data = {
             ],
         },
 
-        {
-            title: "Inventory",
-            url: "#",
-            icon: PackageIcon,
-            items: [
-                {
-                    title: "Media",
-                    url: "/inventory/media",
-                    icon: ImageIcon,
-                },
-            ],
-        },
         {
             title: "WEB1",
             url: "#",
