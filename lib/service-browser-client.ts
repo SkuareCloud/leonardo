@@ -267,6 +267,7 @@ export class ServiceBrowserClient {
         minParticipants = "",
         maxParticipants = "",
         linkedChatUsername = "",
+        sortBy = null,
     }: {
         pageIndex?: number
         pageSize?: number
@@ -279,6 +280,7 @@ export class ServiceBrowserClient {
         minParticipants?: string
         maxParticipants?: string
         linkedChatUsername?: string
+        sortBy?: Array<{ field: string; order?: 'asc' | 'desc' }> | null
     } = {}): Promise<{ chats: ChatView[]; totalCount?: number; hasMore?: boolean }> {
         const params = new URLSearchParams()
         const skip = pageIndex * pageSize
@@ -314,6 +316,9 @@ export class ServiceBrowserClient {
         }
         if (linkedChatUsername) {
             params.set("linked_chat_username", linkedChatUsername)
+        }
+        if (sortBy && sortBy.length > 0) {
+            params.set("sort_by", JSON.stringify(sortBy))
         }
         const query = params.toString()
         const url = query ? `/api/orchestrator/chats?${query}` : `/api/orchestrator/chats`

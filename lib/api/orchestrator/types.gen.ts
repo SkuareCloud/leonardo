@@ -2616,6 +2616,205 @@ export type ScenarioUpdate = {
 };
 
 /**
+ * SearchChatsAddToCategoryRequest
+ * Request body for searching chats and adding to category
+ */
+export type SearchChatsAddToCategoryRequest = {
+    /**
+     * Query
+     * Search query for finding chats by topics
+     */
+    query: string;
+    /**
+     * Threshold
+     * Similarity threshold
+     */
+    threshold?: number;
+    /**
+     * Chat Type
+     * Exact match: Group, Channel, Bot, User
+     */
+    chat_type?: string | null;
+    /**
+     * Platform Id
+     * Exact match platform ID
+     */
+    platform_id?: number | null;
+    /**
+     * Linked Chat Id
+     * Exact match linked chat ID
+     */
+    linked_chat_id?: number | null;
+    /**
+     * Username
+     * Search in username (partial match)
+     */
+    username?: string | null;
+    /**
+     * Title
+     * Search in title (partial match)
+     */
+    title?: string | null;
+    /**
+     * About
+     * Search in about/description (partial match)
+     */
+    about?: string | null;
+    /**
+     * Linked Chat Username
+     * Search in linked chat username (partial match)
+     */
+    linked_chat_username?: string | null;
+    /**
+     * Text Summary
+     * Search in text summary (partial match)
+     */
+    text_summary?: string | null;
+    /**
+     * Min Participants Count
+     * Minimum participants count
+     */
+    min_participants_count?: number | null;
+    /**
+     * Max Participants Count
+     * Maximum participants count
+     */
+    max_participants_count?: number | null;
+    /**
+     * Min Members Count
+     * Minimum number of system chat members
+     */
+    min_members_count?: number | null;
+    /**
+     * Max Members Count
+     * Maximum number of system chat members
+     */
+    max_members_count?: number | null;
+    /**
+     * Has Category
+     * Filter by category name (partial match)
+     */
+    has_category?: string | null;
+    /**
+     * Sort By
+     * List of sort fields with order
+     */
+    sort_by?: Array<SortField> | null;
+    /**
+     * Skip
+     * Number of records to skip
+     */
+    skip?: number;
+    /**
+     * Limit
+     * Maximum number of records to return
+     */
+    limit?: number;
+    /**
+     * Category Name
+     * Category name to add chats to
+     */
+    category_name: string;
+};
+
+/**
+ * SearchChatsRequest
+ * Request body for searching chats
+ */
+export type SearchChatsRequest = {
+    /**
+     * Query
+     * Search query for finding chats by topics
+     */
+    query: string;
+    /**
+     * Threshold
+     * Similarity threshold
+     */
+    threshold?: number;
+    /**
+     * Chat Type
+     * Exact match: Group, Channel, Bot, User
+     */
+    chat_type?: string | null;
+    /**
+     * Platform Id
+     * Exact match platform ID
+     */
+    platform_id?: number | null;
+    /**
+     * Linked Chat Id
+     * Exact match linked chat ID
+     */
+    linked_chat_id?: number | null;
+    /**
+     * Username
+     * Search in username (partial match)
+     */
+    username?: string | null;
+    /**
+     * Title
+     * Search in title (partial match)
+     */
+    title?: string | null;
+    /**
+     * About
+     * Search in about/description (partial match)
+     */
+    about?: string | null;
+    /**
+     * Linked Chat Username
+     * Search in linked chat username (partial match)
+     */
+    linked_chat_username?: string | null;
+    /**
+     * Text Summary
+     * Search in text summary (partial match)
+     */
+    text_summary?: string | null;
+    /**
+     * Min Participants Count
+     * Minimum participants count
+     */
+    min_participants_count?: number | null;
+    /**
+     * Max Participants Count
+     * Maximum participants count
+     */
+    max_participants_count?: number | null;
+    /**
+     * Min Members Count
+     * Minimum number of system chat members
+     */
+    min_members_count?: number | null;
+    /**
+     * Max Members Count
+     * Maximum number of system chat members
+     */
+    max_members_count?: number | null;
+    /**
+     * Has Category
+     * Filter by category name (partial match)
+     */
+    has_category?: string | null;
+    /**
+     * Sort By
+     * List of sort fields with order
+     */
+    sort_by?: Array<SortField> | null;
+    /**
+     * Skip
+     * Number of records to skip
+     */
+    skip?: number;
+    /**
+     * Limit
+     * Maximum number of records to return
+     */
+    limit?: number;
+};
+
+/**
  * SeedScenario
  */
 export type SeedScenario = {
@@ -2725,6 +2924,20 @@ export type SendMessageResponseContentInput = {
  */
 export type SendMessageResponseContentOutput = {
     message_info: MessageInfoOutput;
+};
+
+/**
+ * SortField
+ */
+export type SortField = {
+    /**
+     * Field
+     */
+    field: 'username' | 'title' | 'chat_type' | 'participants_count' | 'categories_count' | 'members_count' | 'linked_chat_id' | 'linked_chat_username' | 'text_summary';
+    /**
+     * Order
+     */
+    order?: 'asc' | 'desc';
 };
 
 /**
@@ -4318,14 +4531,9 @@ export type GetChatsViewChatsViewChatsGetData = {
         has_category?: string | null;
         /**
          * Sort By
-         * Sort by: participants_count, members_count, created_at
+         * Sort config as JSON: {"field": "participants_count", "order": "desc"} or [{"field": "...", "order": "..."}]
          */
-        sort_by?: string;
-        /**
-         * Sort Order
-         * Sort order: asc or desc
-         */
-        sort_order?: string;
+        sort_by?: string | null;
         /**
          * Skip
          * Number of records to skip
@@ -4617,110 +4825,14 @@ export type GetChatCharactersCountChatsChatIdCharacterCountGetResponses = {
     200: unknown;
 };
 
-export type SearchChatsByTopicsChatsSearchChatsGetData = {
-    body?: never;
+export type SearchChatsByTopicsChatsSearchChatsPostData = {
+    body: SearchChatsRequest;
     path?: never;
-    query: {
-        /**
-         * Query
-         * Search query for finding chats by topics
-         */
-        query: string;
-        /**
-         * Threshold
-         * Similarity threshold
-         */
-        threshold?: number;
-        /**
-         * Chat Type
-         * Exact match: Group, Channel, Bot, User
-         */
-        chat_type?: string | null;
-        /**
-         * Platform Id
-         * Exact match platform ID
-         */
-        platform_id?: number | null;
-        /**
-         * Linked Chat Id
-         * Exact match linked chat ID
-         */
-        linked_chat_id?: number | null;
-        /**
-         * Username
-         * Search in username (partial match)
-         */
-        username?: string | null;
-        /**
-         * Title
-         * Search in title (partial match)
-         */
-        title?: string | null;
-        /**
-         * About
-         * Search in about/description (partial match)
-         */
-        about?: string | null;
-        /**
-         * Linked Chat Username
-         * Search in linked chat username (partial match)
-         */
-        linked_chat_username?: string | null;
-        /**
-         * Text Summary
-         * Search in text summary (partial match)
-         */
-        text_summary?: string | null;
-        /**
-         * Min Participants Count
-         * Minimum participants count
-         */
-        min_participants_count?: number | null;
-        /**
-         * Max Participants Count
-         * Maximum participants count
-         */
-        max_participants_count?: number | null;
-        /**
-         * Min Members Count
-         * Minimum number of system chat members
-         */
-        min_members_count?: number | null;
-        /**
-         * Max Members Count
-         * Maximum number of system chat members
-         */
-        max_members_count?: number | null;
-        /**
-         * Has Category
-         * Filter by category name (partial match)
-         */
-        has_category?: string | null;
-        /**
-         * Sort By
-         * Sort by: participants_count, members_count, created_at
-         */
-        sort_by?: string;
-        /**
-         * Sort Order
-         * Sort order: asc or desc
-         */
-        sort_order?: string;
-        /**
-         * Skip
-         * Number of records to skip
-         */
-        skip?: number;
-        /**
-         * Limit
-         * Maximum number of records to return
-         */
-        limit?: number;
-    };
+    query?: never;
     url: '/chats/search_chats/';
 };
 
-export type SearchChatsByTopicsChatsSearchChatsGetErrors = {
+export type SearchChatsByTopicsChatsSearchChatsPostErrors = {
     /**
      * Not found
      */
@@ -4731,127 +4843,26 @@ export type SearchChatsByTopicsChatsSearchChatsGetErrors = {
     422: HttpValidationError;
 };
 
-export type SearchChatsByTopicsChatsSearchChatsGetError = SearchChatsByTopicsChatsSearchChatsGetErrors[keyof SearchChatsByTopicsChatsSearchChatsGetErrors];
+export type SearchChatsByTopicsChatsSearchChatsPostError = SearchChatsByTopicsChatsSearchChatsPostErrors[keyof SearchChatsByTopicsChatsSearchChatsPostErrors];
 
-export type SearchChatsByTopicsChatsSearchChatsGetResponses = {
+export type SearchChatsByTopicsChatsSearchChatsPostResponses = {
     /**
-     * Response Search Chats By Topics Chats Search Chats  Get
+     * Response Search Chats By Topics Chats Search Chats  Post
      * Successful Response
      */
     200: Array<ChatView>;
 };
 
-export type SearchChatsByTopicsChatsSearchChatsGetResponse = SearchChatsByTopicsChatsSearchChatsGetResponses[keyof SearchChatsByTopicsChatsSearchChatsGetResponses];
+export type SearchChatsByTopicsChatsSearchChatsPostResponse = SearchChatsByTopicsChatsSearchChatsPostResponses[keyof SearchChatsByTopicsChatsSearchChatsPostResponses];
 
-export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetData = {
-    body?: never;
+export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostData = {
+    body: SearchChatsAddToCategoryRequest;
     path?: never;
-    query: {
-        /**
-         * Category Name
-         * Category name to add chats to
-         */
-        category_name: string;
-        /**
-         * Query
-         * Search query for finding chats by topics
-         */
-        query: string;
-        /**
-         * Threshold
-         * Similarity threshold
-         */
-        threshold?: number;
-        /**
-         * Chat Type
-         * Exact match: Group, Channel, Bot, User
-         */
-        chat_type?: string | null;
-        /**
-         * Platform Id
-         * Exact match platform ID
-         */
-        platform_id?: number | null;
-        /**
-         * Linked Chat Id
-         * Exact match linked chat ID
-         */
-        linked_chat_id?: number | null;
-        /**
-         * Username
-         * Search in username (partial match)
-         */
-        username?: string | null;
-        /**
-         * Title
-         * Search in title (partial match)
-         */
-        title?: string | null;
-        /**
-         * About
-         * Search in about/description (partial match)
-         */
-        about?: string | null;
-        /**
-         * Linked Chat Username
-         * Search in linked chat username (partial match)
-         */
-        linked_chat_username?: string | null;
-        /**
-         * Text Summary
-         * Search in text summary (partial match)
-         */
-        text_summary?: string | null;
-        /**
-         * Min Participants Count
-         * Minimum participants count
-         */
-        min_participants_count?: number | null;
-        /**
-         * Max Participants Count
-         * Maximum participants count
-         */
-        max_participants_count?: number | null;
-        /**
-         * Min Members Count
-         * Minimum number of system chat members
-         */
-        min_members_count?: number | null;
-        /**
-         * Max Members Count
-         * Maximum number of system chat members
-         */
-        max_members_count?: number | null;
-        /**
-         * Has Category
-         * Filter by category name (partial match)
-         */
-        has_category?: string | null;
-        /**
-         * Sort By
-         * Sort by: participants_count, members_count, created_at
-         */
-        sort_by?: string;
-        /**
-         * Sort Order
-         * Sort order: asc or desc
-         */
-        sort_order?: string;
-        /**
-         * Skip
-         * Number of records to skip
-         */
-        skip?: number;
-        /**
-         * Limit
-         * Maximum number of records to return
-         */
-        limit?: number;
-    };
+    query?: never;
     url: '/chats/search_chats_add_to_category/';
 };
 
-export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetErrors = {
+export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostErrors = {
     /**
      * Not found
      */
@@ -4862,17 +4873,17 @@ export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetE
     422: HttpValidationError;
 };
 
-export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetError = SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetErrors[keyof SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetErrors];
+export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostError = SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostErrors[keyof SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostErrors];
 
-export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponses = {
+export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostResponses = {
     /**
-     * Response Search Chats By Topics And Add To Category Chats Search Chats Add To Category  Get
+     * Response Search Chats By Topics And Add To Category Chats Search Chats Add To Category  Post
      * Successful Response
      */
     200: Array<ChatView>;
 };
 
-export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponse = SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponses[keyof SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponses];
+export type SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostResponse = SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostResponses[keyof SearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostResponses];
 
 export type GetExplorerChatsChatsExplorerChatsGetData = {
     body?: never;
@@ -5738,6 +5749,41 @@ export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMission
 };
 
 export type GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponse = GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponses[keyof GetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponses];
+
+export type GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Mission Id
+         */
+        mission_id: string;
+    };
+    query?: never;
+    url: '/missions/failed_chats/{mission_id}';
+};
+
+export type GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetError = GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetErrors[keyof GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetErrors];
+
+export type GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetResponses = {
+    /**
+     * Response Get Mission Failed Destination Chats Missions Failed Chats  Mission Id  Get
+     * Successful Response
+     */
+    200: Array<ChatRead>;
+};
+
+export type GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetResponse = GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetResponses[keyof GetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetResponses];
 
 export type GetMissionFailureReasonsMissionsFailureReasonsMissionIdGetData = {
     body?: never;

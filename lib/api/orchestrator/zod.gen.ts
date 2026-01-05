@@ -2028,7 +2028,7 @@ export const zEchoMissionInput = z.object({
     message: zMessageForwardRequest,
     characters_categories: z.array(z.string()).optional().default([]),
     chats_categories: z.array(z.string()).optional().default([]),
-    trigger_time: z.string().datetime().optional().default('2025-12-03T05:00:26.879560Z'),
+    trigger_time: z.string().datetime().optional().default('2026-01-05T10:30:57.827790Z'),
     max_retries: z.number().int().optional().default(2),
     keep_hype: z.boolean().optional().default(false),
     scenario_external_id: z.union([
@@ -2050,7 +2050,7 @@ export const zFindUsersByPhoneMissionInput = z.object({
     time_between_scenarios: z.number().int().optional().default(10),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-12-03T05:00:26.771502Z')
+    start_time: z.string().datetime().optional().default('2026-01-05T10:30:57.722690Z')
 });
 
 /**
@@ -2125,7 +2125,7 @@ export const zHttpValidationError = z.object({
  */
 export const zSeedScenario = z.object({
     scenario: zScenario,
-    trigger_time: z.string().datetime().optional().default('2025-12-03T05:00:26.773040Z'),
+    trigger_time: z.string().datetime().optional().default('2026-01-05T10:30:57.724192Z'),
     dependent_scenarios: z.array(zDependentScenario).optional().default([])
 });
 
@@ -2150,7 +2150,7 @@ export const zMassDmMissionInput = z.object({
     batch_size: z.number().int().optional().default(20),
     batch_interval: z.number().int().optional().default(10),
     message: zInputMessage,
-    start_time: z.string().datetime().optional().default('2025-12-03T05:00:26.769923Z')
+    start_time: z.string().datetime().optional().default('2026-01-05T10:30:57.721205Z')
 });
 
 /**
@@ -2393,7 +2393,7 @@ export const zRandomDistributionMissionInput = z.object({
     max_messages_per_chat: z.number().int().optional().default(1),
     batch_size: z.number().int().optional().default(10),
     batch_interval: z.number().int().optional().default(5),
-    start_time: z.string().datetime().optional().default('2025-12-03T05:00:26.886419Z'),
+    start_time: z.string().datetime().optional().default('2026-01-05T10:30:57.835223Z'),
     max_retries: z.number().int().optional().default(2),
     random_choice: z.boolean().optional().default(false)
 });
@@ -2514,6 +2514,162 @@ export const zScenarioUpdate = z.object({
         z.null()
     ]).optional(),
     retries: z.number().int().optional().default(0)
+});
+
+/**
+ * SortField
+ */
+export const zSortField = z.object({
+    field: z.enum([
+        'username',
+        'title',
+        'chat_type',
+        'participants_count',
+        'categories_count',
+        'members_count',
+        'linked_chat_id',
+        'linked_chat_username',
+        'text_summary'
+    ]),
+    order: z.enum([
+        'asc',
+        'desc'
+    ]).optional()
+});
+
+/**
+ * SearchChatsAddToCategoryRequest
+ * Request body for searching chats and adding to category
+ */
+export const zSearchChatsAddToCategoryRequest = z.object({
+    query: z.string(),
+    threshold: z.number().gte(0).optional().default(1),
+    chat_type: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    platform_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    about: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    linked_chat_username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    text_summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    min_participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    max_participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    min_members_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    max_members_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    has_category: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    sort_by: z.union([
+        z.array(zSortField),
+        z.null()
+    ]).optional(),
+    skip: z.number().int().gte(0).optional().default(0),
+    limit: z.number().int().gte(1).lte(1000).optional().default(100),
+    category_name: z.string()
+});
+
+/**
+ * SearchChatsRequest
+ * Request body for searching chats
+ */
+export const zSearchChatsRequest = z.object({
+    query: z.string(),
+    threshold: z.number().gte(0).optional().default(1),
+    chat_type: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    platform_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    linked_chat_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    about: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    linked_chat_username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    text_summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    min_participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    max_participants_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    min_members_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    max_members_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    has_category: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    sort_by: z.union([
+        z.array(zSortField),
+        z.null()
+    ]).optional(),
+    skip: z.number().int().gte(0).optional().default(0),
+    limit: z.number().int().gte(1).lte(1000).optional().default(100)
 });
 
 /**
@@ -3050,8 +3206,10 @@ export const zGetChatsViewChatsViewChatsGetData = z.object({
             z.string(),
             z.null()
         ]).optional(),
-        sort_by: z.string().optional().default('participants_count'),
-        sort_order: z.string().optional().default('desc'),
+        sort_by: z.union([
+            z.string(),
+            z.null()
+        ]).optional(),
         skip: z.number().int().gte(0).optional().default(0),
         limit: z.number().int().gte(1).lte(1000).optional().default(100)
     }).optional()
@@ -3143,148 +3301,29 @@ export const zGetChatCharactersCountChatsChatIdCharacterCountGetData = z.object(
     query: z.never().optional()
 });
 
-export const zSearchChatsByTopicsChatsSearchChatsGetData = z.object({
-    body: z.never().optional(),
+export const zSearchChatsByTopicsChatsSearchChatsPostData = z.object({
+    body: zSearchChatsRequest,
     path: z.never().optional(),
-    query: z.object({
-        query: z.string(),
-        threshold: z.number().gte(0).optional().default(1),
-        chat_type: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        platform_id: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        linked_chat_id: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        username: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        title: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        about: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        linked_chat_username: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        text_summary: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        min_participants_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        max_participants_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        min_members_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        max_members_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        has_category: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        sort_by: z.string().optional().default('participants_count'),
-        sort_order: z.string().optional().default('desc'),
-        skip: z.number().int().gte(0).optional().default(0),
-        limit: z.number().int().gte(1).lte(1000).optional().default(100)
-    })
+    query: z.never().optional()
 });
 
 /**
- * Response Search Chats By Topics Chats Search Chats  Get
+ * Response Search Chats By Topics Chats Search Chats  Post
  * Successful Response
  */
-export const zSearchChatsByTopicsChatsSearchChatsGetResponse = z.array(zChatView);
+export const zSearchChatsByTopicsChatsSearchChatsPostResponse = z.array(zChatView);
 
-export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetData = z.object({
-    body: z.never().optional(),
+export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostData = z.object({
+    body: zSearchChatsAddToCategoryRequest,
     path: z.never().optional(),
-    query: z.object({
-        category_name: z.string(),
-        query: z.string(),
-        threshold: z.number().gte(0).optional().default(1),
-        chat_type: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        platform_id: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        linked_chat_id: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        username: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        title: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        about: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        linked_chat_username: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        text_summary: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        min_participants_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        max_participants_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        min_members_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        max_members_count: z.union([
-            z.number().int(),
-            z.null()
-        ]).optional(),
-        has_category: z.union([
-            z.string(),
-            z.null()
-        ]).optional(),
-        sort_by: z.string().optional().default('participants_count'),
-        sort_order: z.string().optional().default('desc'),
-        skip: z.number().int().gte(0).optional().default(0),
-        limit: z.number().int().gte(1).lte(1000).optional().default(100)
-    })
+    query: z.never().optional()
 });
 
 /**
- * Response Search Chats By Topics And Add To Category Chats Search Chats Add To Category  Get
+ * Response Search Chats By Topics And Add To Category Chats Search Chats Add To Category  Post
  * Successful Response
  */
-export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGetResponse = z.array(zChatView);
+export const zSearchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPostResponse = z.array(zChatView);
 
 export const zGetExplorerChatsChatsExplorerChatsGetData = z.object({
     body: z.never().optional(),
@@ -3613,6 +3652,20 @@ export const zGetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissi
  * Successful Response
  */
 export const zGetMissionSuccessfullDestinationChatsMissionsSuccessfullChatsMissionIdGetResponse = z.array(zChatRead);
+
+export const zGetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        mission_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Get Mission Failed Destination Chats Missions Failed Chats  Mission Id  Get
+ * Successful Response
+ */
+export const zGetMissionFailedDestinationChatsMissionsFailedChatsMissionIdGetResponse = z.array(zChatRead);
 
 export const zGetMissionFailureReasonsMissionsFailureReasonsMissionIdGetData = z.object({
     body: z.never().optional(),

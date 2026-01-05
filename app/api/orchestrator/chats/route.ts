@@ -24,6 +24,23 @@ export async function GET(request: NextRequest) {
     const maxParticipants = maxParticipantsParam && maxParticipantsParam.trim() ? maxParticipantsParam.trim() : undefined
     const linkedChatUsernameParam = searchParams.get("linked_chat_username")
     const linkedChatUsername = linkedChatUsernameParam && linkedChatUsernameParam.trim() ? linkedChatUsernameParam.trim() : undefined
+    
+    // Parse sort_by parameter (JSON string)
+    let sortBy: Array<{ field: string; order?: 'asc' | 'desc' }> | null = null
+    const sortByParam = searchParams.get("sort_by")
+    if (sortByParam) {
+        try {
+            const parsed = JSON.parse(sortByParam)
+            // Handle both single object and array
+            if (Array.isArray(parsed)) {
+                sortBy = parsed
+            } else if (typeof parsed === 'object' && parsed !== null) {
+                sortBy = [parsed]
+            }
+        } catch (e) {
+            console.warn(`Failed to parse sort_by parameter: ${sortByParam}`, e)
+        }
+    }
 
     const apiService = new ApiService()
 
@@ -31,7 +48,7 @@ export async function GET(request: NextRequest) {
         // Fetch one extra to determine if there are more pages
         const requestLimit = limit > 0 ? limit + 1 : 0
         console.log(`[Pagination] Request: skip=${skip}, limit=${limit}, requestLimit=${requestLimit}, category=${categoryName}, filters:`, {
-            username, title, chatType, platform, minParticipants, maxParticipants, linkedChatUsername
+            username, title, chatType, platform, minParticipants, maxParticipants, linkedChatUsername, sortBy
         })
         
         const chats = await apiService.getOrchestratorChats(
@@ -47,7 +64,8 @@ export async function GET(request: NextRequest) {
                 minParticipants,
                 maxParticipants,
                 linkedChatUsername,
-            }
+            },
+            sortBy
         )
         
         // Check if there are more results

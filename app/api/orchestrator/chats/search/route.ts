@@ -29,6 +29,23 @@ export async function GET(request: NextRequest) {
     const linkedChatUsername = linkedChatUsernameParam && linkedChatUsernameParam.trim() ? linkedChatUsernameParam.trim() : undefined
     const hasCategoryParam = searchParams.get("has_category")
     const hasCategory = hasCategoryParam && hasCategoryParam.trim() ? hasCategoryParam.trim() : undefined
+    
+    // Parse sort_by parameter (JSON string that should be an array)
+    let sortBy: Array<{ field: string; order?: 'asc' | 'desc' }> | null = null
+    const sortByParam = searchParams.get("sort_by")
+    if (sortByParam) {
+        try {
+            const parsed = JSON.parse(sortByParam)
+            // Handle both single object and array
+            if (Array.isArray(parsed)) {
+                sortBy = parsed
+            } else if (typeof parsed === 'object' && parsed !== null) {
+                sortBy = [parsed]
+            }
+        } catch (e) {
+            console.warn(`Failed to parse sort_by parameter: ${sortByParam}`, e)
+        }
+    }
 
     if (!query) {
         return new Response(JSON.stringify({ error: "Search query cannot be empty" }), {
@@ -60,6 +77,7 @@ export async function GET(request: NextRequest) {
                 linkedChatUsername,
                 hasCategory,
             },
+            sortBy,
         )
 
         return new Response(JSON.stringify(response.data ?? []), {

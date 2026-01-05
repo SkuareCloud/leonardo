@@ -45,6 +45,7 @@ import {
     CategoryRead,
     CharacterRead,
     ChatRead,
+    ChatView,
     MissionCreate,
     MissionExposure,
     MissionRead,
@@ -75,7 +76,6 @@ import {
     getChatCategoriesChatsChatIdCategoriesGet,
     getChatCharactersChatsChatIdCharactersGet,
     getChatChatsChatIdGet,
-    getChatsViewChatsViewChatsGet,
     getMissionFailureReasonsMissionsFailureReasonsMissionIdGet,
     getMissionMissionsMissionIdGet,
     getMissionPotentialExposureMissionsExposureMissionIdGet,
@@ -87,9 +87,9 @@ import {
     removeCharacterFromCategoryCharactersCharacterIdCategoriesCategoryIdDelete,
     removeChatFromCategoryChatsChatIdCategoriesCategoryIdDelete,
     runMissionMissionsRunMissionMissionIdPost,
-    searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGet,
-    searchChatsByTopicsChatsSearchChatsGet,
-    searchChatsChatsSearchGet,
+    searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPost,
+    searchChatsByTopicsChatsSearchChatsPost,
+    searchChatsChatsSearchGet
 } from "@lib/api/orchestrator/sdk.gen"
 import { logger } from "@lib/logger"
 import { ServerSettings } from "@lib/server-settings"
@@ -465,9 +465,10 @@ export class ApiService {
             maxParticipants?: string
             linkedChatUsername?: string
         },
+        sortBy?: Array<{ field: string; order?: 'asc' | 'desc' }> | null,
     ): Promise<ChatRead[]> {
         logger.info(
-            `Getting orchestrator chats (limit: ${limit}, categoryName: ${categoryName}, filters: ${JSON.stringify(filters)})`,
+            `Getting orchestrator chats (limit: ${limit}, categoryName: ${categoryName}, filters: ${JSON.stringify(filters)}, sortBy: ${JSON.stringify(sortBy)})`,
         )
 
         const queryParams: any = {
@@ -514,6 +515,16 @@ export class ApiService {
             }
         }
 
+        // Add sorting parameter - format as JSON string for POST endpoint
+        if (sortBy && sortBy.length > 0) {
+            // Format as JSON string: single object or array
+            if (sortBy.length === 1) {
+                queryParams.sort_by = JSON.stringify(sortBy[0])
+            } else {
+                queryParams.sort_by = JSON.stringify(sortBy)
+            }
+        }
+
         let response
         if (writable) {
             response = await getAllWritableGroupsChatsCanSendMessageChatsGet({
@@ -521,26 +532,41 @@ export class ApiService {
                 query: queryParams,
             })
         } else {
-            response = await getChatsViewChatsViewChatsGet({
-                client: orchestratorClient,
-                query: queryParams,
+            // Endpoint changed to POST - use body instead of query
+            response = await orchestratorClient.post<Array<ChatView>, unknown, false>({
+                url: '/chats/view_chats/',
+                body: queryParams,
+                security: [
+                    {
+                        name: 'X-API-Key',
+                        type: 'apiKey'
+                    }
+                ],
             })
         }
         if (response.error) {
+            logger.error(`Failed to get orchestrator chats. Body params: ${JSON.stringify(queryParams)}, Error: ${JSON.stringify(response.error)}`)
             throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
         }
         logger.info(`Successfully got ${response.data?.length} orchestrator chats`)
-        return response.data ?? []
+        return (response.data ?? []) as ChatRead[]
     }
 
     async getOrchestratorChatsView(skip: number = 0, limit: number = 0): Promise<ChatRead[]> {
         logger.info(`Getting orchestrator chats view (limit: ${limit})`)
-        const response = await getChatsViewChatsViewChatsGet({
-            client: orchestratorClient,
-            query: {
+        // Endpoint changed to POST - use body instead of query
+        const response = await orchestratorClient.post<Array<ChatView>, unknown, false>({
+            url: '/chats/view_chats/',
+            body: {
                 skip,
                 limit,
             },
+            security: [
+                {
+                    name: 'X-API-Key',
+                    type: 'apiKey'
+                }
+            ],
         })
         if (response.error) {
             throw new Error(
@@ -548,7 +574,7 @@ export class ApiService {
             )
         }
         logger.info(`Successfully got ${response.data?.length} orchestrator chats`)
-        return response.data ?? []
+        return (response.data ?? []) as ChatRead[]
     }
 
     async getChatByUsername(username: string): Promise<ChatRead[]> {
@@ -620,10 +646,11 @@ export class ApiService {
             linkedChatUsername?: string
             hasCategory?: string
         },
+        sortBy?: Array<{ field: string; order?: 'asc' | 'desc' }> | null,
     ) {
         logger.info(`Searching chats by topics: ${query}`)
 
-        const queryParams: Record<string, unknown> = {
+        const bodyParams: Record<string, unknown> = {
             query,
             // Use limit instead of topk (endpoint uses only one of them for pagination)
             ...(typeof topk === "number" && !Number.isNaN(topk) ? { limit: topk } : {}),
@@ -632,46 +659,55 @@ export class ApiService {
 
         // category_name is only used when adding chats to a category (not for filtering)
         if (categoryName) {
-            queryParams.category_name = categoryName
+            bodyParams.category_name = categoryName
         }
 
         // Add filter parameters
         if (filters) {
             if (filters.username) {
-                queryParams.username = filters.username
+                bodyParams.username = filters.username
             }
             if (filters.title) {
-                queryParams.title = filters.title
+                bodyParams.title = filters.title
             }
             if (filters.chatType) {
-                queryParams.chat_type = filters.chatType
+                bodyParams.chat_type = filters.chatType
             }
             if (filters.platform) {
-                queryParams.platform_id = filters.platform // Note: API uses platform_id for platform filter
+                // Try to parse as number for platform_id, otherwise skip
+                const platformId = parseInt(filters.platform)
+                if (!isNaN(platformId)) {
+                    bodyParams.platform_id = platformId
+                }
             }
             if (typeof filters.minParticipants === "number") {
-                queryParams.min_participants_count = filters.minParticipants
+                bodyParams.min_participants_count = filters.minParticipants
             }
             if (typeof filters.maxParticipants === "number") {
-                queryParams.max_participants_count = filters.maxParticipants
+                bodyParams.max_participants_count = filters.maxParticipants
             }
             if (filters.linkedChatUsername) {
-                queryParams.linked_chat_username = filters.linkedChatUsername
+                bodyParams.linked_chat_username = filters.linkedChatUsername
             }
             // has_category is used for filtering chats that have a specific category
             if (filters.hasCategory) {
-                queryParams.has_category = filters.hasCategory
+                bodyParams.has_category = filters.hasCategory
             }
         }
 
+        // Add sorting parameter - format as Array<SortField> for searchChatsByTopicsChatsSearchChatsPost
+        if (sortBy && sortBy.length > 0) {
+            bodyParams.sort_by = sortBy
+        }
+
         const response = categoryName
-            ? await searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryGet({
+            ? await searchChatsByTopicsAndAddToCategoryChatsSearchChatsAddToCategoryPost({
                   client: orchestratorClient,
-                  query: queryParams as any, // Type assertion needed due to dynamic filter parameters
+                  body: bodyParams as any, // Type assertion needed due to dynamic filter parameters
               })
-            : await searchChatsByTopicsChatsSearchChatsGet({
+            : await searchChatsByTopicsChatsSearchChatsPost({
                   client: orchestratorClient,
-                  query: queryParams as any, // Type assertion needed due to dynamic filter parameters
+                  body: bodyParams as any, // Type assertion needed due to dynamic filter parameters
               })
 
         if (response.error) {
