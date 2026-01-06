@@ -45,13 +45,13 @@ import {
     CategoryRead,
     CharacterRead,
     ChatRead,
-    ChatView,
     MissionCreate,
     MissionExposure,
     MissionRead,
     ChatCreate as OrchestratorChatCreate,
     Scenario,
     ScenarioRead,
+    ViewChatsRequest
 } from "@lib/api/orchestrator"
 import { client as orchestratorClient } from "@lib/api/orchestrator/client.gen"
 import {
@@ -76,6 +76,7 @@ import {
     getChatCategoriesChatsChatIdCategoriesGet,
     getChatCharactersChatsChatIdCharactersGet,
     getChatChatsChatIdGet,
+    getChatsViewChatsViewChatsPost,
     getMissionFailureReasonsMissionsFailureReasonsMissionIdGet,
     getMissionMissionsMissionIdGet,
     getMissionPotentialExposureMissionsExposureMissionIdGet,
@@ -465,87 +466,86 @@ export class ApiService {
             maxParticipants?: string
             linkedChatUsername?: string
         },
-        sortBy?: Array<{ field: string; order?: 'asc' | 'desc' }> | null,
+        sortBy?: Array<{ field: 'username' | 'title' | 'chat_type' | 'participants_count' | 'categories_count' | 'members_count' | 'linked_chat_id' | 'linked_chat_username' | 'text_summary'; order?: 'asc' | 'desc' }> | null,
     ): Promise<ChatRead[]> {
         logger.info(
             `Getting orchestrator chats (limit: ${limit}, categoryName: ${categoryName}, filters: ${JSON.stringify(filters)}, sortBy: ${JSON.stringify(sortBy)})`,
         )
 
-        const queryParams: any = {
+        // Build request body according to ViewChatsRequest type
+        const body: ViewChatsRequest = {
             skip,
-            limit,
+            limit: limit > 0 ? limit : undefined,
         }
 
         if (categoryName) {
-            queryParams.has_category = categoryName
+            body.has_category = categoryName
         }
 
         // Add filter parameters
         if (filters) {
             if (filters.username) {
-                queryParams.username = filters.username
+                body.username = filters.username
             }
             if (filters.title) {
-                queryParams.title = filters.title
+                body.title = filters.title
             }
             if (filters.chatType) {
-                queryParams.chat_type = filters.chatType
+                body.chat_type = filters.chatType
             }
             if (filters.platform) {
                 // Try to parse as number for platform_id, otherwise skip
                 const platformId = parseInt(filters.platform)
                 if (!isNaN(platformId)) {
-                    queryParams.platform_id = platformId
+                    body.platform_id = platformId
                 }
             }
             if (filters.minParticipants) {
                 const minPart = parseInt(filters.minParticipants)
                 if (!isNaN(minPart)) {
-                    queryParams.min_participants_count = minPart
+                    body.min_participants_count = minPart
                 }
             }
             if (filters.maxParticipants) {
                 const maxPart = parseInt(filters.maxParticipants)
                 if (!isNaN(maxPart)) {
-                    queryParams.max_participants_count = maxPart
+                    body.max_participants_count = maxPart
                 }
             }
             if (filters.linkedChatUsername) {
-                queryParams.linked_chat_username = filters.linkedChatUsername
+                body.linked_chat_username = filters.linkedChatUsername
             }
         }
 
-        // Add sorting parameter - format as JSON string for POST endpoint
+        // Add sorting parameter - send as array of SortField objects
+        // The backend expects Array<SortField> where SortField = { field: string, order?: 'asc' | 'desc' }
         if (sortBy && sortBy.length > 0) {
-            // Format as JSON string: single object or array
-            if (sortBy.length === 1) {
-                queryParams.sort_by = JSON.stringify(sortBy[0])
-            } else {
-                queryParams.sort_by = JSON.stringify(sortBy)
-            }
+            body.sort_by = sortBy as any // Type assertion needed since our input type is more flexible
         }
 
         let response
         if (writable) {
+            // For writable, still use GET with query params
+            const queryParams: any = {
+                skip,
+                limit: limit > 0 ? limit : undefined,
+            }
+            if (categoryName) {
+                queryParams.category_name = categoryName
+            }
             response = await getAllWritableGroupsChatsCanSendMessageChatsGet({
                 client: orchestratorClient,
                 query: queryParams,
             })
         } else {
-            // Endpoint changed to POST - use body instead of query
-            response = await orchestratorClient.post<Array<ChatView>, unknown, false>({
-                url: '/chats/view_chats/',
-                body: queryParams,
-                security: [
-                    {
-                        name: 'X-API-Key',
-                        type: 'apiKey'
-                    }
-                ],
+            // Endpoint changed to POST - use the generated POST function
+            response = await getChatsViewChatsViewChatsPost({
+                client: orchestratorClient,
+                body: body,
             })
         }
         if (response.error) {
-            logger.error(`Failed to get orchestrator chats. Body params: ${JSON.stringify(queryParams)}, Error: ${JSON.stringify(response.error)}`)
+            logger.error(`Failed to get orchestrator chats. Body params: ${JSON.stringify(body)}, Error: ${JSON.stringify(response.error)}`)
             throw new Error(`Failed to get orchestrator chats: ${JSON.stringify(response.error)}`)
         }
         logger.info(`Successfully got ${response.data?.length} orchestrator chats`)
@@ -554,19 +554,14 @@ export class ApiService {
 
     async getOrchestratorChatsView(skip: number = 0, limit: number = 0): Promise<ChatRead[]> {
         logger.info(`Getting orchestrator chats view (limit: ${limit})`)
-        // Endpoint changed to POST - use body instead of query
-        const response = await orchestratorClient.post<Array<ChatView>, unknown, false>({
-            url: '/chats/view_chats/',
-            body: {
-                skip,
-                limit,
-            },
-            security: [
-                {
-                    name: 'X-API-Key',
-                    type: 'apiKey'
-                }
-            ],
+        // Endpoint changed to POST - use the generated POST function
+        const body: ViewChatsRequest = {
+            skip,
+            limit: limit > 0 ? limit : undefined,
+        }
+        const response = await getChatsViewChatsViewChatsPost({
+            client: orchestratorClient,
+            body: body,
         })
         if (response.error) {
             throw new Error(

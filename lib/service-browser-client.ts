@@ -282,48 +282,56 @@ export class ServiceBrowserClient {
         linkedChatUsername?: string
         sortBy?: Array<{ field: string; order?: 'asc' | 'desc' }> | null
     } = {}): Promise<{ chats: ChatView[]; totalCount?: number; hasMore?: boolean }> {
-        const params = new URLSearchParams()
         const skip = pageIndex * pageSize
+        
+        // Build request body (endpoint changed to POST)
+        const body: Record<string, unknown> = {}
         if (skip > 0) {
-            params.set("skip", skip.toString())
+            body.skip = skip
         }
         if (pageSize > 0) {
-            params.set("limit", pageSize.toString())
+            body.limit = pageSize
         }
         if (writable) {
-            params.set("writable", "true")
+            body.writable = true
         }
         if (categoryName) {
-            params.set("category_name", categoryName)
+            body.category_name = categoryName
         }
         if (username) {
-            params.set("username", username)
+            body.username = username
         }
         if (title) {
-            params.set("title", title)
+            body.title = title
         }
         if (chatType) {
-            params.set("chat_type", chatType)
+            body.chat_type = chatType
         }
         if (platform) {
-            params.set("platform", platform)
+            body.platform = platform
         }
         if (minParticipants) {
-            params.set("min_participants", minParticipants)
+            body.min_participants = minParticipants
         }
         if (maxParticipants) {
-            params.set("max_participants", maxParticipants)
+            body.max_participants = maxParticipants
         }
         if (linkedChatUsername) {
-            params.set("linked_chat_username", linkedChatUsername)
+            body.linked_chat_username = linkedChatUsername
         }
         if (sortBy && sortBy.length > 0) {
-            params.set("sort_by", JSON.stringify(sortBy))
+            // Send as array of objects directly, not as JSON string
+            body.sort_by = sortBy
         }
-        const query = params.toString()
-        const url = query ? `/api/orchestrator/chats?${query}` : `/api/orchestrator/chats`
-        console.log("[API] Fetching chats with URL:", url)
-        const resp = await fetch(url)
+        
+        console.log("[API] Fetching chats with POST:", body)
+        const resp = await fetch("/api/orchestrator/chats", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+        })
         if (!resp.ok) {
             throw new Error(`Failed to load chats: ${resp.statusText}`)
         }
