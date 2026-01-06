@@ -8,23 +8,6 @@ export type ActionCreate = {
      * Avatar Id
      */
     avatar_id?: string;
-    action_type: Type;
-    platform: Platform;
-    /**
-     * Action Description
-     */
-    action_description: string;
-    /**
-     * Request Payload
-     * Action input
-     */
-    request_payload?: ScrollFeedArgs | SendMessageArgsInput | SendBulkMessagesArgsInput | JoinGroupArgsInput | LeaveGroupArgsInput | ReplyToMessageArgsInput | ForwardMessageArgsInput | BehaviouralArgs | ReadMessagesArgsInput | ResolvePhoneArgs | InteractWithTweetArgsInput | InteractWithTweetByTweetIdArgsInput | CloseBrowserArgs;
-    status: ActionStatus;
-    /**
-     * Response Content
-     * Action output
-     */
-    response_content?: ScrollFeedResponseContentInput | InteractWithTweetResponseContentInput | SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContentInput | ForwardMessageResponseContent | BehaviouralResponseContentInput | SendBulkMessagesResponseContent | ReadMessagesResponseContent | ResolvePhoneResponseContentInput | CloseBrowserResponseContent;
     /**
      * Start Time
      */
@@ -32,7 +15,18 @@ export type ActionCreate = {
     /**
      * End Time
      */
-    end_time?: string;
+    end_time?: string | null;
+    action_type: Type;
+    platform: Platform;
+    /**
+     * Request Payload
+     */
+    request_payload: ScrollFeedArgs | SendMessageArgs | SendBulkMessagesArgs | JoinGroupArgs | LeaveGroupArgs | ReplyToMessageArgs | ForwardMessageArgs | BehaviouralArgs | ReadMessagesArgs | ResolvePhoneArgs | InteractWithTweetArgs | InteractWithTweetByTweetIdArgs | CloseBrowserArgs | null;
+    status: ActionStatus;
+    /**
+     * Response Content
+     */
+    response_content: ScrollFeedResponseContent | InteractWithTweetResponseContent | SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContent | ForwardMessageResponseContent | BehaviouralResponseContent | SendBulkMessagesResponseContent | ReadMessagesResponseContent | ResolvePhoneResponseContent | CloseBrowserResponseContent | null;
 };
 
 /**
@@ -41,51 +35,25 @@ export type ActionCreate = {
 export type ActionErrorCode = 'chat_not_found' | 'general_error' | 'account_muted' | 'send_message_error' | 'message_deleted' | 'sending_attachment_error' | 'did_not_find_message_after_sending' | 'username_not_valid' | 'failed_to_download_attachment' | 'join_group_chat_type_user' | 'account_in_slow_mode' | 'timeout' | 'tweet_does_not_exist' | 'tweet_is_unavailable' | 'tweet_page_load_failed';
 
 /**
- * ActionRead
+ * ActionPlatform
  */
-export type ActionRead = {
+export type ActionPlatform = 'x';
+
+/**
+ * ActionResultStatus
+ */
+export type ActionResultStatus = {
+    status_code: ActionResultStatusCode;
     /**
-     * Id
+     * Error
      */
-    id: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Updated At
-     */
-    updated_at: string;
-    /**
-     * Avatar Id
-     */
-    avatar_id?: string;
-    action_type: Type;
-    platform: Platform;
-    /**
-     * Action Description
-     */
-    action_description: string;
-    /**
-     * Request Payload
-     * Action input
-     */
-    request_payload?: ScrollFeedArgs | SendMessageArgsOutput | SendBulkMessagesArgsOutput | JoinGroupArgsOutput | LeaveGroupArgsOutput | ReplyToMessageArgsOutput | ForwardMessageArgsOutput | BehaviouralArgs | ReadMessagesArgsOutput | ResolvePhoneArgs | InteractWithTweetArgsOutput | InteractWithTweetByTweetIdArgsOutput | CloseBrowserArgs;
-    status: ActionStatus;
-    /**
-     * Response Content
-     * Action output
-     */
-    response_content?: ScrollFeedResponseContentOutput | InteractWithTweetResponseContentOutput | SendMessageResponseContent | ReplyToMessageResponseContent | LeaveGroupResponseContent | JoinGroupResponseContentOutput | ForwardMessageResponseContent | BehaviouralResponseContentOutput | SendBulkMessagesResponseContent | ReadMessagesResponseContent | ResolvePhoneResponseContentOutput | CloseBrowserResponseContent;
-    /**
-     * Start Time
-     */
-    start_time: string;
-    /**
-     * End Time
-     */
-    end_time?: string;
+    error?: string | null;
 };
+
+/**
+ * ActionResultStatusCode
+ */
+export type ActionResultStatusCode = 'success' | 'failed' | 'cancelled' | 'fail_fast' | 'running' | 'pending';
 
 /**
  * ActionStatus
@@ -95,14 +63,24 @@ export type ActionStatus = {
     /**
      * Error
      */
-    error?: string;
-    error_code?: ActionErrorCode;
+    error?: string | null;
+    error_code?: ActionErrorCode | null;
 };
 
 /**
  * ActionStatusCode
  */
 export type ActionStatusCode = 'success' | 'failed' | 'cancelled' | 'fail_fast' | 'running' | 'pending';
+
+/**
+ * ActionUpdate
+ */
+export type ActionUpdate = {
+    /**
+     * Data
+     */
+    data?: ScrollFeedActionData | LikeTweetActionData | RetweetActionData | BookmarkActionData | ReplyActionData | QuoteActionData | null;
+};
 
 /**
  * ActivityTimeParameters
@@ -157,7 +135,7 @@ export type Address = {
     /**
      * Street
      */
-    street?: string;
+    street?: string | null;
     /**
      * City
      */
@@ -165,7 +143,7 @@ export type Address = {
     /**
      * State
      */
-    state?: string;
+    state?: string | null;
     /**
      * Country
      */
@@ -178,7 +156,7 @@ export type Address = {
     /**
      * Postal Code
      */
-    postal_code?: string;
+    postal_code?: string | null;
     /**
      * Iso 3166 1 Alpha 2 Code
      * ISO 3166-1 alpha-2 code for avatar's country, e.g. US, DE, etc.
@@ -198,35 +176,35 @@ export type AddressUpdate = {
     /**
      * Street
      */
-    street?: string;
+    street?: string | null;
     /**
      * City
      */
-    city?: string;
+    city?: string | null;
     /**
      * State
      */
-    state?: string;
+    state?: string | null;
     /**
      * Country
      */
-    country?: string;
+    country?: string | null;
     /**
      * Timezone
      */
-    timezone?: string;
+    timezone?: string | null;
     /**
      * Postal Code
      */
-    postal_code?: string;
+    postal_code?: string | null;
     /**
      * Iso 3166 1 Alpha 2 Code
      */
-    iso_3166_1_alpha_2_code?: string;
+    iso_3166_1_alpha_2_code?: string | null;
     /**
      * Iso 3166 2 Subdivision Code
      */
-    iso_3166_2_subdivision_code?: string;
+    iso_3166_2_subdivision_code?: string | null;
 };
 
 /**
@@ -238,19 +216,42 @@ export type Attachment = {
      */
     url: string;
     /**
+     * S3 Uri
+     */
+    s3_uri?: string | null;
+    /**
      * Name
      */
-    name?: string;
+    name?: string | null;
     /**
      * Mime Type
      */
-    mime_type?: string;
+    mime_type?: string | null;
+};
+
+/**
+ * AttachmentData
+ */
+export type AttachmentData = {
+    /**
+     * Url
+     */
+    url: string;
+    /**
+     * S3 Uri
+     */
+    s3_uri?: string | null;
+    /**
+     * Name
+     */
+    name?: string | null;
+    mime_type: MimeType;
 };
 
 /**
  * AvatarCreate
  */
-export type AvatarCreateInput = {
+export type AvatarCreate = {
     /**
      * First Name
      */
@@ -300,71 +301,7 @@ export type AvatarCreateInput = {
     /**
      * Image Url
      */
-    image_url: string;
-    /**
-     * Emails
-     */
-    emails?: Array<Email>;
-    /**
-     * Social Media Accounts
-     */
-    social_media_accounts?: Array<SocialMediaAccountCreate>;
-};
-
-/**
- * AvatarCreate
- */
-export type AvatarCreateOutput = {
-    /**
-     * First Name
-     */
-    first_name: string;
-    /**
-     * Last Name
-     */
-    last_name: string;
-    /**
-     * Gender
-     * The gender of the avatar, male or female
-     */
-    gender: string;
-    /**
-     * Language
-     * The language of the avatar, e.g. English, Spanish, French, etc.
-     */
-    language: string;
-    /**
-     * Birth Date
-     * The birth date of the avatar, format: YYYY-MM-DD
-     */
-    birth_date: string;
-    /**
-     * The address of the avatar
-     */
-    address: Address;
-    /**
-     * Bio
-     * The bio of the avatar, paragraph of text describing the avatar's personality, social media habits, etc.
-     */
-    bio: string;
-    /**
-     * Interests
-     * Avatar's areas of interest, subjects he is interested in.
-     */
-    interests?: Array<string>;
-    /**
-     * Habits
-     * Avatar’s personal habits and preferred activities
-     */
-    habits?: Array<string>;
-    /**
-     * Phone Number
-     */
-    phone_number: string;
-    /**
-     * Image Url
-     */
-    image_url: string;
+    image_url?: string;
     /**
      * Emails
      */
@@ -391,11 +328,11 @@ export type AvatarRead = {
     /**
      * Strategy
      */
-    strategy?: string;
+    strategy?: string | null;
     /**
      * Strategy Expiration
      */
-    strategy_expiration?: string;
+    strategy_expiration?: string | null;
     /**
      * First Name
      */
@@ -445,7 +382,7 @@ export type AvatarRead = {
     /**
      * Image Url
      */
-    image_url: string;
+    image_url?: string;
     /**
      * Emails
      */
@@ -459,7 +396,7 @@ export type AvatarRead = {
      * Social Media Accounts
      */
     social_media_accounts: Array<SocialMediaAccountRead>;
-    proxy?: ProxyRead;
+    proxy?: ProxyRead | null;
 };
 
 /**
@@ -488,7 +425,7 @@ export type AvatarState = {
 /**
  * AvatarStateEnum
  */
-export type AvatarStateEnum = 'available' | 'active' | 'pending' | 'invalid';
+export type AvatarStateEnum = 'available' | 'active' | 'invalid';
 
 /**
  * AvatarUpdate
@@ -497,48 +434,56 @@ export type AvatarUpdate = {
     /**
      * First Name
      */
-    first_name?: string;
+    first_name?: string | null;
     /**
      * Last Name
      */
-    last_name?: string;
+    last_name?: string | null;
     /**
      * Phone Number
      */
-    phone_number?: string;
+    phone_number?: string | null;
     /**
      * Image Url
      */
-    image_url?: string;
+    image_url?: string | null;
     /**
      * Birth Date
      */
-    birth_date?: string;
-    address?: AddressUpdate;
+    birth_date?: string | null;
+    /**
+     * Gender
+     */
+    gender?: string | null;
+    /**
+     * Language
+     */
+    language?: string | null;
+    address?: AddressUpdate | null;
     /**
      * Emails
      */
-    emails?: Array<Email>;
+    emails?: Array<Email> | null;
     /**
      * Bio
      */
-    bio?: string;
+    bio?: string | null;
     /**
      * Interests
      */
-    interests?: Array<string>;
+    interests?: Array<string> | null;
     /**
      * Habits
      */
-    habits?: Array<string>;
+    habits?: Array<string> | null;
     /**
      * Strategy
      */
-    strategy?: string;
+    strategy?: string | null;
     /**
      * Strategy Expiration
      */
-    strategy_expiration?: string;
+    strategy_expiration?: string | null;
 };
 
 /**
@@ -548,34 +493,34 @@ export type BehaviouralArgs = {
     /**
      * Wait Time
      */
-    wait_time?: number;
+    wait_time?: number | null;
     /**
      * Sync Context
      */
-    sync_context?: boolean;
+    sync_context?: boolean | null;
     /**
      * Get Chats
      */
-    get_chats?: boolean;
-    sync_personal_details?: SyncPersonalDetailsArgs;
+    get_chats?: boolean | null;
+    sync_personal_details?: SyncPersonalDetailsArgs | null;
     /**
      * Disable Auto Download Media
      */
-    disable_auto_download_media?: boolean;
+    disable_auto_download_media?: boolean | null;
     /**
      * Delete All Active Sessions
      */
-    delete_all_active_sessions?: boolean;
+    delete_all_active_sessions?: boolean | null;
     /**
      * Get Unread Messages
      */
-    get_unread_messages?: boolean;
+    get_unread_messages?: boolean | null;
 };
 
 /**
  * BehaviouralResponseContent
  */
-export type BehaviouralResponseContentInput = {
+export type BehaviouralResponseContent = {
     /**
      * Current Context
      */
@@ -583,53 +528,65 @@ export type BehaviouralResponseContentInput = {
     /**
      * Chats
      */
-    chats?: Array<GroupInfo | ChannelInfo>;
+    chats?: Array<GroupInfo | ChannelInfo> | null;
     /**
      * Personal Details Synced
      */
-    personal_details_synced?: boolean;
+    personal_details_synced?: boolean | null;
     /**
      * Auto Download Media Disabled
      */
-    auto_download_media_disabled?: boolean;
+    auto_download_media_disabled?: boolean | null;
     /**
      * All Active Sessions Deleted
      */
-    all_active_sessions_deleted?: boolean;
+    all_active_sessions_deleted?: boolean | null;
     /**
      * Unread Messages
      */
-    unread_messages?: Array<ChatInfo>;
+    unread_messages?: Array<ChatInfo> | null;
 };
 
 /**
- * BehaviouralResponseContent
+ * Body_saveProfileImage
  */
-export type BehaviouralResponseContentOutput = {
+export type BodySaveProfileImage = {
     /**
-     * Current Context
+     * Image B64
      */
-    current_context?: unknown;
+    image_b64: string;
+};
+
+/**
+ * BookmarkActionData
+ */
+export type BookmarkActionData = {
+    tweet?: TweetData | null;
+};
+
+/**
+ * BookmarkActionRead
+ */
+export type BookmarkActionRead = {
     /**
-     * Chats
+     * Id
      */
-    chats?: Array<GroupInfo | ChannelInfo>;
+    id: string;
     /**
-     * Personal Details Synced
+     * Avatar Id
      */
-    personal_details_synced?: boolean;
+    avatar_id: string;
     /**
-     * Auto Download Media Disabled
+     * Type
      */
-    auto_download_media_disabled?: boolean;
+    type: 'bookmark';
+    platform?: ActionPlatform | null;
+    status: ActionResultStatus;
     /**
-     * All Active Sessions Deleted
+     * Created At
      */
-    all_active_sessions_deleted?: boolean;
-    /**
-     * Unread Messages
-     */
-    unread_messages?: Array<ChatInfo>;
+    created_at: string;
+    data: BookmarkActionData;
 };
 
 /**
@@ -653,48 +610,48 @@ export type ChannelInfo = {
     /**
      * Id
      */
-    id?: number;
+    id?: number | null;
     /**
      * Name
      */
-    name?: string;
+    name?: string | null;
     /**
      * Phone Number
      */
-    phone_number?: string;
+    phone_number?: string | null;
     /**
      * Title
      */
-    title?: string;
-    type?: ChatType;
+    title?: string | null;
+    type?: ChatType | null;
     /**
      * Description
      */
-    description?: string;
+    description?: string | null;
     /**
      * Read Inbox Max Id
      */
-    read_inbox_max_id?: number;
+    read_inbox_max_id?: number | null;
     /**
      * Read Outbox Max Id
      */
-    read_outbox_max_id?: number;
+    read_outbox_max_id?: number | null;
     /**
      * Unread Count
      */
-    unread_count?: number;
+    unread_count?: number | null;
     /**
      * Unread Mentions Count
      */
-    unread_mentions_count?: number;
+    unread_mentions_count?: number | null;
     /**
      * Unread Reactions Count
      */
-    unread_reactions_count?: number;
+    unread_reactions_count?: number | null;
     /**
      * Subscribers
      */
-    subscribers?: number;
+    subscribers?: number | null;
 };
 
 /**
@@ -704,44 +661,44 @@ export type ChatInfo = {
     /**
      * Id
      */
-    id?: number;
+    id?: number | null;
     /**
      * Name
      */
-    name?: string;
+    name?: string | null;
     /**
      * Phone Number
      */
-    phone_number?: string;
+    phone_number?: string | null;
     /**
      * Title
      */
-    title?: string;
-    type?: ChatType;
+    title?: string | null;
+    type?: ChatType | null;
     /**
      * Description
      */
-    description?: string;
+    description?: string | null;
     /**
      * Read Inbox Max Id
      */
-    read_inbox_max_id?: number;
+    read_inbox_max_id?: number | null;
     /**
      * Read Outbox Max Id
      */
-    read_outbox_max_id?: number;
+    read_outbox_max_id?: number | null;
     /**
      * Unread Count
      */
-    unread_count?: number;
+    unread_count?: number | null;
     /**
      * Unread Mentions Count
      */
-    unread_mentions_count?: number;
+    unread_mentions_count?: number | null;
     /**
      * Unread Reactions Count
      */
-    unread_reactions_count?: number;
+    unread_reactions_count?: number | null;
 };
 
 /**
@@ -763,7 +720,7 @@ export type CloseBrowserResponseContent = {
     /**
      * Closed
      */
-    closed?: boolean;
+    closed?: boolean | null;
 };
 
 /**
@@ -787,61 +744,40 @@ export type Entities = {
     /**
      * Urls
      */
-    urls?: Array<Url>;
+    urls?: Array<Url> | null;
     /**
      * Hashtags
      */
-    hashtags?: Array<Hashtag>;
+    hashtags?: Array<Hashtag> | null;
     /**
      * Cashtags
      */
-    cashtags?: Array<Cashtag>;
+    cashtags?: Array<Cashtag> | null;
     /**
      * Mentions
      */
-    mentions?: Array<Mention>;
+    mentions?: Array<Mention> | null;
 };
 
 /**
  * ForwardMessageArgs
  */
-export type ForwardMessageArgsInput = {
+export type ForwardMessageArgs = {
     /**
      * The chat to forward from, if not provided, the message link will be used
      */
-    from_chat?: ChatInfo;
+    from_chat?: ChatInfo | null;
     /**
      * The message to forward, if not provided, the message link will be used
      */
-    message_info?: MessageInfo;
+    message_info?: MessageInfo | null;
     target_chat: ChatInfo;
-    message?: InputMessage;
+    message?: InputMessage | null;
     /**
      * Message Link
      * The link to the message to forward, if not provided, the from chat and message info will be used
      */
-    message_link?: string;
-};
-
-/**
- * ForwardMessageArgs
- */
-export type ForwardMessageArgsOutput = {
-    /**
-     * The chat to forward from, if not provided, the message link will be used
-     */
-    from_chat?: ChatInfo;
-    /**
-     * The message to forward, if not provided, the message link will be used
-     */
-    message_info?: MessageInfo;
-    target_chat: ChatInfo;
-    message?: InputMessage;
-    /**
-     * Message Link
-     * The link to the message to forward, if not provided, the from chat and message info will be used
-     */
-    message_link?: string;
+    message_link?: string | null;
 };
 
 /**
@@ -852,58 +788,68 @@ export type ForwardMessageResponseContent = {
 };
 
 /**
+ * GenerateProfileImageResponse
+ */
+export type GenerateProfileImageResponse = {
+    /**
+     * Image B64
+     */
+    image_b64: string;
+};
+
+/**
  * GroupInfo
  */
 export type GroupInfo = {
     /**
      * Id
      */
-    id?: number;
+    id?: number | null;
     /**
      * Name
      */
-    name?: string;
+    name?: string | null;
     /**
      * Phone Number
      */
-    phone_number?: string;
+    phone_number?: string | null;
     /**
      * Title
      */
-    title?: string;
-    type?: ChatType;
+    title?: string | null;
+    type?: ChatType | null;
     /**
      * Description
      */
-    description?: string;
+    description?: string | null;
     /**
      * Read Inbox Max Id
      */
-    read_inbox_max_id?: number;
+    read_inbox_max_id?: number | null;
     /**
      * Read Outbox Max Id
      */
-    read_outbox_max_id?: number;
+    read_outbox_max_id?: number | null;
     /**
      * Unread Count
      */
-    unread_count?: number;
+    unread_count?: number | null;
     /**
      * Unread Mentions Count
      */
-    unread_mentions_count?: number;
+    unread_mentions_count?: number | null;
     /**
      * Unread Reactions Count
      */
-    unread_reactions_count?: number;
+    unread_reactions_count?: number | null;
     /**
      * Members
      */
-    members?: number;
+    members?: number | null;
     /**
      * Online
      */
-    online?: number;
+    online?: number | null;
 };
 
 /**
@@ -927,28 +873,17 @@ export type InputMessage = {
     /**
      * Text
      */
-    text?: string;
+    text?: string | null;
     /**
      * Attachments
      */
-    attachments?: Array<Attachment>;
+    attachments?: Array<Attachment> | null;
 };
 
 /**
  * InteractWithTweetArgs
  */
-export type InteractWithTweetArgsInput = {
-    /**
-     * Url
-     */
-    url: string;
-    interaction: TweetInteraction;
-};
-
-/**
- * InteractWithTweetArgs
- */
-export type InteractWithTweetArgsOutput = {
+export type InteractWithTweetArgs = {
     /**
      * Url
      */
@@ -959,18 +894,7 @@ export type InteractWithTweetArgsOutput = {
 /**
  * InteractWithTweetByTweetIdArgs
  */
-export type InteractWithTweetByTweetIdArgsInput = {
-    /**
-     * Tweet Id
-     */
-    tweet_id: number;
-    interaction: TweetInteraction;
-};
-
-/**
- * InteractWithTweetByTweetIdArgs
- */
-export type InteractWithTweetByTweetIdArgsOutput = {
+export type InteractWithTweetByTweetIdArgs = {
     /**
      * Tweet Id
      */
@@ -981,86 +905,43 @@ export type InteractWithTweetByTweetIdArgsOutput = {
 /**
  * InteractWithTweetResponseContent
  */
-export type InteractWithTweetResponseContentInput = {
-    interaction_result: TweetInteractionResult;
-};
-
-/**
- * InteractWithTweetResponseContent
- */
-export type InteractWithTweetResponseContentOutput = {
+export type InteractWithTweetResponseContent = {
     interaction_result: TweetInteractionResult;
 };
 
 /**
  * JoinGroupArgs
  */
-export type JoinGroupArgsInput = {
-    chat?: ChatInfo;
+export type JoinGroupArgs = {
+    chat?: ChatInfo | null;
     /**
      * Join Discussion Group If Availble
      */
-    join_discussion_group_if_availble?: boolean;
+    join_discussion_group_if_availble?: boolean | null;
     /**
      * Invite Link
      */
-    invite_link?: string;
-};
-
-/**
- * JoinGroupArgs
- */
-export type JoinGroupArgsOutput = {
-    chat?: ChatInfo;
-    /**
-     * Join Discussion Group If Availble
-     */
-    join_discussion_group_if_availble?: boolean;
-    /**
-     * Invite Link
-     */
-    invite_link?: string;
+    invite_link?: string | null;
 };
 
 /**
  * JoinGroupResponseContent
  */
-export type JoinGroupResponseContentInput = {
+export type JoinGroupResponseContent = {
     /**
      * Chat Info
      */
-    chat_info: ChannelInfo | GroupInfo;
+    chat_info: ChannelInfo | GroupInfo | null;
     /**
      * Discussion Group Chat Info
      */
-    discussion_group_chat_info: ChannelInfo | GroupInfo;
-};
-
-/**
- * JoinGroupResponseContent
- */
-export type JoinGroupResponseContentOutput = {
-    /**
-     * Chat Info
-     */
-    chat_info: ChannelInfo | GroupInfo;
-    /**
-     * Discussion Group Chat Info
-     */
-    discussion_group_chat_info: ChannelInfo | GroupInfo;
+    discussion_group_chat_info: ChannelInfo | GroupInfo | null;
 };
 
 /**
  * LeaveGroupArgs
  */
-export type LeaveGroupArgsInput = {
-    chat: ChatInfo;
-};
-
-/**
- * LeaveGroupArgs
- */
-export type LeaveGroupArgsOutput = {
+export type LeaveGroupArgs = {
     chat: ChatInfo;
 };
 
@@ -1069,6 +950,38 @@ export type LeaveGroupArgsOutput = {
  */
 export type LeaveGroupResponseContent = {
     [key: string]: unknown;
+};
+
+/**
+ * LikeActionRead
+ */
+export type LikeActionRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Avatar Id
+     */
+    avatar_id: string;
+    /**
+     * Type
+     */
+    type: 'like';
+    platform?: ActionPlatform | null;
+    status: ActionResultStatus;
+    /**
+     * Created At
+     */
+    created_at: string;
+    data: LikeTweetActionData;
+};
+
+/**
+ * LikeTweetActionData
+ */
+export type LikeTweetActionData = {
+    tweet?: TweetData | null;
 };
 
 /**
@@ -1096,24 +1009,59 @@ export type MessageInfo = {
     /**
      * Peer Id
      */
-    peer_id?: string;
+    peer_id?: string | null;
     /**
      * From Id
      */
-    from_id?: string;
+    from_id?: string | null;
     /**
      * Text Hash
      */
-    text_hash?: string;
+    text_hash?: string | null;
     /**
      * Message Id
      */
-    message_id?: string;
+    message_id?: string | null;
     /**
      * Viewer Id
      */
-    viewer_id?: string;
+    viewer_id?: string | null;
 };
+
+/**
+ * MetricsData
+ */
+export type MetricsData = {
+    /**
+     * Likes
+     */
+    likes?: number | null;
+    /**
+     * Retweets
+     */
+    retweets?: number | null;
+    /**
+     * Bookmarks
+     */
+    bookmarks?: number | null;
+    /**
+     * Replies
+     */
+    replies?: number | null;
+    /**
+     * Quotes
+     */
+    quotes?: number | null;
+    /**
+     * Impressions
+     */
+    impressions?: number | null;
+};
+
+/**
+ * MimeType
+ */
+export type MimeType = 'image/jpeg' | 'image/jpg' | 'image/png' | 'image/gif' | 'image/webp' | 'video/mp4' | 'video/webm';
 
 /**
  * Platform
@@ -1143,7 +1091,7 @@ export type ProxyRead = {
     /**
      * Status
      */
-    status?: Status;
+    status?: Status | null;
     version: Version;
     /**
      * Proxy Type
@@ -1156,11 +1104,11 @@ export type ProxyRead = {
     /**
      * Ip Address
      */
-    ip_address?: string;
+    ip_address?: string | null;
     /**
      * Fqdn
      */
-    fqdn?: string;
+    fqdn?: string | null;
     /**
      * Username
      */
@@ -1172,19 +1120,19 @@ export type ProxyRead = {
     /**
      * Continent Code
      */
-    continent_code?: string;
+    continent_code?: string | null;
     /**
      * Iso 3166 1 Alpha 2 Code
      */
-    iso_3166_1_alpha_2_code?: string;
+    iso_3166_1_alpha_2_code?: string | null;
     /**
      * Iso 3166 2 Subdivision Code
      */
-    iso_3166_2_subdivision_code?: string;
+    iso_3166_2_subdivision_code?: string | null;
     /**
      * City
      */
-    city?: string;
+    city?: string | null;
     /**
      * Expired Date
      */
@@ -1196,17 +1144,17 @@ export type ProxyRead = {
     /**
      * Last Pinged
      */
-    last_pinged?: string;
+    last_pinged?: string | null;
     /**
      * Extra Data
      */
     extra_data?: {
         [key: string]: unknown;
-    };
+    } | null;
     /**
      * Proxy Full Url
      */
-    proxy_full_url?: string;
+    proxy_full_url?: string | null;
 };
 
 /**
@@ -1221,57 +1169,82 @@ export type PublicMetrics = {
     /**
      * Retweet Count
      */
-    retweet_count?: number;
+    retweet_count?: number | null;
     /**
      * Reply Count
      */
-    reply_count?: number;
+    reply_count?: number | null;
     /**
      * Like Count
      */
-    like_count?: number;
+    like_count?: number | null;
     /**
      * Quote Count
      */
-    quote_count?: number;
+    quote_count?: number | null;
     /**
      * Bookmark Count
      */
-    bookmark_count?: number;
+    bookmark_count?: number | null;
     /**
      * Impression Count
      */
-    impression_count?: number;
+    impression_count?: number | null;
+};
+
+/**
+ * QuoteActionData
+ */
+export type QuoteActionData = {
+    tweet?: TweetData | null;
+    /**
+     * Quote Content
+     */
+    quote_content?: string | null;
+    /**
+     * Quote Id
+     */
+    quote_id?: number | null;
+};
+
+/**
+ * QuoteActionRead
+ */
+export type QuoteActionRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Avatar Id
+     */
+    avatar_id: string;
+    /**
+     * Type
+     */
+    type: 'quote';
+    platform?: ActionPlatform | null;
+    status: ActionResultStatus;
+    /**
+     * Created At
+     */
+    created_at: string;
+    data: QuoteActionData;
 };
 
 /**
  * ReadMessagesArgs
  */
-export type ReadMessagesArgsInput = {
+export type ReadMessagesArgs = {
     chat: ChatInfo;
     /**
      * Amount Messages
      */
-    amount_messages?: number;
+    amount_messages?: number | null;
     /**
      * Read All In End
      */
-    read_all_in_end?: boolean;
-};
-
-/**
- * ReadMessagesArgs
- */
-export type ReadMessagesArgsOutput = {
-    chat: ChatInfo;
-    /**
-     * Amount Messages
-     */
-    amount_messages?: number;
-    /**
-     * Read All In End
-     */
-    read_all_in_end?: boolean;
+    read_all_in_end?: boolean | null;
 };
 
 /**
@@ -1285,43 +1258,63 @@ export type ReadMessagesResponseContent = {
 };
 
 /**
- * ReplyToMessageArgs
+ * ReplyActionData
  */
-export type ReplyToMessageArgsInput = {
+export type ReplyActionData = {
+    tweet?: TweetData | null;
     /**
-     * The chat to reply to, if not provided, the message link will be used
+     * Reply Content
      */
-    chat?: ChatInfo;
+    reply_content?: string | null;
     /**
-     * The message to reply to, if not provided, the message link will be used
+     * Reply Id
      */
-    message_info?: MessageInfo;
-    input_message_content: InputMessage;
+    reply_id?: number | null;
+};
+
+/**
+ * ReplyActionRead
+ */
+export type ReplyActionRead = {
     /**
-     * Message Link
-     * The link to the message to reply to, if not provided, the chat and message info will be used
+     * Id
      */
-    message_link?: string;
+    id: string;
+    /**
+     * Avatar Id
+     */
+    avatar_id: string;
+    /**
+     * Type
+     */
+    type: 'reply';
+    platform?: ActionPlatform | null;
+    status: ActionResultStatus;
+    /**
+     * Created At
+     */
+    created_at: string;
+    data: ReplyActionData;
 };
 
 /**
  * ReplyToMessageArgs
  */
-export type ReplyToMessageArgsOutput = {
+export type ReplyToMessageArgs = {
     /**
      * The chat to reply to, if not provided, the message link will be used
      */
-    chat?: ChatInfo;
+    chat?: ChatInfo | null;
     /**
      * The message to reply to, if not provided, the message link will be used
      */
-    message_info?: MessageInfo;
+    message_info?: MessageInfo | null;
     input_message_content: InputMessage;
     /**
      * Message Link
      * The link to the message to reply to, if not provided, the chat and message info will be used
      */
-    message_link?: string;
+    message_link?: string | null;
 };
 
 /**
@@ -1344,23 +1337,83 @@ export type ResolvePhoneArgs = {
 /**
  * ResolvePhoneResponseContent
  */
-export type ResolvePhoneResponseContentInput = {
-    user_info?: UserInfo;
+export type ResolvePhoneResponseContent = {
+    user_info?: UserInfo | null;
     /**
      * Error
      */
-    error?: string;
+    error?: string | null;
 };
 
 /**
- * ResolvePhoneResponseContent
+ * RetweetActionData
  */
-export type ResolvePhoneResponseContentOutput = {
-    user_info?: UserInfo;
+export type RetweetActionData = {
+    tweet?: TweetData | null;
+};
+
+/**
+ * RetweetActionRead
+ */
+export type RetweetActionRead = {
     /**
-     * Error
+     * Id
      */
-    error?: string;
+    id: string;
+    /**
+     * Avatar Id
+     */
+    avatar_id: string;
+    /**
+     * Type
+     */
+    type: 'retweet';
+    platform?: ActionPlatform | null;
+    status: ActionResultStatus;
+    /**
+     * Created At
+     */
+    created_at: string;
+    data: RetweetActionData;
+};
+
+/**
+ * ScrollActionRead
+ */
+export type ScrollActionRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Avatar Id
+     */
+    avatar_id: string;
+    /**
+     * Type
+     */
+    type: 'scroll';
+    platform?: ActionPlatform | null;
+    status: ActionResultStatus;
+    /**
+     * Created At
+     */
+    created_at: string;
+    data: ScrollFeedActionData;
+};
+
+/**
+ * ScrollFeedActionData
+ */
+export type ScrollFeedActionData = {
+    /**
+     * Url
+     */
+    url?: string | null;
+    /**
+     * Tweets
+     */
+    tweets: Array<TweetData>;
 };
 
 /**
@@ -1371,43 +1424,33 @@ export type ScrollFeedArgs = {
      * Url
      * URL of the Twitter page to scroll. If None, continues from the last position/current page.
      */
-    url?: string;
+    url?: string | null;
     /**
      * Scroll Count
      * Number of scroll iterations to perform
      */
-    scroll_count?: number;
+    scroll_count?: number | null;
     /**
      * Wait Time After Scroll In Seconds
      * Time to wait after the scroll is finished in seconds. If None, waits for 5 seconds.
      */
-    wait_time_after_scroll_in_seconds?: number;
+    wait_time_after_scroll_in_seconds?: number | null;
 };
 
 /**
  * ScrollFeedResponseContent
  */
-export type ScrollFeedResponseContentInput = {
+export type ScrollFeedResponseContent = {
     /**
      * Tweets Collected
      */
-    tweets_collected: Array<TweetInput>;
-};
-
-/**
- * ScrollFeedResponseContent
- */
-export type ScrollFeedResponseContentOutput = {
-    /**
-     * Tweets Collected
-     */
-    tweets_collected: Array<TweetOutput>;
+    tweets_collected: Array<Tweet>;
 };
 
 /**
  * SendBulkMessagesArgs
  */
-export type SendBulkMessagesArgsInput = {
+export type SendBulkMessagesArgs = {
     chat: ChatInfo;
     /**
      * Messages
@@ -1416,22 +1459,7 @@ export type SendBulkMessagesArgsInput = {
     /**
      * Interval
      */
-    interval?: number;
-};
-
-/**
- * SendBulkMessagesArgs
- */
-export type SendBulkMessagesArgsOutput = {
-    chat: ChatInfo;
-    /**
-     * Messages
-     */
-    messages: Array<string>;
-    /**
-     * Interval
-     */
-    interval?: number;
+    interval?: number | null;
 };
 
 /**
@@ -1447,15 +1475,7 @@ export type SendBulkMessagesResponseContent = {
 /**
  * SendMessageArgs
  */
-export type SendMessageArgsInput = {
-    chat: ChatInfo;
-    input_message_content: InputMessage;
-};
-
-/**
- * SendMessageArgs
- */
-export type SendMessageArgsOutput = {
+export type SendMessageArgs = {
     chat: ChatInfo;
     input_message_content: InputMessage;
 };
@@ -1487,11 +1507,11 @@ export type SocialMediaAccountCreate = {
     /**
      * Profile Image Url
      */
-    profile_image_url?: string;
+    profile_image_url?: string | null;
     /**
      * Subject Image Url
      */
-    subject_image_url?: string;
+    subject_image_url?: string | null;
 };
 
 /**
@@ -1514,17 +1534,32 @@ export type SocialMediaAccountRead = {
     /**
      * Profile Image Url
      */
-    profile_image_url?: string;
+    profile_image_url?: string | null;
     /**
      * Subject Image Url
      */
-    subject_image_url?: string;
+    subject_image_url?: string | null;
 };
 
 /**
  * SocialPlatform
  */
 export type SocialPlatform = 'x' | 'telegram';
+
+/**
+ * StateInterval
+ */
+export type StateInterval = {
+    state: AvatarStateEnum;
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * Ended At
+     */
+    ended_at?: string | null;
+};
 
 /**
  * Status
@@ -1538,25 +1573,25 @@ export type SyncPersonalDetailsArgs = {
     /**
      * First Name
      */
-    first_name?: string;
+    first_name?: string | null;
     /**
      * Last Name
      */
-    last_name?: string;
+    last_name?: string | null;
     /**
      * Bio
      */
-    bio?: string;
+    bio?: string | null;
     /**
      * Username
      */
-    username?: string;
+    username?: string | null;
 };
 
 /**
  * Tweet
  */
-export type TweetInput = {
+export type Tweet = {
     /**
      * Tweet Id
      */
@@ -1564,145 +1599,74 @@ export type TweetInput = {
     /**
      * Author Id
      */
-    author_id?: number;
+    author_id?: number | null;
     /**
      * Author Name
      */
-    author_name?: string;
+    author_name?: string | null;
     /**
      * Author Username
      */
-    author_username?: string;
+    author_username?: string | null;
     /**
      * Creation Date
      */
-    creation_date?: string;
+    creation_date?: string | null;
+    /**
+     * Media Attachments
+     */
+    media_attachments?: Array<Attachment> | null;
+    inner_tweet?: Tweet | null;
     /**
      * Text
      */
     text: string;
-    entities?: Entities;
-    public_metrics?: PublicMetrics;
+    entities?: Entities | null;
+    public_metrics?: PublicMetrics | null;
     /**
      * Geo
      */
     geo?: {
         [key: string]: unknown;
-    };
+    } | null;
     /**
      * In Reply To Status Id
      */
-    in_reply_to_status_id?: number;
+    in_reply_to_status_id?: number | null;
     /**
      * In Reply To User Id
      */
-    in_reply_to_user_id?: number;
+    in_reply_to_user_id?: number | null;
     /**
      * Quoted Status Id
      */
-    quoted_status_id?: number;
+    quoted_status_id?: number | null;
     /**
      * Is Quote Status
      */
-    is_quote_status?: boolean;
+    is_quote_status?: boolean | null;
     /**
      * Retweeted
      */
-    retweeted?: boolean;
+    retweeted?: boolean | null;
     /**
      * Possibly Sensitive
      */
-    possibly_sensitive?: boolean;
+    possibly_sensitive?: boolean | null;
     /**
      * Lang
      */
-    lang?: string;
+    lang?: string | null;
     /**
      * Referenced Tweets
      */
     referenced_tweets?: Array<{
         [key: string]: unknown;
-    }>;
+    }> | null;
     /**
      * Public Metrics Samples
      */
-    public_metrics_samples?: Array<PublicMetrics>;
-};
-
-/**
- * Tweet
- */
-export type TweetOutput = {
-    /**
-     * Tweet Id
-     */
-    tweet_id: number;
-    /**
-     * Author Id
-     */
-    author_id?: number;
-    /**
-     * Author Name
-     */
-    author_name?: string;
-    /**
-     * Author Username
-     */
-    author_username?: string;
-    /**
-     * Creation Date
-     */
-    creation_date?: string;
-    /**
-     * Text
-     */
-    text: string;
-    entities?: Entities;
-    public_metrics?: PublicMetrics;
-    /**
-     * Geo
-     */
-    geo?: {
-        [key: string]: unknown;
-    };
-    /**
-     * In Reply To Status Id
-     */
-    in_reply_to_status_id?: number;
-    /**
-     * In Reply To User Id
-     */
-    in_reply_to_user_id?: number;
-    /**
-     * Quoted Status Id
-     */
-    quoted_status_id?: number;
-    /**
-     * Is Quote Status
-     */
-    is_quote_status?: boolean;
-    /**
-     * Retweeted
-     */
-    retweeted?: boolean;
-    /**
-     * Possibly Sensitive
-     */
-    possibly_sensitive?: boolean;
-    /**
-     * Lang
-     */
-    lang?: string;
-    /**
-     * Referenced Tweets
-     */
-    referenced_tweets?: Array<{
-        [key: string]: unknown;
-    }>;
-    /**
-     * Public Metrics Samples
-     */
-    public_metrics_samples?: Array<PublicMetrics>;
+    public_metrics_samples?: Array<PublicMetrics> | null;
 };
 
 /**
@@ -1716,7 +1680,51 @@ export type TweetContent = {
     /**
      * Media
      */
-    media?: Array<string>;
+    media?: Array<string> | null;
+};
+
+/**
+ * TweetData
+ */
+export type TweetData = {
+    /**
+     * Tweet Id
+     */
+    tweet_id: number;
+    /**
+     * Author Id
+     */
+    author_id?: number | null;
+    /**
+     * Author Name
+     */
+    author_name?: string | null;
+    /**
+     * Author Username
+     */
+    author_username?: string | null;
+    /**
+     * Creation Date
+     */
+    creation_date?: string | null;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Media
+     */
+    media?: Array<AttachmentData>;
+    /**
+     * Media Description
+     */
+    media_description?: string | null;
+    inner_tweet?: TweetData | null;
+    metrics?: MetricsData | null;
+    /**
+     * Summary
+     */
+    summary?: string | null;
 };
 
 /**
@@ -1726,47 +1734,42 @@ export type TweetInteraction = {
     /**
      * Like
      */
-    like?: boolean;
+    like?: boolean | null;
     /**
      * Retweet
      */
-    retweet?: boolean;
+    retweet?: boolean | null;
     /**
      * Bookmark
      */
-    bookmark?: boolean;
-    reply?: TweetContent;
-    quote?: TweetContent;
+    bookmark?: boolean | null;
+    reply?: TweetContent | null;
+    quote?: TweetContent | null;
 };
 
 /**
  * TweetInteractionResult
  */
 export type TweetInteractionResult = {
-    like?: TweetInteractionStatus;
-    retweet?: TweetInteractionStatus;
-    bookmark?: TweetInteractionStatus;
-    reply?: TweetInteractionStatus;
+    like?: ActionStatus | null;
+    retweet?: ActionStatus | null;
+    bookmark?: ActionStatus | null;
+    reply?: ActionStatus | null;
     /**
      * Reply Tweet Id
      */
-    reply_tweet_id?: number;
-    quote?: TweetInteractionStatus;
+    reply_tweet_id?: number | null;
+    quote?: ActionStatus | null;
     /**
      * Quote Tweet Id
      */
-    quote_tweet_id?: number;
+    quote_tweet_id?: number | null;
 };
-
-/**
- * TweetInteractionStatus
- */
-export type TweetInteractionStatus = 'success' | 'failed' | 'already_done';
 
 /**
  * Type
  */
-export type Type = 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet' | 'scroll_feed' | 'close_browser' | 'publish_post';
+export type Type = 'send_message' | 'send_bulk_messages' | 'join_group' | 'leave_group' | 'reply_to_message' | 'forward_message' | 'behavioural' | 'read_messages' | 'resolve_phone' | 'interact_with_tweet' | 'scroll_feed' | 'close_browser' | 'publish_post' | 'ask_grok' | 'get_notifications' | 'get_tweet_engagment' | 'change_following_state';
 
 /**
  * Url
@@ -1793,48 +1796,48 @@ export type UserInfo = {
     /**
      * Id
      */
-    id?: number;
+    id?: number | null;
     /**
      * Name
      */
-    name?: string;
+    name?: string | null;
     /**
      * Phone Number
      */
-    phone_number?: string;
+    phone_number?: string | null;
     /**
      * Title
      */
-    title?: string;
-    type?: ChatType;
+    title?: string | null;
+    type?: ChatType | null;
     /**
      * Description
      */
-    description?: string;
+    description?: string | null;
     /**
      * Read Inbox Max Id
      */
-    read_inbox_max_id?: number;
+    read_inbox_max_id?: number | null;
     /**
      * Read Outbox Max Id
      */
-    read_outbox_max_id?: number;
+    read_outbox_max_id?: number | null;
     /**
      * Unread Count
      */
-    unread_count?: number;
+    unread_count?: number | null;
     /**
      * Unread Mentions Count
      */
-    unread_mentions_count?: number;
+    unread_mentions_count?: number | null;
     /**
      * Unread Reactions Count
      */
-    unread_reactions_count?: number;
+    unread_reactions_count?: number | null;
     /**
      * Subtitle
      */
-    subtitle?: string;
+    subtitle?: string | null;
 };
 
 /**
@@ -1845,7 +1848,20 @@ export type Version = 'IPV4' | 'IPV6';
 export type GetAvatarsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Attach Proxy
+         */
+        attach_proxy?: boolean;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
     url: '/avatars/';
 };
 
@@ -1860,7 +1876,7 @@ export type GetAvatarsResponses = {
 export type GetAvatarsResponse = GetAvatarsResponses[keyof GetAvatarsResponses];
 
 export type CreateAvatarData = {
-    body: AvatarCreateInput;
+    body: AvatarCreate;
     path?: never;
     query?: never;
     url: '/avatars/';
@@ -1891,7 +1907,7 @@ export type GenerateAvatarResponses = {
     /**
      * Successful Response
      */
-    201: AvatarCreateOutput;
+    201: AvatarCreate;
 };
 
 export type GenerateAvatarResponse = GenerateAvatarResponses[keyof GenerateAvatarResponses];
@@ -1899,7 +1915,11 @@ export type GenerateAvatarResponse = GenerateAvatarResponses[keyof GenerateAvata
 export type AvailableAvatarsData = {
     body?: never;
     path?: never;
-    query?: {
+    query: {
+        /**
+         * Interval
+         */
+        interval: number;
         /**
          * Limit
          */
@@ -1968,7 +1988,12 @@ export type GetAvatarData = {
          */
         avatar_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Attach Proxy
+         */
+        attach_proxy?: boolean;
+    };
     url: '/avatars/{avatar_id}';
 };
 
@@ -2093,6 +2118,33 @@ export type DeleteAvatarStateResponses = {
 
 export type DeleteAvatarStateResponse = DeleteAvatarStateResponses[keyof DeleteAvatarStateResponses];
 
+export type GetAvatarStateHistoryData = {
+    body?: never;
+    path: {
+        /**
+         * Avatar Id
+         */
+        avatar_id: string;
+    };
+    query?: {
+        /**
+         * Hours Ago
+         */
+        hours_ago?: number;
+    };
+    url: '/avatars/{avatar_id}/state/history';
+};
+
+export type GetAvatarStateHistoryResponses = {
+    /**
+     * Response Getavatarstatehistory
+     * Successful Response
+     */
+    200: Array<StateInterval>;
+};
+
+export type GetAvatarStateHistoryResponse = GetAvatarStateHistoryResponses[keyof GetAvatarStateHistoryResponses];
+
 export type ForceShutdownAvatarData = {
     body?: never;
     path: {
@@ -2135,6 +2187,48 @@ export type ForceAwakeAvatarResponses = {
 
 export type ForceAwakeAvatarResponse = ForceAwakeAvatarResponses[keyof ForceAwakeAvatarResponses];
 
+export type GenerateProfileImageData = {
+    body?: never;
+    path: {
+        /**
+         * Avatar Id
+         */
+        avatar_id: string;
+    };
+    query?: never;
+    url: '/avatars/generate_profile_image/{avatar_id}';
+};
+
+export type GenerateProfileImageResponses = {
+    /**
+     * Successful Response
+     */
+    201: GenerateProfileImageResponse;
+};
+
+export type GenerateProfileImageResponse2 = GenerateProfileImageResponses[keyof GenerateProfileImageResponses];
+
+export type SaveProfileImageData = {
+    body: BodySaveProfileImage;
+    path: {
+        /**
+         * Avatar Id
+         */
+        avatar_id: string;
+    };
+    query?: never;
+    url: '/avatars/{avatar_id}/profile_image';
+};
+
+export type SaveProfileImageResponses = {
+    /**
+     * Successful Response
+     */
+    200: AvatarRead;
+};
+
+export type SaveProfileImageResponse = SaveProfileImageResponses[keyof SaveProfileImageResponses];
+
 export type CreateActionData = {
     body: ActionCreate;
     path?: never;
@@ -2144,48 +2238,13 @@ export type CreateActionData = {
 
 export type CreateActionResponses = {
     /**
+     * Response Createaction
      * Successful Response
      */
-    201: ActionRead;
+    201: Array<ScrollActionRead | LikeActionRead | RetweetActionRead | BookmarkActionRead | ReplyActionRead | QuoteActionRead>;
 };
 
 export type CreateActionResponse = CreateActionResponses[keyof CreateActionResponses];
-
-export type QueryActionsData = {
-    body?: never;
-    path: {
-        /**
-         * Avatar Id
-         */
-        avatar_id: string;
-    };
-    query: {
-        action_type: Type;
-        /**
-         * Count
-         */
-        count?: number;
-        /**
-         * Status Code
-         */
-        status_code?: ActionStatusCode | null;
-        /**
-         * Platform
-         */
-        platform?: Platform | null;
-    };
-    url: '/actions/query_actions/{avatar_id}';
-};
-
-export type QueryActionsResponses = {
-    /**
-     * Response Queryactions
-     * Successful Response
-     */
-    200: Array<ActionRead>;
-};
-
-export type QueryActionsResponse = QueryActionsResponses[keyof QueryActionsResponses];
 
 export type GetActionData = {
     body?: never;
@@ -2201,14 +2260,71 @@ export type GetActionData = {
 
 export type GetActionResponses = {
     /**
+     * Response Getaction
      * Successful Response
      */
-    200: ActionRead;
+    200: ScrollActionRead | LikeActionRead | RetweetActionRead | BookmarkActionRead | ReplyActionRead | QuoteActionRead;
 };
 
 export type GetActionResponse = GetActionResponses[keyof GetActionResponses];
 
-export type GetAvatarActionsData = {
+export type UpdateActionData = {
+    body: ActionUpdate;
+    path: {
+        /**
+         * Action Id
+         */
+        action_id: string;
+    };
+    query?: never;
+    url: '/actions/{action_id}';
+};
+
+export type UpdateActionResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type UpdateActionResponse = UpdateActionResponses[keyof UpdateActionResponses];
+
+export type GetAvatarInteractionsData = {
+    body?: never;
+    path: {
+        /**
+         * Avatar Id
+         */
+        avatar_id: string;
+    };
+    query?: {
+        /**
+         * Success Only
+         */
+        success_only?: boolean;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/actions/interactions/{avatar_id}';
+};
+
+export type GetAvatarInteractionsResponses = {
+    /**
+     * Response Getavatarinteractions
+     * Successful Response
+     */
+    200: Array<LikeActionRead | RetweetActionRead | BookmarkActionRead | ReplyActionRead | QuoteActionRead>;
+};
+
+export type GetAvatarInteractionsResponse = GetAvatarInteractionsResponses[keyof GetAvatarInteractionsResponses];
+
+export type GetAvatarInteractionsDescriptionsData = {
     body?: never;
     path: {
         /**
@@ -2226,42 +2342,20 @@ export type GetAvatarActionsData = {
          */
         offset?: number;
     };
-    url: '/actions/avatar/{avatar_id}';
+    url: '/actions/descriptions/{avatar_id}';
 };
 
-export type GetAvatarActionsResponses = {
+export type GetAvatarInteractionsDescriptionsResponses = {
     /**
-     * Response Getavataractions
+     * Response Getavatarinteractionsdescriptions
      * Successful Response
      */
-    200: Array<ActionRead>;
+    200: Array<string>;
 };
 
-export type GetAvatarActionsResponse = GetAvatarActionsResponses[keyof GetAvatarActionsResponses];
+export type GetAvatarInteractionsDescriptionsResponse = GetAvatarInteractionsDescriptionsResponses[keyof GetAvatarInteractionsDescriptionsResponses];
 
-export type GetAvatarActionsTodayData = {
-    body?: never;
-    path: {
-        /**
-         * Avatar Id
-         */
-        avatar_id: string;
-    };
-    query?: never;
-    url: '/actions/avatar/{avatar_id}/today';
-};
-
-export type GetAvatarActionsTodayResponses = {
-    /**
-     * Response Getavataractionstoday
-     * Successful Response
-     */
-    200: Array<ActionRead>;
-};
-
-export type GetAvatarActionsTodayResponse = GetAvatarActionsTodayResponses[keyof GetAvatarActionsTodayResponses];
-
-export type GetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetData = {
+export type GetAvatarRepliesData = {
     body?: never;
     path: {
         /**
@@ -2271,26 +2365,22 @@ export type GetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetData
     };
     query?: {
         /**
-         * Content Type
+         * Limit
          */
-        content_type?: 'reply' | 'post';
-        /**
-         * Count
-         */
-        count?: number;
+        limit?: number;
     };
-    url: '/actions/actions/{avatar_id}/previous_content';
+    url: '/actions/{avatar_id}/reply';
 };
 
-export type GetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetResponses = {
+export type GetAvatarRepliesResponses = {
     /**
-     * Response Get Avatar Previous Content Actions Actions  Avatar Id  Previous Content Get
+     * Response Getavatarreplies
      * Successful Response
      */
     200: Array<string>;
 };
 
-export type GetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetResponse = GetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetResponses[keyof GetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetResponses];
+export type GetAvatarRepliesResponse = GetAvatarRepliesResponses[keyof GetAvatarRepliesResponses];
 
 export type BoomBoomGetData = {
     body?: never;

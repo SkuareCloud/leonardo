@@ -18,7 +18,11 @@ export const zType = z.enum([
     'interact_with_tweet',
     'scroll_feed',
     'close_browser',
-    'publish_post'
+    'publish_post',
+    'ask_grok',
+    'get_notifications',
+    'get_tweet_engagment',
+    'change_following_state'
 ]);
 
 /**
@@ -33,9 +37,18 @@ export const zPlatform = z.enum([
  * ScrollFeedArgs
  */
 export const zScrollFeedArgs = z.object({
-    url: z.string().optional(),
-    scroll_count: z.number().int().optional(),
-    wait_time_after_scroll_in_seconds: z.number().int().optional()
+    url: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    scroll_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    wait_time_after_scroll_in_seconds: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -53,17 +66,50 @@ export const zChatType = z.enum([
  * ChatInfo
  */
 export const zChatInfo = z.object({
-    id: z.number().int().optional(),
-    name: z.string().optional(),
-    phone_number: z.string().optional(),
-    title: z.string().optional(),
-    type: zChatType.optional(),
-    description: z.string().optional(),
-    read_inbox_max_id: z.number().int().optional(),
-    read_outbox_max_id: z.number().int().optional(),
-    unread_count: z.number().int().optional(),
-    unread_mentions_count: z.number().int().optional(),
-    unread_reactions_count: z.number().int().optional()
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -71,22 +117,38 @@ export const zChatInfo = z.object({
  */
 export const zAttachment = z.object({
     url: z.string(),
-    name: z.string().optional(),
-    mime_type: z.string().optional()
+    s3_uri: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    mime_type: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * InputMessage
  */
 export const zInputMessage = z.object({
-    text: z.string().optional(),
-    attachments: z.array(zAttachment).optional()
+    text: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    attachments: z.union([
+        z.array(zAttachment),
+        z.null()
+    ]).optional()
 });
 
 /**
  * SendMessageArgs
  */
-export const zSendMessageArgsInput = z.object({
+export const zSendMessageArgs = z.object({
     chat: zChatInfo,
     input_message_content: zInputMessage
 });
@@ -94,25 +156,37 @@ export const zSendMessageArgsInput = z.object({
 /**
  * SendBulkMessagesArgs
  */
-export const zSendBulkMessagesArgsInput = z.object({
+export const zSendBulkMessagesArgs = z.object({
     chat: zChatInfo,
     messages: z.array(z.string()),
-    interval: z.number().optional()
+    interval: z.union([
+        z.number(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * JoinGroupArgs
  */
-export const zJoinGroupArgsInput = z.object({
-    chat: zChatInfo.optional(),
-    join_discussion_group_if_availble: z.boolean().optional(),
-    invite_link: z.string().optional()
+export const zJoinGroupArgs = z.object({
+    chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    join_discussion_group_if_availble: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    invite_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * LeaveGroupArgs
  */
-export const zLeaveGroupArgsInput = z.object({
+export const zLeaveGroupArgs = z.object({
     chat: zChatInfo
 });
 
@@ -121,64 +195,139 @@ export const zLeaveGroupArgsInput = z.object({
  */
 export const zMessageInfo = z.object({
     timestamp: z.string(),
-    peer_id: z.string().optional(),
-    from_id: z.string().optional(),
-    text_hash: z.string().optional(),
-    message_id: z.string().optional(),
-    viewer_id: z.string().optional()
+    peer_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    from_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    text_hash: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    message_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    viewer_id: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * ReplyToMessageArgs
  */
-export const zReplyToMessageArgsInput = z.object({
-    chat: zChatInfo.optional(),
-    message_info: zMessageInfo.optional(),
+export const zReplyToMessageArgs = z.object({
+    chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    message_info: z.union([
+        zMessageInfo,
+        z.null()
+    ]).optional(),
     input_message_content: zInputMessage,
-    message_link: z.string().optional()
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * ForwardMessageArgs
  */
-export const zForwardMessageArgsInput = z.object({
-    from_chat: zChatInfo.optional(),
-    message_info: zMessageInfo.optional(),
+export const zForwardMessageArgs = z.object({
+    from_chat: z.union([
+        zChatInfo,
+        z.null()
+    ]).optional(),
+    message_info: z.union([
+        zMessageInfo,
+        z.null()
+    ]).optional(),
     target_chat: zChatInfo,
-    message: zInputMessage.optional(),
-    message_link: z.string().optional()
+    message: z.union([
+        zInputMessage,
+        z.null()
+    ]).optional(),
+    message_link: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * SyncPersonalDetailsArgs
  */
 export const zSyncPersonalDetailsArgs = z.object({
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    bio: z.string().optional(),
-    username: z.string().optional()
+    first_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    last_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    bio: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    username: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * BehaviouralArgs
  */
 export const zBehaviouralArgs = z.object({
-    wait_time: z.number().int().optional(),
-    sync_context: z.boolean().optional(),
-    get_chats: z.boolean().optional(),
-    sync_personal_details: zSyncPersonalDetailsArgs.optional(),
-    disable_auto_download_media: z.boolean().optional(),
-    delete_all_active_sessions: z.boolean().optional(),
-    get_unread_messages: z.boolean().optional()
+    wait_time: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    sync_context: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    get_chats: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    sync_personal_details: z.union([
+        zSyncPersonalDetailsArgs,
+        z.null()
+    ]).optional(),
+    disable_auto_download_media: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    delete_all_active_sessions: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    get_unread_messages: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * ReadMessagesArgs
  */
-export const zReadMessagesArgsInput = z.object({
+export const zReadMessagesArgs = z.object({
     chat: zChatInfo,
-    amount_messages: z.number().int().optional(),
-    read_all_in_end: z.boolean().optional()
+    amount_messages: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_all_in_end: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -193,24 +342,42 @@ export const zResolvePhoneArgs = z.object({
  */
 export const zTweetContent = z.object({
     text: z.string(),
-    media: z.array(z.string()).optional()
+    media: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional()
 });
 
 /**
  * TweetInteraction
  */
 export const zTweetInteraction = z.object({
-    like: z.boolean().optional(),
-    retweet: z.boolean().optional(),
-    bookmark: z.boolean().optional(),
-    reply: zTweetContent.optional(),
-    quote: zTweetContent.optional()
+    like: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    retweet: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    bookmark: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    reply: z.union([
+        zTweetContent,
+        z.null()
+    ]).optional(),
+    quote: z.union([
+        zTweetContent,
+        z.null()
+    ]).optional()
 });
 
 /**
  * InteractWithTweetArgs
  */
-export const zInteractWithTweetArgsInput = z.object({
+export const zInteractWithTweetArgs = z.object({
     url: z.string(),
     interaction: zTweetInteraction
 });
@@ -218,7 +385,7 @@ export const zInteractWithTweetArgsInput = z.object({
 /**
  * InteractWithTweetByTweetIdArgs
  */
-export const zInteractWithTweetByTweetIdArgsInput = z.object({
+export const zInteractWithTweetByTweetIdArgs = z.object({
     tweet_id: z.number().int(),
     interaction: zTweetInteraction
 });
@@ -266,14 +433,20 @@ export const zActionErrorCode = z.enum([
  */
 export const zActionStatus = z.object({
     status_code: zActionStatusCode,
-    error: z.string().optional(),
-    error_code: zActionErrorCode.optional()
+    error: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    error_code: z.union([
+        zActionErrorCode,
+        z.null()
+    ]).optional()
 });
 
 /**
  * Url
  */
-export const zUrl = z.object({
+export const zUrl: z.AnyZodObject = z.object({
     indices: z.array(z.number().int()),
     link: z.string(),
     text: z.string()
@@ -282,7 +455,7 @@ export const zUrl = z.object({
 /**
  * Hashtag
  */
-export const zHashtag = z.object({
+export const zHashtag: z.AnyZodObject = z.object({
     indices: z.array(z.number().int()),
     text: z.string()
 });
@@ -290,7 +463,7 @@ export const zHashtag = z.object({
 /**
  * Cashtag
  */
-export const zCashtag = z.object({
+export const zCashtag: z.AnyZodObject = z.object({
     indices: z.array(z.number().int()),
     text: z.string()
 });
@@ -298,7 +471,7 @@ export const zCashtag = z.object({
 /**
  * Mention
  */
-export const zMention = z.object({
+export const zMention: z.AnyZodObject = z.object({
     indices: z.array(z.number().int()),
     text: z.string()
 });
@@ -306,463 +479,729 @@ export const zMention = z.object({
 /**
  * Entities
  */
-export const zEntities = z.object({
-    urls: z.array(zUrl).optional(),
-    hashtags: z.array(zHashtag).optional(),
-    cashtags: z.array(zCashtag).optional(),
-    mentions: z.array(zMention).optional()
+export const zEntities: z.AnyZodObject = z.object({
+    urls: z.union([
+        z.array(zUrl),
+        z.null()
+    ]).optional(),
+    hashtags: z.union([
+        z.array(zHashtag),
+        z.null()
+    ]).optional(),
+    cashtags: z.union([
+        z.array(zCashtag),
+        z.null()
+    ]).optional(),
+    mentions: z.union([
+        z.array(zMention),
+        z.null()
+    ]).optional()
 });
 
 /**
  * PublicMetrics
  */
-export const zPublicMetrics = z.object({
-    retweet_count: z.number().int().optional(),
-    reply_count: z.number().int().optional(),
-    like_count: z.number().int().optional(),
-    quote_count: z.number().int().optional(),
-    bookmark_count: z.number().int().optional(),
-    impression_count: z.number().int().optional()
+export const zPublicMetrics: z.AnyZodObject = z.object({
+    retweet_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    reply_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    like_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    quote_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    bookmark_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    impression_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * Tweet
  */
-export const zTweetInput = z.object({
+export const zTweet: z.AnyZodObject = z.object({
     tweet_id: z.number().int(),
-    author_id: z.number().int().optional(),
-    author_name: z.string().optional(),
-    author_username: z.string().optional(),
-    creation_date: z.string().optional(),
+    author_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    author_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    author_username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    creation_date: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    media_attachments: z.union([
+        z.array(zAttachment),
+        z.null()
+    ]).optional(),
+    inner_tweet: z.union([
+        z.lazy(() => {
+            return zTweet;
+        }),
+        z.null()
+    ]).optional(),
     text: z.string(),
-    entities: zEntities.optional(),
-    public_metrics: zPublicMetrics.optional(),
-    geo: z.object({}).optional(),
-    in_reply_to_status_id: z.number().int().optional(),
-    in_reply_to_user_id: z.number().int().optional(),
-    quoted_status_id: z.number().int().optional(),
-    is_quote_status: z.boolean().optional(),
-    retweeted: z.boolean().optional(),
-    possibly_sensitive: z.boolean().optional(),
-    lang: z.string().optional(),
-    referenced_tweets: z.array(z.object({})).optional(),
-    public_metrics_samples: z.array(zPublicMetrics).optional()
+    entities: z.union([
+        zEntities,
+        z.null()
+    ]).optional(),
+    public_metrics: z.union([
+        zPublicMetrics,
+        z.null()
+    ]).optional(),
+    geo: z.union([
+        z.object({}),
+        z.null()
+    ]).optional(),
+    in_reply_to_status_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    in_reply_to_user_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    quoted_status_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    is_quote_status: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    retweeted: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    possibly_sensitive: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    lang: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    referenced_tweets: z.union([
+        z.array(z.object({})),
+        z.null()
+    ]).optional(),
+    public_metrics_samples: z.union([
+        z.array(zPublicMetrics),
+        z.null()
+    ]).optional()
 });
 
 /**
  * ScrollFeedResponseContent
  */
-export const zScrollFeedResponseContentInput = z.object({
-    tweets_collected: z.array(zTweetInput)
+export const zScrollFeedResponseContent: z.AnyZodObject = z.object({
+    tweets_collected: z.array(zTweet)
 });
-
-/**
- * TweetInteractionStatus
- */
-export const zTweetInteractionStatus = z.enum([
-    'success',
-    'failed',
-    'already_done'
-]);
 
 /**
  * TweetInteractionResult
  */
-export const zTweetInteractionResult = z.object({
-    like: zTweetInteractionStatus.optional(),
-    retweet: zTweetInteractionStatus.optional(),
-    bookmark: zTweetInteractionStatus.optional(),
-    reply: zTweetInteractionStatus.optional(),
-    reply_tweet_id: z.number().int().optional(),
-    quote: zTweetInteractionStatus.optional(),
-    quote_tweet_id: z.number().int().optional()
+export const zTweetInteractionResult: z.AnyZodObject = z.object({
+    like: z.union([
+        zActionStatus,
+        z.null()
+    ]).optional(),
+    retweet: z.union([
+        zActionStatus,
+        z.null()
+    ]).optional(),
+    bookmark: z.union([
+        zActionStatus,
+        z.null()
+    ]).optional(),
+    reply: z.union([
+        zActionStatus,
+        z.null()
+    ]).optional(),
+    reply_tweet_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    quote: z.union([
+        zActionStatus,
+        z.null()
+    ]).optional(),
+    quote_tweet_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * InteractWithTweetResponseContent
  */
-export const zInteractWithTweetResponseContentInput = z.object({
+export const zInteractWithTweetResponseContent: z.AnyZodObject = z.object({
     interaction_result: zTweetInteractionResult
 });
 
 /**
  * SendMessageResponseContent
  */
-export const zSendMessageResponseContent = z.object({
+export const zSendMessageResponseContent: z.AnyZodObject = z.object({
     message_info: zMessageInfo
 });
 
 /**
  * ReplyToMessageResponseContent
  */
-export const zReplyToMessageResponseContent = z.object({
+export const zReplyToMessageResponseContent: z.AnyZodObject = z.object({
     message_info: zMessageInfo
 });
 
 /**
  * LeaveGroupResponseContent
  */
-export const zLeaveGroupResponseContent = z.object({});
+export const zLeaveGroupResponseContent: z.AnyZodObject = z.object({});
 
 /**
  * ChannelInfo
  */
-export const zChannelInfo = z.object({
-    id: z.number().int().optional(),
-    name: z.string().optional(),
-    phone_number: z.string().optional(),
-    title: z.string().optional(),
-    type: zChatType.optional(),
-    description: z.string().optional(),
-    read_inbox_max_id: z.number().int().optional(),
-    read_outbox_max_id: z.number().int().optional(),
-    unread_count: z.number().int().optional(),
-    unread_mentions_count: z.number().int().optional(),
-    unread_reactions_count: z.number().int().optional(),
-    subscribers: z.number().int().optional()
+export const zChannelInfo: z.AnyZodObject = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    subscribers: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * GroupInfo
  */
-export const zGroupInfo = z.object({
-    id: z.number().int().optional(),
-    name: z.string().optional(),
-    phone_number: z.string().optional(),
-    title: z.string().optional(),
-    type: zChatType.optional(),
-    description: z.string().optional(),
-    read_inbox_max_id: z.number().int().optional(),
-    read_outbox_max_id: z.number().int().optional(),
-    unread_count: z.number().int().optional(),
-    unread_mentions_count: z.number().int().optional(),
-    unread_reactions_count: z.number().int().optional(),
-    members: z.number().int().optional(),
-    online: z.number().int().optional()
+export const zGroupInfo: z.AnyZodObject = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    members: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    online: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * JoinGroupResponseContent
  */
-export const zJoinGroupResponseContentInput = z.object({
+export const zJoinGroupResponseContent: z.AnyZodObject = z.object({
     chat_info: z.union([
         zChannelInfo,
-        zGroupInfo
+        zGroupInfo,
+        z.null()
     ]),
     discussion_group_chat_info: z.union([
         zChannelInfo,
-        zGroupInfo
+        zGroupInfo,
+        z.null()
     ])
 });
 
 /**
  * ForwardMessageResponseContent
  */
-export const zForwardMessageResponseContent = z.object({
+export const zForwardMessageResponseContent: z.AnyZodObject = z.object({
     message_info: zMessageInfo
 });
 
 /**
  * BehaviouralResponseContent
  */
-export const zBehaviouralResponseContentInput = z.object({
+export const zBehaviouralResponseContent: z.AnyZodObject = z.object({
     current_context: z.unknown().optional(),
-    chats: z.array(z.union([
-        zGroupInfo,
-        zChannelInfo
-    ])).optional(),
-    personal_details_synced: z.boolean().optional(),
-    auto_download_media_disabled: z.boolean().optional(),
-    all_active_sessions_deleted: z.boolean().optional(),
-    unread_messages: z.array(zChatInfo).optional()
+    chats: z.union([
+        z.array(z.union([
+            zGroupInfo,
+            zChannelInfo
+        ])),
+        z.null()
+    ]).optional(),
+    personal_details_synced: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    auto_download_media_disabled: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    all_active_sessions_deleted: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional(),
+    unread_messages: z.union([
+        z.array(zChatInfo),
+        z.null()
+    ]).optional()
 });
 
 /**
  * SendBulkMessagesResponseContent
  */
-export const zSendBulkMessagesResponseContent = z.object({
+export const zSendBulkMessagesResponseContent: z.AnyZodObject = z.object({
     message_infos: z.array(zMessageInfo)
 });
 
 /**
  * ReadMessagesResponseContent
  */
-export const zReadMessagesResponseContent = z.object({
+export const zReadMessagesResponseContent: z.AnyZodObject = z.object({
     messages_read: z.number().int()
 });
 
 /**
  * UserInfo
  */
-export const zUserInfo = z.object({
-    id: z.number().int().optional(),
-    name: z.string().optional(),
-    phone_number: z.string().optional(),
-    title: z.string().optional(),
-    type: zChatType.optional(),
-    description: z.string().optional(),
-    read_inbox_max_id: z.number().int().optional(),
-    read_outbox_max_id: z.number().int().optional(),
-    unread_count: z.number().int().optional(),
-    unread_mentions_count: z.number().int().optional(),
-    unread_reactions_count: z.number().int().optional(),
-    subtitle: z.string().optional()
+export const zUserInfo: z.AnyZodObject = z.object({
+    id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    title: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    type: z.union([
+        zChatType,
+        z.null()
+    ]).optional(),
+    description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    read_inbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    read_outbox_max_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_mentions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    unread_reactions_count: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    subtitle: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * ResolvePhoneResponseContent
  */
-export const zResolvePhoneResponseContentInput = z.object({
-    user_info: zUserInfo.optional(),
-    error: z.string().optional()
+export const zResolvePhoneResponseContent: z.AnyZodObject = z.object({
+    user_info: z.union([
+        zUserInfo,
+        z.null()
+    ]).optional(),
+    error: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * CloseBrowserResponseContent
  */
-export const zCloseBrowserResponseContent = z.object({
-    closed: z.boolean().optional()
+export const zCloseBrowserResponseContent: z.AnyZodObject = z.object({
+    closed: z.union([
+        z.boolean(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * ActionCreate
  */
-export const zActionCreate = z.object({
+export const zActionCreate: z.AnyZodObject = z.object({
     avatar_id: z.string().uuid().optional(),
+    start_time: z.string().datetime(),
+    end_time: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional(),
     action_type: zType,
     platform: zPlatform,
-    action_description: z.string(),
     request_payload: z.union([
         zScrollFeedArgs,
-        zSendMessageArgsInput,
-        zSendBulkMessagesArgsInput,
-        zJoinGroupArgsInput,
-        zLeaveGroupArgsInput,
-        zReplyToMessageArgsInput,
-        zForwardMessageArgsInput,
+        zSendMessageArgs,
+        zSendBulkMessagesArgs,
+        zJoinGroupArgs,
+        zLeaveGroupArgs,
+        zReplyToMessageArgs,
+        zForwardMessageArgs,
         zBehaviouralArgs,
-        zReadMessagesArgsInput,
+        zReadMessagesArgs,
         zResolvePhoneArgs,
-        zInteractWithTweetArgsInput,
-        zInteractWithTweetByTweetIdArgsInput,
-        zCloseBrowserArgs
-    ]).optional(),
+        zInteractWithTweetArgs,
+        zInteractWithTweetByTweetIdArgs,
+        zCloseBrowserArgs,
+        z.null()
+    ]),
     status: zActionStatus,
     response_content: z.union([
-        zScrollFeedResponseContentInput,
-        zInteractWithTweetResponseContentInput,
+        zScrollFeedResponseContent,
+        zInteractWithTweetResponseContent,
         zSendMessageResponseContent,
         zReplyToMessageResponseContent,
         zLeaveGroupResponseContent,
-        zJoinGroupResponseContentInput,
+        zJoinGroupResponseContent,
         zForwardMessageResponseContent,
-        zBehaviouralResponseContentInput,
+        zBehaviouralResponseContent,
         zSendBulkMessagesResponseContent,
         zReadMessagesResponseContent,
-        zResolvePhoneResponseContentInput,
-        zCloseBrowserResponseContent
-    ]).optional(),
-    start_time: z.string().datetime(),
-    end_time: z.string().datetime().optional()
-});
-
-/**
- * SendMessageArgs
- */
-export const zSendMessageArgsOutput = z.object({
-    chat: zChatInfo,
-    input_message_content: zInputMessage
-});
-
-/**
- * SendBulkMessagesArgs
- */
-export const zSendBulkMessagesArgsOutput = z.object({
-    chat: zChatInfo,
-    messages: z.array(z.string()),
-    interval: z.number().optional()
-});
-
-/**
- * JoinGroupArgs
- */
-export const zJoinGroupArgsOutput = z.object({
-    chat: zChatInfo.optional(),
-    join_discussion_group_if_availble: z.boolean().optional(),
-    invite_link: z.string().optional()
-});
-
-/**
- * LeaveGroupArgs
- */
-export const zLeaveGroupArgsOutput = z.object({
-    chat: zChatInfo
-});
-
-/**
- * ReplyToMessageArgs
- */
-export const zReplyToMessageArgsOutput = z.object({
-    chat: zChatInfo.optional(),
-    message_info: zMessageInfo.optional(),
-    input_message_content: zInputMessage,
-    message_link: z.string().optional()
-});
-
-/**
- * ForwardMessageArgs
- */
-export const zForwardMessageArgsOutput = z.object({
-    from_chat: zChatInfo.optional(),
-    message_info: zMessageInfo.optional(),
-    target_chat: zChatInfo,
-    message: zInputMessage.optional(),
-    message_link: z.string().optional()
-});
-
-/**
- * ReadMessagesArgs
- */
-export const zReadMessagesArgsOutput = z.object({
-    chat: zChatInfo,
-    amount_messages: z.number().int().optional(),
-    read_all_in_end: z.boolean().optional()
-});
-
-/**
- * InteractWithTweetArgs
- */
-export const zInteractWithTweetArgsOutput = z.object({
-    url: z.string(),
-    interaction: zTweetInteraction
-});
-
-/**
- * InteractWithTweetByTweetIdArgs
- */
-export const zInteractWithTweetByTweetIdArgsOutput = z.object({
-    tweet_id: z.number().int(),
-    interaction: zTweetInteraction
-});
-
-/**
- * Tweet
- */
-export const zTweetOutput = z.object({
-    tweet_id: z.number().int(),
-    author_id: z.number().int().optional(),
-    author_name: z.string().optional(),
-    author_username: z.string().optional(),
-    creation_date: z.string().optional(),
-    text: z.string(),
-    entities: zEntities.optional(),
-    public_metrics: zPublicMetrics.optional(),
-    geo: z.object({}).optional(),
-    in_reply_to_status_id: z.number().int().optional(),
-    in_reply_to_user_id: z.number().int().optional(),
-    quoted_status_id: z.number().int().optional(),
-    is_quote_status: z.boolean().optional(),
-    retweeted: z.boolean().optional(),
-    possibly_sensitive: z.boolean().optional(),
-    lang: z.string().optional(),
-    referenced_tweets: z.array(z.object({})).optional(),
-    public_metrics_samples: z.array(zPublicMetrics).optional()
-});
-
-/**
- * ScrollFeedResponseContent
- */
-export const zScrollFeedResponseContentOutput = z.object({
-    tweets_collected: z.array(zTweetOutput)
-});
-
-/**
- * InteractWithTweetResponseContent
- */
-export const zInteractWithTweetResponseContentOutput = z.object({
-    interaction_result: zTweetInteractionResult
-});
-
-/**
- * JoinGroupResponseContent
- */
-export const zJoinGroupResponseContentOutput = z.object({
-    chat_info: z.union([
-        zChannelInfo,
-        zGroupInfo
-    ]),
-    discussion_group_chat_info: z.union([
-        zChannelInfo,
-        zGroupInfo
+        zResolvePhoneResponseContent,
+        zCloseBrowserResponseContent,
+        z.null()
     ])
 });
 
 /**
- * BehaviouralResponseContent
+ * ActionPlatform
  */
-export const zBehaviouralResponseContentOutput = z.object({
-    current_context: z.unknown().optional(),
-    chats: z.array(z.union([
-        zGroupInfo,
-        zChannelInfo
-    ])).optional(),
-    personal_details_synced: z.boolean().optional(),
-    auto_download_media_disabled: z.boolean().optional(),
-    all_active_sessions_deleted: z.boolean().optional(),
-    unread_messages: z.array(zChatInfo).optional()
+export const zActionPlatform = z.enum([
+    'x'
+]);
+
+/**
+ * ActionResultStatusCode
+ */
+export const zActionResultStatusCode = z.enum([
+    'success',
+    'failed',
+    'cancelled',
+    'fail_fast',
+    'running',
+    'pending'
+]);
+
+/**
+ * ActionResultStatus
+ */
+export const zActionResultStatus = z.object({
+    status_code: zActionResultStatusCode,
+    error: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
- * ResolvePhoneResponseContent
+ * MimeType
  */
-export const zResolvePhoneResponseContentOutput = z.object({
-    user_info: zUserInfo.optional(),
-    error: z.string().optional()
+export const zMimeType = z.enum([
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'video/mp4',
+    'video/webm'
+]);
+
+/**
+ * AttachmentData
+ */
+export const zAttachmentData = z.object({
+    url: z.string(),
+    s3_uri: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    mime_type: zMimeType
 });
 
 /**
- * ActionRead
+ * MetricsData
  */
-export const zActionRead = z.object({
-    id: z.string().uuid(),
-    created_at: z.string().datetime(),
-    updated_at: z.string().datetime(),
-    avatar_id: z.string().uuid().optional(),
-    action_type: zType,
-    platform: zPlatform,
-    action_description: z.string(),
-    request_payload: z.union([
-        zScrollFeedArgs,
-        zSendMessageArgsOutput,
-        zSendBulkMessagesArgsOutput,
-        zJoinGroupArgsOutput,
-        zLeaveGroupArgsOutput,
-        zReplyToMessageArgsOutput,
-        zForwardMessageArgsOutput,
-        zBehaviouralArgs,
-        zReadMessagesArgsOutput,
-        zResolvePhoneArgs,
-        zInteractWithTweetArgsOutput,
-        zInteractWithTweetByTweetIdArgsOutput,
-        zCloseBrowserArgs
+export const zMetricsData: z.AnyZodObject = z.object({
+    likes: z.union([
+        z.number().int(),
+        z.null()
     ]).optional(),
-    status: zActionStatus,
-    response_content: z.union([
-        zScrollFeedResponseContentOutput,
-        zInteractWithTweetResponseContentOutput,
-        zSendMessageResponseContent,
-        zReplyToMessageResponseContent,
-        zLeaveGroupResponseContent,
-        zJoinGroupResponseContentOutput,
-        zForwardMessageResponseContent,
-        zBehaviouralResponseContentOutput,
-        zSendBulkMessagesResponseContent,
-        zReadMessagesResponseContent,
-        zResolvePhoneResponseContentOutput,
-        zCloseBrowserResponseContent
+    retweets: z.union([
+        z.number().int(),
+        z.null()
     ]).optional(),
-    start_time: z.string().datetime(),
-    end_time: z.string().datetime().optional()
+    bookmarks: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    replies: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    quotes: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    impressions: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
+/**
+ * TweetData
+ */
+export const zTweetData: z.AnyZodObject = z.object({
+    tweet_id: z.number().int(),
+    author_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional(),
+    author_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    author_username: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    creation_date: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    text: z.string(),
+    media: z.array(zAttachmentData).optional().default([]),
+    media_description: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    inner_tweet: z.union([
+        z.lazy(() => {
+            return zTweetData;
+        }),
+        z.null()
+    ]).optional(),
+    metrics: z.union([
+        zMetricsData,
+        z.null()
+    ]).optional(),
+    summary: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
+});
+
+/**
+ * ScrollFeedActionData
+ */
+export const zScrollFeedActionData: z.AnyZodObject = z.object({
+    url: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    tweets: z.array(zTweetData)
+});
+
+/**
+ * LikeTweetActionData
+ */
+export const zLikeTweetActionData: z.AnyZodObject = z.object({
+    tweet: z.union([
+        zTweetData,
+        z.null()
+    ]).optional()
+});
+
+/**
+ * RetweetActionData
+ */
+export const zRetweetActionData: z.AnyZodObject = z.object({
+    tweet: z.union([
+        zTweetData,
+        z.null()
+    ]).optional()
+});
+
+/**
+ * BookmarkActionData
+ */
+export const zBookmarkActionData: z.AnyZodObject = z.object({
+    tweet: z.union([
+        zTweetData,
+        z.null()
+    ]).optional()
+});
+
+/**
+ * ReplyActionData
+ */
+export const zReplyActionData: z.AnyZodObject = z.object({
+    tweet: z.union([
+        zTweetData,
+        z.null()
+    ]).optional(),
+    reply_content: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    reply_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
+/**
+ * QuoteActionData
+ */
+export const zQuoteActionData: z.AnyZodObject = z.object({
+    tweet: z.union([
+        zTweetData,
+        z.null()
+    ]).optional(),
+    quote_content: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    quote_id: z.union([
+        z.number().int(),
+        z.null()
+    ]).optional()
+});
+
+/**
+ * ActionUpdate
+ */
+export const zActionUpdate: z.AnyZodObject = z.object({
+    data: z.union([
+        zScrollFeedActionData,
+        zLikeTweetActionData,
+        zRetweetActionData,
+        zBookmarkActionData,
+        zReplyActionData,
+        zQuoteActionData,
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -783,12 +1222,21 @@ export const zActivityTimeParameters = z.object({
  * Address
  */
 export const zAddress = z.object({
-    street: z.string().optional(),
+    street: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     city: z.string(),
-    state: z.string().optional(),
+    state: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     country: z.string(),
     timezone: z.string(),
-    postal_code: z.string().optional(),
+    postal_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     iso_3166_1_alpha_2_code: z.string(),
     iso_3166_2_subdivision_code: z.string()
 });
@@ -797,14 +1245,38 @@ export const zAddress = z.object({
  * AddressUpdate
  */
 export const zAddressUpdate = z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    country: z.string().optional(),
-    timezone: z.string().optional(),
-    postal_code: z.string().optional(),
-    iso_3166_1_alpha_2_code: z.string().optional(),
-    iso_3166_2_subdivision_code: z.string().optional()
+    street: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    city: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    state: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    country: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    timezone: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    postal_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    iso_3166_1_alpha_2_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    iso_3166_2_subdivision_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -831,14 +1303,20 @@ export const zSocialMediaAccountCreate = z.object({
     username: z.string(),
     password: z.string(),
     active: z.boolean().optional().default(false),
-    profile_image_url: z.string().optional(),
-    subject_image_url: z.string().optional()
+    profile_image_url: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    subject_image_url: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
  * AvatarCreate
  */
-export const zAvatarCreateInput = z.object({
+export const zAvatarCreate = z.object({
     first_name: z.string(),
     last_name: z.string(),
     gender: z.string(),
@@ -849,26 +1327,7 @@ export const zAvatarCreateInput = z.object({
     interests: z.array(z.string()).optional(),
     habits: z.array(z.string()).optional(),
     phone_number: z.string(),
-    image_url: z.string(),
-    emails: z.array(zEmail).optional(),
-    social_media_accounts: z.array(zSocialMediaAccountCreate).optional()
-});
-
-/**
- * AvatarCreate
- */
-export const zAvatarCreateOutput = z.object({
-    first_name: z.string(),
-    last_name: z.string(),
-    gender: z.string(),
-    language: z.string(),
-    birth_date: z.string().date(),
-    address: zAddress,
-    bio: z.string(),
-    interests: z.array(z.string()).optional(),
-    habits: z.array(z.string()).optional(),
-    phone_number: z.string(),
-    image_url: z.string(),
+    image_url: z.string().optional().default(''),
     emails: z.array(zEmail).optional(),
     social_media_accounts: z.array(zSocialMediaAccountCreate).optional()
 });
@@ -879,7 +1338,6 @@ export const zAvatarCreateOutput = z.object({
 export const zAvatarStateEnum = z.enum([
     'available',
     'active',
-    'pending',
     'invalid'
 ]);
 
@@ -902,8 +1360,14 @@ export const zSocialMediaAccountRead = z.object({
     username: z.string(),
     password: z.string(),
     active: z.boolean().optional().default(false),
-    profile_image_url: z.string().optional(),
-    subject_image_url: z.string().optional()
+    profile_image_url: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    subject_image_url: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -940,23 +1404,53 @@ export const zProxyRead = z.object({
     created_at: z.string().datetime(),
     updated_at: z.string().datetime(),
     name: z.string(),
-    status: zStatus.optional(),
+    status: z.union([
+        zStatus,
+        z.null()
+    ]).optional(),
     version: zVersion,
     proxy_type: zProxyType,
     port: z.number().int(),
-    ip_address: z.string().optional(),
-    fqdn: z.string().optional(),
+    ip_address: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    fqdn: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     username: z.string(),
     password: z.string(),
-    continent_code: z.string().optional(),
-    iso_3166_1_alpha_2_code: z.string().optional(),
-    iso_3166_2_subdivision_code: z.string().optional(),
-    city: z.string().optional(),
+    continent_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    iso_3166_1_alpha_2_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    iso_3166_2_subdivision_code: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    city: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
     expired_date: z.string().date(),
     batch_id: z.string().uuid(),
-    last_pinged: z.string().datetime().optional(),
-    extra_data: z.object({}).optional(),
-    proxy_full_url: z.string().optional()
+    last_pinged: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional(),
+    extra_data: z.union([
+        z.object({}),
+        z.null()
+    ]).optional(),
+    proxy_full_url: z.union([
+        z.string(),
+        z.null()
+    ]).optional()
 });
 
 /**
@@ -966,8 +1460,14 @@ export const zAvatarRead = z.object({
     activity_time_parameters: zActivityTimeParameters.optional(),
     force_awake: z.boolean().optional().default(false),
     force_shutdown: z.boolean().optional().default(false),
-    strategy: z.string().optional(),
-    strategy_expiration: z.string().datetime().optional(),
+    strategy: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    strategy_expiration: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional(),
     first_name: z.string(),
     last_name: z.string(),
     gender: z.string(),
@@ -978,36 +1478,209 @@ export const zAvatarRead = z.object({
     interests: z.array(z.string()).optional(),
     habits: z.array(z.string()).optional(),
     phone_number: z.string(),
-    image_url: z.string(),
+    image_url: z.string().optional().default(''),
     emails: z.array(zEmail).optional(),
     id: z.string().uuid(),
     avatar_state: zAvatarState,
     social_media_accounts: z.array(zSocialMediaAccountRead),
-    proxy: zProxyRead.optional()
+    proxy: z.union([
+        zProxyRead,
+        z.null()
+    ]).optional()
 });
 
 /**
  * AvatarUpdate
  */
 export const zAvatarUpdate = z.object({
-    first_name: z.string().optional(),
-    last_name: z.string().optional(),
-    phone_number: z.string().optional(),
-    image_url: z.string().optional(),
-    birth_date: z.string().date().optional(),
-    address: zAddressUpdate.optional(),
-    emails: z.array(zEmail).optional(),
-    bio: z.string().optional(),
-    interests: z.array(z.string()).optional(),
-    habits: z.array(z.string()).optional(),
-    strategy: z.string().optional(),
-    strategy_expiration: z.string().datetime().optional()
+    first_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    last_name: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    phone_number: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    image_url: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    birth_date: z.union([
+        z.string().date(),
+        z.null()
+    ]).optional(),
+    gender: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    language: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    address: z.union([
+        zAddressUpdate,
+        z.null()
+    ]).optional(),
+    emails: z.union([
+        z.array(zEmail),
+        z.null()
+    ]).optional(),
+    bio: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    interests: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional(),
+    habits: z.union([
+        z.array(z.string()),
+        z.null()
+    ]).optional(),
+    strategy: z.union([
+        z.string(),
+        z.null()
+    ]).optional(),
+    strategy_expiration: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional()
+});
+
+/**
+ * Body_saveProfileImage
+ */
+export const zBodySaveProfileImage = z.object({
+    image_b64: z.string()
+});
+
+/**
+ * BookmarkActionRead
+ */
+export const zBookmarkActionRead = z.object({
+    id: z.string().uuid(),
+    avatar_id: z.string().uuid(),
+    type: z.literal('bookmark'),
+    platform: z.union([
+        zActionPlatform,
+        z.null()
+    ]).optional(),
+    status: zActionResultStatus,
+    created_at: z.string().datetime(),
+    data: zBookmarkActionData
+});
+
+/**
+ * GenerateProfileImageResponse
+ */
+export const zGenerateProfileImageResponse = z.object({
+    image_b64: z.string()
+});
+
+/**
+ * LikeActionRead
+ */
+export const zLikeActionRead = z.object({
+    id: z.string().uuid(),
+    avatar_id: z.string().uuid(),
+    type: z.literal('like'),
+    platform: z.union([
+        zActionPlatform,
+        z.null()
+    ]).optional(),
+    status: zActionResultStatus,
+    created_at: z.string().datetime(),
+    data: zLikeTweetActionData
+});
+
+/**
+ * QuoteActionRead
+ */
+export const zQuoteActionRead = z.object({
+    id: z.string().uuid(),
+    avatar_id: z.string().uuid(),
+    type: z.literal('quote'),
+    platform: z.union([
+        zActionPlatform,
+        z.null()
+    ]).optional(),
+    status: zActionResultStatus,
+    created_at: z.string().datetime(),
+    data: zQuoteActionData
+});
+
+/**
+ * ReplyActionRead
+ */
+export const zReplyActionRead = z.object({
+    id: z.string().uuid(),
+    avatar_id: z.string().uuid(),
+    type: z.literal('reply'),
+    platform: z.union([
+        zActionPlatform,
+        z.null()
+    ]).optional(),
+    status: zActionResultStatus,
+    created_at: z.string().datetime(),
+    data: zReplyActionData
+});
+
+/**
+ * RetweetActionRead
+ */
+export const zRetweetActionRead = z.object({
+    id: z.string().uuid(),
+    avatar_id: z.string().uuid(),
+    type: z.literal('retweet'),
+    platform: z.union([
+        zActionPlatform,
+        z.null()
+    ]).optional(),
+    status: zActionResultStatus,
+    created_at: z.string().datetime(),
+    data: zRetweetActionData
+});
+
+/**
+ * ScrollActionRead
+ */
+export const zScrollActionRead = z.object({
+    id: z.string().uuid(),
+    avatar_id: z.string().uuid(),
+    type: z.literal('scroll'),
+    platform: z.union([
+        zActionPlatform,
+        z.null()
+    ]).optional(),
+    status: zActionResultStatus,
+    created_at: z.string().datetime(),
+    data: zScrollFeedActionData
+});
+
+/**
+ * StateInterval
+ */
+export const zStateInterval = z.object({
+    state: zAvatarStateEnum,
+    started_at: z.string().datetime(),
+    ended_at: z.union([
+        z.string().datetime(),
+        z.null()
+    ]).optional()
 });
 
 export const zGetAvatarsData = z.object({
     body: z.never().optional(),
     path: z.never().optional(),
-    query: z.never().optional()
+    query: z.object({
+        attach_proxy: z.boolean().optional().default(false),
+        limit: z.number().int().optional().default(100),
+        offset: z.number().int().optional().default(0)
+    }).optional()
 });
 
 /**
@@ -1017,7 +1690,7 @@ export const zGetAvatarsData = z.object({
 export const zGetAvatarsResponse = z.array(zAvatarRead);
 
 export const zCreateAvatarData = z.object({
-    body: zAvatarCreateInput,
+    body: zAvatarCreate,
     path: z.never().optional(),
     query: z.never().optional()
 });
@@ -1038,15 +1711,16 @@ export const zGenerateAvatarData = z.object({
 /**
  * Successful Response
  */
-export const zGenerateAvatarResponse = zAvatarCreateOutput;
+export const zGenerateAvatarResponse = zAvatarCreate;
 
 export const zAvailableAvatarsData = z.object({
     body: z.never().optional(),
     path: z.never().optional(),
     query: z.object({
+        interval: z.number().int(),
         limit: z.number().int().optional().default(100),
         offset: z.number().int().optional().default(0)
-    }).optional()
+    })
 });
 
 /**
@@ -1085,7 +1759,9 @@ export const zGetAvatarData = z.object({
     path: z.object({
         avatar_id: z.string().uuid()
     }),
-    query: z.never().optional()
+    query: z.object({
+        attach_proxy: z.boolean().optional().default(false)
+    }).optional()
 });
 
 /**
@@ -1162,6 +1838,22 @@ export const zDeleteAvatarStateData = z.object({
  */
 export const zDeleteAvatarStateResponse = z.void();
 
+export const zGetAvatarStateHistoryData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.object({
+        hours_ago: z.number().int().optional().default(24)
+    }).optional()
+});
+
+/**
+ * Response Getavatarstatehistory
+ * Successful Response
+ */
+export const zGetAvatarStateHistoryResponse = z.array(zStateInterval);
+
 export const zForceShutdownAvatarData = z.object({
     body: z.never().optional(),
     path: z.object({
@@ -1188,6 +1880,32 @@ export const zForceAwakeAvatarData = z.object({
  */
 export const zForceAwakeAvatarResponse = z.void();
 
+export const zGenerateProfileImageData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zGenerateProfileImageResponse2 = zGenerateProfileImageResponse;
+
+export const zSaveProfileImageData = z.object({
+    body: zBodySaveProfileImage,
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zSaveProfileImageResponse = zAvatarRead;
+
 export const zCreateActionData = z.object({
     body: zActionCreate,
     path: z.never().optional(),
@@ -1195,34 +1913,17 @@ export const zCreateActionData = z.object({
 });
 
 /**
+ * Response Createaction
  * Successful Response
  */
-export const zCreateActionResponse = zActionRead;
-
-export const zQueryActionsData = z.object({
-    body: z.never().optional(),
-    path: z.object({
-        avatar_id: z.string().uuid()
-    }),
-    query: z.object({
-        action_type: zType,
-        count: z.number().int().optional().default(10),
-        status_code: z.union([
-            zActionStatusCode,
-            z.null()
-        ]).optional(),
-        platform: z.union([
-            zPlatform,
-            z.null()
-        ]).optional()
-    })
-});
-
-/**
- * Response Queryactions
- * Successful Response
- */
-export const zQueryActionsResponse = z.array(zActionRead);
+export const zCreateActionResponse = z.array(z.union([
+    zScrollActionRead,
+    zLikeActionRead,
+    zRetweetActionRead,
+    zBookmarkActionRead,
+    zReplyActionRead,
+    zQuoteActionRead
+]));
 
 export const zGetActionData = z.object({
     body: z.never().optional(),
@@ -1233,11 +1934,56 @@ export const zGetActionData = z.object({
 });
 
 /**
+ * Response Getaction
  * Successful Response
  */
-export const zGetActionResponse = zActionRead;
+export const zGetActionResponse = z.union([
+    zScrollActionRead,
+    zLikeActionRead,
+    zRetweetActionRead,
+    zBookmarkActionRead,
+    zReplyActionRead,
+    zQuoteActionRead
+]);
 
-export const zGetAvatarActionsData = z.object({
+export const zUpdateActionData = z.object({
+    body: zActionUpdate,
+    path: z.object({
+        action_id: z.string().uuid()
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateActionResponse = z.void();
+
+export const zGetAvatarInteractionsData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        avatar_id: z.string().uuid()
+    }),
+    query: z.object({
+        success_only: z.boolean().optional().default(false),
+        limit: z.number().int().gte(1).lte(1000).optional().default(100),
+        offset: z.number().int().gte(0).optional().default(0)
+    }).optional()
+});
+
+/**
+ * Response Getavatarinteractions
+ * Successful Response
+ */
+export const zGetAvatarInteractionsResponse = z.array(z.union([
+    zLikeActionRead,
+    zRetweetActionRead,
+    zBookmarkActionRead,
+    zReplyActionRead,
+    zQuoteActionRead
+]));
+
+export const zGetAvatarInteractionsDescriptionsData = z.object({
     body: z.never().optional(),
     path: z.object({
         avatar_id: z.string().uuid()
@@ -1249,44 +1995,26 @@ export const zGetAvatarActionsData = z.object({
 });
 
 /**
- * Response Getavataractions
+ * Response Getavatarinteractionsdescriptions
  * Successful Response
  */
-export const zGetAvatarActionsResponse = z.array(zActionRead);
+export const zGetAvatarInteractionsDescriptionsResponse = z.array(z.string());
 
-export const zGetAvatarActionsTodayData = z.object({
-    body: z.never().optional(),
-    path: z.object({
-        avatar_id: z.string().uuid()
-    }),
-    query: z.never().optional()
-});
-
-/**
- * Response Getavataractionstoday
- * Successful Response
- */
-export const zGetAvatarActionsTodayResponse = z.array(zActionRead);
-
-export const zGetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetData = z.object({
+export const zGetAvatarRepliesData = z.object({
     body: z.never().optional(),
     path: z.object({
         avatar_id: z.string().uuid()
     }),
     query: z.object({
-        content_type: z.enum([
-            'reply',
-            'post'
-        ]).optional(),
-        count: z.number().int().optional().default(10)
+        limit: z.number().int().optional().default(10)
     }).optional()
 });
 
 /**
- * Response Get Avatar Previous Content Actions Actions  Avatar Id  Previous Content Get
+ * Response Getavatarreplies
  * Successful Response
  */
-export const zGetAvatarPreviousContentActionsActionsAvatarIdPreviousContentGetResponse = z.array(z.string());
+export const zGetAvatarRepliesResponse = z.array(z.string());
 
 export const zBoomBoomGetData = z.object({
     body: z.never().optional(),

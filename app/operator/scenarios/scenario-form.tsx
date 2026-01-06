@@ -12,10 +12,10 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { AvatarRead } from "@lib/api/avatars/types.gen"
-import { Attachment, Scenario } from "@lib/api/operator/types.gen"
+import { Attachment, ScenarioReadable, ScenarioWritable } from "@lib/api/operator/types.gen"
 import { logger } from "@lib/logger"
-import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { getAvatarDisplayName } from "@lib/profile-utils"
+import { ServiceBrowserClient } from "@lib/service-browser-client"
 import { useOperatorStore } from "@lib/store-provider"
 import { ChevronDown, PlusIcon, Search, TrashIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -56,16 +56,16 @@ interface AvatarModel {
 
 interface ScenarioFormProps {
     avatars: AvatarRead[]
-    initialScenario?: Scenario
+    initialScenario?: ScenarioReadable
 }
 
 export function ScenarioForm({ avatars: avatarsProp, initialScenario }: ScenarioFormProps) {
     const [avatars, setAvatars] = useState<AvatarRead[]>(avatarsProp)
     const [selectedAvatar, setSelectedAvatar] = useState<string>(initialScenario?.profile?.id || "")
     const [actions, setActions] = useState<ActionFormData[]>(
-        initialScenario?.actions.map((action) => ({
+        initialScenario?.actions.map((action: ScenarioReadable['actions'][number]) => ({
             type: action.type as ActionType,
-            args: action.args,
+            args: 'args' in action ? action.args : {},
         })) || [],
     )
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -215,7 +215,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
         setIsSubmitting(true)
 
         try {
-            const scenario: Scenario = {
+            const scenario: ScenarioWritable = {
                 profile: { id: selectedAvatar },
                 prefrences: preferences,
                 actions: actions.map((action) => ({
@@ -237,7 +237,7 @@ export function ScenarioForm({ avatars: avatarsProp, initialScenario }: Scenario
                 return
             }
 
-            const newScenario: Scenario = await response.json()
+            const newScenario: ScenarioReadable = await response.json()
 
             toast.success("Scenario created successfully")
 

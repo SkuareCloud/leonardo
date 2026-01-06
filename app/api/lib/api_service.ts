@@ -248,7 +248,7 @@ export class ApiService {
         const [allAvatarsResponse, runningAvatarsResponse] = await Promise.all([
             getAvatarsRequest({
                 client: avatarsClient,
-                query: { attach_proxy: true } as any,
+                query: { attach_proxy: false },
             }),
             getAllCharactersCharactersGetOperator(),
         ])
@@ -1399,10 +1399,11 @@ export class ApiService {
 
         let response
         try {
-            response = await avatarsClient.get({
-                url: "/avatars/",
-                query: { attach_proxy: true },
-                parseAs: "json",
+            response = await getAvatarsRequest({
+                client: avatarsClient,
+                query: { attach_proxy: false },
+                // Override response validator to skip validation since we transform the data ourselves
+                responseValidator: async (data) => data,
             })
 
             logger.info(`[DEBUG] Response received: ${response.error ? "ERROR" : "SUCCESS"}`)
