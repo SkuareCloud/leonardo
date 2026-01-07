@@ -5,25 +5,20 @@ import { ServiceClient } from "@lib/service-client"
 import { AvatarsView } from "./avatars-view"
 
 export default async function Page() {
-    const serviceClient = new ServiceClient()
     const apiService = new ApiService()
 
-    const [avatars, allCategories] = await Promise.all([
-        serviceClient.getAvatars(),
-        apiService.getOrchestratorCategories(),
-    ])
-
-    logger.info(`Loaded ${avatars.length} avatars for avatars page`)
+    // Only fetch categories on server - avatars will be fetched client-side with pagination
+    const allCategories = await apiService.getOrchestratorCategories()
 
     return (
         <div className="container py-6">
             <div className="mb-6 flex items-center justify-between">
                 <PageHeader
                     title="Avatars"
-                    subtitle={`Inventory of all avatars in the system. (${avatars.length} total)`}
+                    subtitle="Inventory of all avatars in the system."
                 />
             </div>
-            <AvatarsView avatars={avatars} allCategories={allCategories} />
+            <AvatarsView avatars={[]} allCategories={allCategories} />
         </div>
     )
 }

@@ -75,13 +75,26 @@ export class ServiceClient {
         return response.json()
     }
 
-    async getAvatars(): Promise<Array<AvatarRead>> {
-        const url = `${this.env.serverUrl}/api/avatars/avatars`
-        logger.info(`[DEBUG] ServiceClient.getAvatars - fetching from URL: ${url}`)
+    async getAvatars(skip?: number, limit?: number): Promise<Array<AvatarRead>> {
+        const url = new URL(`${this.env.serverUrl}/api/avatars/avatars`)
+        // If limit is 0 or undefined, don't add it (API defaults to 0 = all avatars)
+        // If limit is > 0, add it for pagination
+        if (skip !== undefined && skip > 0) {
+            url.searchParams.set('skip', skip.toString())
+        }
+        if (limit !== undefined && limit > 0) {
+            url.searchParams.set('limit', limit.toString())
+        }
+        // If limit is 0, explicitly set it to get all avatars
+        if (limit === 0) {
+            url.searchParams.set('limit', '0')
+        }
+        
+        logger.info(`[DEBUG] ServiceClient.getAvatars - fetching from URL: ${url.toString()}`)
         logger.info(`[DEBUG] ServiceClient.getAvatars - serverUrl: ${this.env.serverUrl}`)
         
         try {
-            const response = await fetch(url)
+            const response = await fetch(url.toString())
             logger.info(`[DEBUG] ServiceClient.getAvatars - Response status: ${response.status}`)
             logger.info(`[DEBUG] ServiceClient.getAvatars - Response ok: ${response.ok}`)
             

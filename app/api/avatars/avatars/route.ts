@@ -11,8 +11,10 @@ export async function GET(request: Request) {
     
     try {
         const { searchParams } = new URL(request.url)
+        // Default to limit=0 (all avatars) if no limit is specified
         const skip = parseInt(searchParams.get('skip') || '0', 10)
-        const limit = parseInt(searchParams.get('limit') || '0', 10)
+        const limitParam = searchParams.get('limit')
+        const limit = limitParam !== null ? parseInt(limitParam, 10) : 0
         
         logger.info(`[DEBUG] Pagination params: skip=${skip}, limit=${limit}`)
         logger.info('[DEBUG] Creating ApiService instance...')

@@ -346,9 +346,9 @@ export function AvatarsList({
         pageIndex: 0,
         pageSize,
     })
-    const [isPageLoading, setIsPageLoading] = useState(false)
+    const [isPageLoading, setIsPageLoading] = useState(true) // Start with loading true since we fetch on mount
     const [totalCount, setTotalCount] = useState<number | null>(null)
-    const [hasNextPage, setHasNextPage] = useState(() => initialAvatars.length === pageSize)
+    const [hasNextPage, setHasNextPage] = useState(false)
     const tableRef = useRef<HTMLDivElement>(null)
     const bulkCategoryOptionsId = "avatar-bulk-category-options"
 
@@ -633,20 +633,12 @@ export function AvatarsList({
         }
     }, [])
 
-    // Fetch avatars when pagination changes (but not on initial mount if we have initial data)
+    // Fetch avatars when pagination changes
     useEffect(() => {
-        // Skip initial fetch if we already have initial data and we're on the first page
-        if (paginationState.pageIndex === 0 && initialAvatars.length > 0) {
-            // Use initial data, but still set total count if we can infer it
-            if (initialAvatars.length < paginationState.pageSize) {
-                setTotalCount(initialAvatars.length)
-            }
-            return
-        }
         const skip = paginationState.pageIndex * paginationState.pageSize
         const limit = paginationState.pageSize
         fetchAvatars(skip, limit)
-    }, [paginationState.pageIndex, paginationState.pageSize, fetchAvatars, initialAvatars.length])
+    }, [paginationState.pageIndex, paginationState.pageSize, fetchAvatars])
 
     // Load avatar categories
     const loadAvatarCategories = useCallback(async () => {

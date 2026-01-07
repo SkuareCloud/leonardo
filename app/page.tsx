@@ -1,8 +1,8 @@
 import TelegramIcon from "@/assets/telegram.svg"
 import SquaresCanvas from "@/components/squares-canvas"
+import { logger } from "@/lib/logger"
 import { getSocialNetworkStatus } from "@/lib/profile-utils"
 import { cn } from "@/lib/utils"
-import { logger } from "@/lib/logger"
 import { ServiceClient } from "@lib/service-client"
 import { CrosshairIcon, MessagesSquareIcon, PlusIcon, UserIcon } from "lucide-react"
 import { Metadata } from "next"
@@ -63,7 +63,8 @@ export default async function Page() {
     logger.info('[DEBUG] Creating ServiceClient...')
     const serviceClient = new ServiceClient()
     logger.info('[DEBUG] ServiceClient created, fetching avatars...')
-    const avatars = await serviceClient.getAvatars()
+    // Request all avatars (limit=0) for counting on main page
+    const avatars = await serviceClient.getAvatars(0, 0)
     logger.info(`[DEBUG] Avatars fetched successfully, count: ${avatars.length}`)
 
     // Count active Telegram avatars
