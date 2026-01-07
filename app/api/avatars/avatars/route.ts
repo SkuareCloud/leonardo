@@ -3,17 +3,22 @@ import { AvatarRead } from "@lib/api/avatars/types.gen"
 import { logger } from "@lib/logger"
 
 /**
- * Fetch all profiles from DB.
+ * Fetch profiles from DB with optional pagination.
  */
-export async function GET() {
+export async function GET(request: Request) {
     logger.info('[DEBUG] API route /api/avatars/avatars called')
     logger.info("Retrieving avatars...")
     
     try {
+        const { searchParams } = new URL(request.url)
+        const skip = parseInt(searchParams.get('skip') || '0', 10)
+        const limit = parseInt(searchParams.get('limit') || '0', 10)
+        
+        logger.info(`[DEBUG] Pagination params: skip=${skip}, limit=${limit}`)
         logger.info('[DEBUG] Creating ApiService instance...')
         const apiService = new ApiService()
         logger.info('[DEBUG] ApiService instance created, calling getAvatars...')
-        const avatars: AvatarRead[] = await apiService.getAvatars()
+        const avatars: AvatarRead[] = await apiService.getAvatars(skip, limit)
         logger.info('[DEBUG] getAvatars completed successfully')
         logger.info(`Successfully retrieved ${avatars.length} avatars.`)
 

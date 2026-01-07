@@ -1389,8 +1389,8 @@ export class ApiService {
         return response ?? null
     }
 
-    async getAvatars() {
-        logger.info("Getting avatars with proxy information")
+    async getAvatars(skip: number = 0, limit: number = 0) {
+        logger.info(`Getting avatars with proxy information (skip: ${skip}, limit: ${limit})`)
         logger.info("[DEBUG] getAvatars called")
         logger.info(
             `[DEBUG] avatarsClient baseUrl: ${(avatarsClient as any)._options?.baseUrl || "not set"}`,
@@ -1399,9 +1399,18 @@ export class ApiService {
 
         let response
         try {
+            const queryParams: { attach_proxy: boolean; limit?: number; skip?: number } = {
+                attach_proxy: true,
+            }
+            if (limit > 0) {
+                queryParams.limit = limit
+            }
+            if (skip > 0) {
+                queryParams.skip = skip
+            }
             response = await getAvatarsRequest({
                 client: avatarsClient,
-                query: { attach_proxy: false },
+                query: queryParams,
                 // Override response validator to skip validation since we transform the data ourselves
                 responseValidator: async (data) => data,
             })

@@ -20,7 +20,7 @@ import { CategoryRead } from "@lib/api/orchestrator"
 import { logger } from "@lib/logger"
 import { getAvatarDisplayName, getSocialNetworkStatus } from "@lib/profile-utils"
 import { ServiceBrowserClient } from "@lib/service-browser-client"
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, PaginationState } from "@tanstack/react-table"
 import getUnicodeFlagIcon from "country-flag-icons/unicode"
 import { Loader2, MarsIcon, VenusIcon } from "lucide-react"
 import Image from "next/image"
@@ -332,6 +332,7 @@ export function AvatarsList({
     avatars: AvatarRead[]
     allCategories: CategoryRead[]
 }) {
+    const pageSize = 100
     const [activeRow, setActiveRow] = useState<ProfileDataRow | undefined>(undefined)
     const [avatars, setAvatars] = useState<AvatarRead[]>(initialAvatars)
     const [profilesData, setProfilesData] = useState<ProfileDataRow[]>([])
@@ -341,6 +342,13 @@ export function AvatarsList({
     const [bulkCategoryInput, setBulkCategoryInput] = useState<string>("")
     const [isApplyingBulkCategory, setIsApplyingBulkCategory] = useState(false)
     const [isRemovingBulkCategory, setIsRemovingBulkCategory] = useState(false)
+    const [paginationState, setPaginationState] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize,
+    })
+    const [isPageLoading, setIsPageLoading] = useState(false)
+    const [totalCount, setTotalCount] = useState<number | null>(null)
+    const [hasNextPage, setHasNextPage] = useState(() => initialAvatars.length === pageSize)
     const tableRef = useRef<HTMLDivElement>(null)
     const bulkCategoryOptionsId = "avatar-bulk-category-options"
 
@@ -601,6 +609,45 @@ export function AvatarsList({
         }
     }
 
+    // Fetch avatars with pagination
+    const fetchAvatars = useCallback(async (skip: number, limit: number) => {
+        setIsPageLoading(true)
+        try {
+            const response = await fetch(`/api/avatars/avatars?skip=${skip}&limit=${limit}`)
+            if (!response.ok) {
+                throw new Error(`Failed to fetch avatars: ${response.statusText}`)
+            }
+            const fetchedAvatars: AvatarRead[] = await response.json()
+            setAvatars(fetchedAvatars)
+            // If we got a full page, there might be more
+            setHasNextPage(fetchedAvatars.length === limit)
+            // If we got less than a full page, we know the total
+            if (fetchedAvatars.length < limit) {
+                setTotalCount(skip + fetchedAvatars.length)
+            }
+        } catch (error) {
+            console.error("Failed to fetch avatars:", error)
+            toast.error(`Failed to fetch avatars: ${error instanceof Error ? error.message : "Unknown error"}`)
+        } finally {
+            setIsPageLoading(false)
+        }
+    }, [])
+
+    // Fetch avatars when pagination changes (but not on initial mount if we have initial data)
+    useEffect(() => {
+        // Skip initial fetch if we already have initial data and we're on the first page
+        if (paginationState.pageIndex === 0 && initialAvatars.length > 0) {
+            // Use initial data, but still set total count if we can infer it
+            if (initialAvatars.length < paginationState.pageSize) {
+                setTotalCount(initialAvatars.length)
+            }
+            return
+        }
+        const skip = paginationState.pageIndex * paginationState.pageSize
+        const limit = paginationState.pageSize
+        fetchAvatars(skip, limit)
+    }, [paginationState.pageIndex, paginationState.pageSize, fetchAvatars, initialAvatars.length])
+
     // Load avatar categories
     const loadAvatarCategories = useCallback(async () => {
         try {
@@ -624,7 +671,7 @@ export function AvatarsList({
         }
     }, [avatars])
 
-    // Load categories on mount
+    // Load categories when avatars change
     useEffect(() => {
         loadAvatarCategories()
     }, [avatars, loadAvatarCategories])
@@ -679,6 +726,32 @@ export function AvatarsList({
         ensureCategoryByName,
     )
 
+    // Calculate page count for manual pagination
+    const computedPageCount = totalCount !== null 
+        ? Math.ceil(totalCount / paginationState.pageSize)
+        : hasNextPage 
+            ? paginationState.pageIndex + 2 // At least one more page
+            : paginationState.pageIndex + 1
+
+    const handlePaginationChange = (pagination: PaginationState) => {
+        setPaginationState(pagination)
+    }
+
+    const filteredProfiles = profilesData.filter((profile) => {
+        if (categorySelectValue === "Untagged") {
+            return !profile.categories || profile.categories.length === 0
+        }
+        if (!activeCategory) {
+            return true
+        }
+        if (!profile.categories) {
+            return false
+        }
+        return profile.categories.some((category) => category.name === activeCategory)
+    })
+
+    const displayTotalItems = totalCount ?? (hasNextPage ? (paginationState.pageIndex + 1) * paginationState.pageSize + 1 : filteredProfiles.length)
+
     return (
         <div
             className="flex w-full flex-col focus:outline-none"
@@ -724,25 +797,7 @@ export function AvatarsList({
                     </div>
                     <div className="text-muted-foreground text-md flex flex-row items-center gap-2">
                         <Badge variant="secondary" className="font-normal">
-                            {
-                                profilesData.filter((profile) => {
-                                    if (categorySelectValue === "Untagged") {
-                                        return (
-                                            !profile.categories || profile.categories.length === 0
-                                        )
-                                    }
-                                    if (!activeCategory) {
-                                        return true
-                                    }
-                                    if (!profile.categories) {
-                                        return false
-                                    }
-                                    return profile.categories.some(
-                                        (category) => category.name === activeCategory,
-                                    )
-                                }).length
-                            }{" "}
-                            of {profilesData.length} avatars
+                            {filteredProfiles.length} of {displayTotalItems} avatars
                         </Badge>
                     </div>
                 </div>
@@ -764,20 +819,15 @@ export function AvatarsList({
                             logger.info("Clicked row: ", row.original)
                             setActiveRow(row)
                         }}
-                        data={profilesData.filter((profile) => {
-                            if (categorySelectValue === "Untagged") {
-                                return !profile.categories || profile.categories.length === 0
-                            }
-                            if (!activeCategory) {
-                                return true
-                            }
-                            if (!profile.categories) {
-                                return false
-                            }
-                            return profile.categories.some(
-                                (category) => category.name === activeCategory,
-                            )
-                        })}
+                        data={filteredProfiles}
+                        isRefreshing={isPageLoading}
+                        pageSize={paginationState.pageSize}
+                        manualPagination={true}
+                        externalPagination={paginationState}
+                        onExternalPaginationChange={handlePaginationChange}
+                        pageCount={computedPageCount}
+                        totalItems={displayTotalItems}
+                        paginationPosition="top"
                         header={({ table }) => {
                             const selectedRows = table.getFilteredSelectedRowModel().rows
                             return (
