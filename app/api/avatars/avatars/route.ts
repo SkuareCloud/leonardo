@@ -12,15 +12,16 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url)
         // Default to limit=0 (all avatars) if no limit is specified
-        const skip = parseInt(searchParams.get('skip') || '0', 10)
+        // Frontend sends 'skip' but backend API expects 'offset'
+        const offset = parseInt(searchParams.get('skip') || '0', 10)
         const limitParam = searchParams.get('limit')
         const limit = limitParam !== null ? parseInt(limitParam, 10) : 0
         
-        logger.info(`[DEBUG] Pagination params: skip=${skip}, limit=${limit}`)
+        logger.info(`[DEBUG] Pagination params: offset=${offset}, limit=${limit}`)
         logger.info('[DEBUG] Creating ApiService instance...')
         const apiService = new ApiService()
         logger.info('[DEBUG] ApiService instance created, calling getAvatars...')
-        const avatars: AvatarRead[] = await apiService.getAvatars(skip, limit)
+        const avatars: AvatarRead[] = await apiService.getAvatars(offset, limit)
         logger.info('[DEBUG] getAvatars completed successfully')
         logger.info(`Successfully retrieved ${avatars.length} avatars.`)
 

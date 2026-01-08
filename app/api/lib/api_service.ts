@@ -1390,8 +1390,8 @@ export class ApiService {
         return response ?? null
     }
 
-    async getAvatars(skip: number = 0, limit: number = 0) {
-        logger.info(`Getting avatars with proxy information (skip: ${skip}, limit: ${limit})`)
+    async getAvatars(offset: number = 0, limit: number = 0) {
+        logger.info(`Getting avatars with proxy information (offset: ${offset}, limit: ${limit})`)
         logger.info("[DEBUG] getAvatars called")
         logger.info(
             `[DEBUG] avatarsClient baseUrl: ${(avatarsClient as any)._options?.baseUrl || "not set"}`,
@@ -1400,15 +1400,14 @@ export class ApiService {
 
         let response
         try {
-            const queryParams: { attach_proxy: boolean; limit?: number; skip?: number } = {
+            const queryParams: { attach_proxy: boolean; limit?: number; offset?: number } = {
                 attach_proxy: true,
             }
             if (limit > 0) {
                 queryParams.limit = limit
             }
-            if (skip > 0) {
-                queryParams.skip = skip
-            }
+            // Always include offset, even if 0, to be explicit about pagination
+            queryParams.offset = offset
             response = await getAvatarsRequest({
                 client: avatarsClient,
                 query: queryParams,
