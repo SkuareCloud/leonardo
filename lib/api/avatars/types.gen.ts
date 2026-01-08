@@ -2229,6 +2229,25 @@ export type SaveProfileImageResponses = {
 
 export type SaveProfileImageResponse = SaveProfileImageResponses[keyof SaveProfileImageResponses];
 
+export type GetActiveAvatarsCountByPlatformData = {
+    body?: never;
+    path: {
+        platform: SocialPlatform;
+    };
+    query?: never;
+    url: '/avatars/active_avatars_by_platform/{platform}';
+};
+
+export type GetActiveAvatarsCountByPlatformResponses = {
+    /**
+     * Response Getactiveavatarscountbyplatform
+     * Successful Response
+     */
+    200: number;
+};
+
+export type GetActiveAvatarsCountByPlatformResponse = GetActiveAvatarsCountByPlatformResponses[keyof GetActiveAvatarsCountByPlatformResponses];
+
 export type CreateActionData = {
     body: ActionCreate;
     path?: never;

@@ -1,8 +1,8 @@
 import { read_server_env, ServerEnv } from "@lib/server-env"
 import { AvatarRead } from "./api/avatars/types.gen"
 import { CombinedAvatar, zCombinedAvatar } from "./api/models"
-import { Scenario, ScenarioWithResult } from "./api/operator/types.gen"
-import { ScenarioRead } from "./api/orchestrator/types.gen"
+import { ScenarioWithResultReadable } from "./api/operator/types.gen"
+import { Scenario, ScenarioRead } from "./api/orchestrator/types.gen"
 import { logger } from "./logger"
 import { OperatorSettings, ServerSettings } from "./server-settings"
 import { Web1Client } from "./web1/web1-client"
@@ -44,7 +44,7 @@ export class ServiceClient {
     async assignWeb1Account(allProfiles: CombinedAvatar[]): Promise<Web1Account | null> {
         const accounts = await this.listWeb1Accounts()
         const allProfilePhoneNumbers = new Set(
-            allProfiles.map((profile) => profile.avatar.phone_number),
+            allProfiles.map((profile) => profile.avatar?.phone_number).filter((phone): phone is string => phone !== undefined),
         )
         const selectedAccount = accounts.find(
             (account) =>
@@ -58,7 +58,7 @@ export class ServiceClient {
         return selectedAccount
     }
 
-    async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResult }> {
+    async getOperatorScenarios(): Promise<{ [key: string]: ScenarioWithResultReadable }> {
         const operatorSettings = this.getOperatorSettings()
         console.log("Getting operator scenarios for slot", operatorSettings.operatorSlot)
         const response = await fetch(
@@ -67,7 +67,7 @@ export class ServiceClient {
         return response.json()
     }
 
-    async getOperatorScenarioById(scenarioId: string): Promise<ScenarioWithResult | null> {
+    async getOperatorScenarioById(scenarioId: string): Promise<ScenarioWithResultReadable | null> {
         const operatorSettings = this.getOperatorSettings()
         const response = await fetch(
             `${this.env.serverUrl}/api/operator/${operatorSettings.operatorSlot}/scenario/${scenarioId}`,

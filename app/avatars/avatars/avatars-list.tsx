@@ -742,7 +742,13 @@ export function AvatarsList({
         return profile.categories.some((category) => category.name === activeCategory)
     })
 
-    const displayTotalItems = totalCount ?? (hasNextPage ? (paginationState.pageIndex + 1) * paginationState.pageSize + 1 : filteredProfiles.length)
+    // Calculate display total - if we have a category filter, we can't know the true total
+    // without fetching all data, so we show an approximation
+    const displayTotalItems = activeCategory 
+        ? filteredProfiles.length < paginationState.pageSize 
+            ? (paginationState.pageIndex * paginationState.pageSize) + filteredProfiles.length
+            : (paginationState.pageIndex + 1) * paginationState.pageSize + (hasNextPage ? 1 : 0)
+        : (totalCount ?? (hasNextPage ? (paginationState.pageIndex + 1) * paginationState.pageSize + 1 : filteredProfiles.length))
 
     return (
         <div
@@ -763,6 +769,8 @@ export function AvatarsList({
                             value={categorySelectValue}
                             onValueChange={(value) => {
                                 setCategorySelectValue(value)
+                                // Reset pagination when category filter changes
+                                setPaginationState({ pageIndex: 0, pageSize })
                                 if (value === "All" || value === "Untagged") {
                                     setActiveCategory(null)
                                 } else {
@@ -864,7 +872,14 @@ export function AvatarsList({
                                         <div className="flex flex-col gap-2">
                                             <Label htmlFor="socialNetworks">Social Networks</Label>
                                             <Select
+                                                value={
+                                                    (table
+                                                        .getColumn("socialNetworks")
+                                                        ?.getFilterValue() as string) || "all"
+                                                }
                                                 onValueChange={(value) => {
+                                                    // Reset pagination when platform filter changes
+                                                    setPaginationState({ pageIndex: 0, pageSize })
                                                     if (value === "all") {
                                                         table
                                                             .getColumn("socialNetworks")
@@ -875,11 +890,6 @@ export function AvatarsList({
                                                             ?.setFilterValue(value)
                                                     }
                                                 }}
-                                                defaultValue={
-                                                    table
-                                                        .getColumn("socialNetworks")
-                                                        ?.getFilterValue() as string
-                                                }
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Filter by social networks..." />
@@ -891,7 +901,7 @@ export function AvatarsList({
                                                             key={`${network}-active`}
                                                             value={network}
                                                         >
-                                                            {network}
+                                                            {network.charAt(0).toUpperCase() + network.slice(1)} (Active)
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>

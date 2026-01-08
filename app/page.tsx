@@ -1,9 +1,8 @@
+import { ApiService } from "@/app/api/lib/api_service"
 import TelegramIcon from "@/assets/telegram.svg"
 import SquaresCanvas from "@/components/squares-canvas"
 import { logger } from "@/lib/logger"
-import { getSocialNetworkStatus } from "@/lib/profile-utils"
 import { cn } from "@/lib/utils"
-import { ServiceClient } from "@lib/service-client"
 import { CrosshairIcon, MessagesSquareIcon, PlusIcon, UserIcon } from "lucide-react"
 import { Metadata } from "next"
 import Image from "next/image"
@@ -60,19 +59,15 @@ function Card({
 export default async function Page() {
     logger.info('[DEBUG] Page rendering started')
     
-    logger.info('[DEBUG] Creating ServiceClient...')
-    const serviceClient = new ServiceClient()
-    logger.info('[DEBUG] ServiceClient created, fetching avatars...')
-    // Request all avatars (limit=0) for counting on main page
-    const avatars = await serviceClient.getAvatars(0, 0)
-    logger.info(`[DEBUG] Avatars fetched successfully, count: ${avatars.length}`)
-
-    // Count active Telegram avatars
-    const activeTelegramAvatars = avatars.filter((avatar) => {
-        const socialStatus = getSocialNetworkStatus(avatar)
-        return socialStatus.telegram === true
-    }).length
-    logger.info(`[DEBUG] Active Telegram avatars: ${activeTelegramAvatars}`)
+    logger.info('[DEBUG] Fetching active avatars count...')
+    let activeTelegramAvatars = 0
+    try {
+        const apiService = new ApiService()
+        activeTelegramAvatars = await apiService.getActiveAvatarsCountByPlatform("telegram")
+        logger.info(`[DEBUG] Active Telegram avatars count: ${activeTelegramAvatars}`)
+    } catch (error) {
+        logger.error(`[DEBUG] Error fetching active avatars count: ${error}`)
+    }
 
     return (
         <div className="relative flex h-full w-full flex-col items-center justify-center px-4">

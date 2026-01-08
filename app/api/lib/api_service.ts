@@ -9,6 +9,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { AvatarRead, AvatarUpdate, ProxyRead } from "@lib/api/avatars"
 import { client as avatarsClient } from "@lib/api/avatars/client.gen"
 import {
+    getActiveAvatarsCountByPlatform as getActiveAvatarsCountByPlatformRequest,
     getAvatar as getAvatarRequest,
     getAvatars as getAvatarsRequest,
     updateAvatar as updateAvatarRequest,
@@ -39,7 +40,7 @@ import {
     submitCredentialsAuthPost,
     submitScenarioAsyncScenarioPost,
 } from "@lib/api/operator/sdk.gen"
-import { type ScenarioWithResultReadable } from "@lib/api/operator/types.gen"
+import { type ProfileWorkerViewReadable, type ScenarioWithResultReadable } from "@lib/api/operator/types.gen"
 import {
     ActionRead,
     CategoryRead,
@@ -328,7 +329,7 @@ export class ApiService {
         return response.data ?? null
     }
 
-    async listOperatorCharacters(): Promise<CharacterRead[]> {
+    async listOperatorCharacters(): Promise<ProfileWorkerViewReadable[]> {
         const response = await getAllCharactersCharactersGetOperator({
             client: operatorClient,
         })
@@ -1462,6 +1463,27 @@ export class ApiService {
         })
 
         return cleanedAvatars as AvatarRead[]
+    }
+
+    async getActiveAvatarsCountByPlatform(platform: "telegram" | "x"): Promise<number> {
+        logger.info(`Getting active avatars count for platform: ${platform}`)
+        
+        try {
+            const response = await getActiveAvatarsCountByPlatformRequest({
+                client: avatarsClient,
+                path: { platform },
+            })
+
+            if (response.error) {
+                logger.error(`Failed to get active avatars count: ${JSON.stringify(response.error)}`)
+                throw new Error(`Failed to get active avatars count: ${JSON.stringify(response.error)}`)
+            }
+
+            return response.data as number
+        } catch (error) {
+            logger.error(`Exception in getActiveAvatarsCountByPlatform: ${error}`)
+            throw error
+        }
     }
 
     async getAvatar(profileId: string): Promise<AvatarRead> {

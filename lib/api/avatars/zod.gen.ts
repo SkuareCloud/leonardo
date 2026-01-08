@@ -1906,6 +1906,20 @@ export const zSaveProfileImageData = z.object({
  */
 export const zSaveProfileImageResponse = zAvatarRead;
 
+export const zGetActiveAvatarsCountByPlatformData = z.object({
+    body: z.never().optional(),
+    path: z.object({
+        platform: zSocialPlatform
+    }),
+    query: z.never().optional()
+});
+
+/**
+ * Response Getactiveavatarscountbyplatform
+ * Successful Response
+ */
+export const zGetActiveAvatarsCountByPlatformResponse = z.number().int();
+
 export const zCreateActionData = z.object({
     body: zActionCreate,
     path: z.never().optional(),
